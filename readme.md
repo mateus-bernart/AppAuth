@@ -7,3 +7,7 @@
 
 - npm run android
 - npm run start
+
+## Token
+
+- Expiration time: 60 minutes

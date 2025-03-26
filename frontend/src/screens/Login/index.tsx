@@ -2,70 +2,106 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../component/CustomInput';
+import Axios from 'axios';
+import {useToast} from 'react-native-toast-notifications';
+import {AppNavigationProp} from '../../types/navigationTypes';
+import {useAuth} from '../../providers/AuthProvider';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {storageGet, storageSet} from '../../services/storage';
+
+const axios = Axios.create({
+  baseURL: 'http://172.16.1.131:8000/api',
+  //interceptor -> token storage para enviar para api
+});
 
 const Login = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<AppNavigationProp>();
+  const toast = useToast();
 
   const {
     control,
     handleSubmit,
     formState: {errors},
+    setError,
   } = useForm();
 
-  const onLoginPressed = data => {
-    console.log(data);
+  const {startSession} = useAuth();
 
-    //TODO: create homepage
-    navigation.navigate('Index');
+  const onLoginPressed = async data => {
+    try {
+      const response = await axios.post('/login', data);
+
+      if (response.data.status == true) {
+        startSession(
+          {
+            userId: response.data.user.id,
+            userName: response.data.user.name,
+            isLogged: true,
+          },
+          response.data.token,
+        );
+      } else {
+        toast.show('Invalid credentials', {
+          type: 'danger',
+          placement: 'top',
+        });
+      }
+    } catch (error) {
+      toast.show('Login failed', {
+        type: 'danger',
+        placement: 'top',
+      });
+    }
   };
 
   return (
-    <SafeAreaView style={styles.body}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Login</Text>
-      </View>
-      <View style={styles.formContainer}>
-        <Text style={styles.formTitle}>E-mail</Text>
-        <CustomInput
-          rules={{required: 'Please insert your email'}}
-          control={control}
-          name="email"
-          placeholder="Type your email"
-          secureTextEntry={false}
-          keyboardType="email-address"
-        />
-        <Text style={styles.formTitle}>Password</Text>
-        <CustomInput
-          rules={{required: 'Please insert your password'}}
-          control={control}
-          name="password"
-          placeholder="Type your password"
-          secureTextEntry={true}
-        />
-        <View style={styles.formFooter}>
-          <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-            <Text style={styles.createAccountText}>
-              Don't have an account? Register
-            </Text>
-          </TouchableOpacity>
+    <>
+      <SafeAreaView style={styles.body}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Login</Text>
         </View>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSubmit(onLoginPressed)}>
-            <Text style={styles.buttonText}>Send</Text>
-          </TouchableOpacity>
+        <View style={styles.formContainer}>
+          <Text style={styles.formTitle}>E-mail</Text>
+          <CustomInput
+            rules={{required: 'Please insert your email'}}
+            control={control}
+            name="email"
+            placeholder="Type your email"
+            secureTextEntry={false}
+            keyboardType="email-address"
+          />
+          <Text style={styles.formTitle}>Password</Text>
+          <CustomInput
+            rules={{required: 'Please insert your password'}}
+            control={control}
+            name="password"
+            placeholder="Type your password"
+            secureTextEntry={true}
+          />
+          <View style={styles.formFooter}>
+            <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+              <Text style={styles.createAccountText}>
+                Don't have an account? Register
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleSubmit(onLoginPressed)}>
+              <Text style={styles.buttonText}>Send</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 };
 

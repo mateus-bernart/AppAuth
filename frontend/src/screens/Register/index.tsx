@@ -2,44 +2,77 @@ import {
   SafeAreaView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {useNavigation} from '@react-navigation/native';
-import CustomInput from '../../component/CustomInput';
-import axios from 'axios';
 import {useForm} from 'react-hook-form';
+import CustomInput from '../../component/CustomInput';
+import Axios from 'axios';
+import {useToast} from 'react-native-toast-notifications';
+import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import {AppNavigationProp} from '../../types/navigationTypes';
+import {useAuth} from '../../providers/AuthProvider';
 
-const Login = () => {
-  const navigation = useNavigation<any>();
+const axios = Axios.create({
+  baseURL: 'http://172.16.1.131:8000/api',
+});
+
+const Register = () => {
+  const navigation = useNavigation<AppNavigationProp>();
+  const toast = useToast();
+
+  const {isAuthenticated} = useAuth();
 
   const {
     control,
     handleSubmit,
     formState: {errors},
     watch,
+    setError,
   } = useForm();
   const passwordVerification = watch('password');
 
-  const onRegisterPressed = data => {
-    console.log(data);
+  const onRegisterPressed = async data => {
+    await axios
+      .post('/register', data)
+      .then(response => {
+        console.log(response);
 
-    axiosInstance.get('/posts').then(response => {
-      console.log(response.data);
-    });
+        if (response.data.status === 'created') {
+          toast.show('User created', {
+            type: 'success',
+            placement: 'top',
+          });
 
-    //TODO: create an success page
-    navigation.navigate('Login');
+          navigation.navigate('Login');
+        } else {
+          toast.show('Fail to register user', {
+            type: 'danger',
+            placement: 'top',
+          });
+        }
+      })
+      .catch(e => {
+        Object.keys(e.response.data.errors).map(key => {
+          //Tipagem form -> key (bd)
+          setError(key, {message: e.response.data.errors[key][0]});
+        });
+      });
   };
-
-  const axiosInstance = axios.create({
-    baseURL: 'http://172.16.1.131:8000/api',
-  });
 
   return (
     <SafeAreaView style={styles.body}>
+      {isAuthenticated && (
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <IconFontAwesome
+            name="chevron-left"
+            size={30}
+            style={styles.iconBack}
+          />
+        </TouchableOpacity>
+      )}
       <View style={styles.header}>
         <Text style={styles.title}>Register</Text>
       </View>
@@ -87,17 +120,25 @@ const Login = () => {
             },
           }}
           control={control}
-          name="confirmPassword"
+          name="password_confirmation"
           placeholder="Type your password again"
           secureTextEntry={true}
         />
-        <View style={styles.formFooter}>
-          <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.createAccountText}>
-              Have an account? Sign in
-            </Text>
-          </TouchableOpacity>
-        </View>
+        {!isAuthenticated && (
+          <View style={styles.formFooter}>
+            <TouchableOpacity
+              onPress={() => {
+                if (isAuthenticated) {
+                  navigation.navigate('Home');
+                }
+                navigation.navigate('Login');
+              }}>
+              <Text style={styles.createAccountText}>
+                Have an account? Sign in
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
             style={styles.button}
@@ -110,13 +151,17 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
 
 const styles = StyleSheet.create({
   body: {
     flex: 1,
     marginHorizontal: 50,
     justifyContent: 'center',
+  },
+  iconBack: {
+    position: 'absolute',
+    top: 70,
   },
   formTitle: {
     fontSize: 20,
@@ -140,10 +185,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-
   header: {
     position: 'absolute',
-    top: 100,
+    top: 60,
     alignSelf: 'center',
   },
   title: {
