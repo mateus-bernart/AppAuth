@@ -9,7 +9,7 @@ import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../component/CustomInput';
-import Axios from 'axios';
+import Axios, {AxiosResponse} from 'axios';
 import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
@@ -35,10 +35,13 @@ const Login = () => {
   const {startSession} = useAuth();
 
   const onLoginPressed = async data => {
-    try {
-      const response = await axios.post('/login', data);
-
-      if (response.data.status == true) {
+    const response: any = await axios
+      .post('/login', data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+      .then(response => {
         startSession(
           {
             userId: response.data.user.id,
@@ -47,18 +50,10 @@ const Login = () => {
           },
           response.data.token,
         );
-      } else {
-        toast.show('Invalid credentials', {
-          type: 'danger',
-          placement: 'top',
-        });
-      }
-    } catch (error) {
-      toast.show('Login failed', {
-        type: 'danger',
-        placement: 'top',
-      });
-    }
+      })
+      .catch(error =>
+        toast.show('Invalid Credentials', {type: 'danger', placement: 'top'}),
+      );
   };
 
   return (
@@ -147,7 +142,7 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'absolute',
-    top: 100,
+    top: 60,
     alignSelf: 'center',
   },
   title: {

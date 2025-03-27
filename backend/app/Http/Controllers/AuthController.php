@@ -39,9 +39,9 @@ class AuthController extends Controller
 
         if ($authorized) {
             $token = $user->createToken($request->email)->plainTextToken;
-            return ['status' => true, 'token' => $token, 'user' => $user];
+            return ['token' => $token, 'user' => $user];
         } else {
-            return ['status' => false, 'messages' => ['password' => ['Incorrect Password']]];
+            return ['message' => 'Incorrect Password'];
         }
 
         return $user;

@@ -16,6 +16,7 @@ import Header from '../../component/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {storageDelete, storageGet} from '../../services/storage';
 import {useAuth} from '../../providers/AuthProvider';
+import {useIsFocused} from '@react-navigation/native';
 
 const axios = Axios.create({
   baseURL: 'http://172.16.1.131:8000/api',
@@ -41,6 +42,7 @@ interface User {
 const Home = () => {
   const toast = useToast();
   const [userList, setUserList] = useState<User[]>([]);
+  const isFocused = useIsFocused();
 
   const {endSession} = useAuth();
 
@@ -73,8 +75,11 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (isFocused) {
+      fetchUsers();
+      console.log('fetch');
+    }
+  }, [isFocused]);
 
   return (
     <SafeAreaView style={styles.body}>

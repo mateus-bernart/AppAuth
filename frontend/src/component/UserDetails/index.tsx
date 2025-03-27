@@ -14,6 +14,7 @@ import {AppNavigationProp} from '../../types/navigationTypes';
 import Axios from 'axios';
 import {storageGet} from '../../services/storage';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useToast} from 'react-native-toast-notifications';
 
 const axios = Axios.create({
   baseURL: 'http://172.16.1.131:8000/api',
@@ -40,6 +41,7 @@ const UserDetailsComponent = () => {
   const {session, endSession} = useAuth();
   const navigation = useNavigation<AppNavigationProp>();
   const [userInfo, setUserInfo] = useState<UserInfoProps>();
+  const toast = useToast();
 
   const handleBack = () => {
     navigation.goBack();
@@ -54,11 +56,13 @@ const UserDetailsComponent = () => {
       const userInfo = await axios
         .get('/user')
         .then(response => {
-          console.log(response.data);
           setUserInfo(response.data);
         })
         .catch(error => {
-          console.log(error);
+          toast.show('Could not render data', {
+            type: 'danger',
+            placement: 'top',
+          });
         });
       return userInfo;
     };

@@ -6,7 +6,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import {storageGet, storageSet} from '../services/storage';
+import {storageDelete, storageGet, storageSet} from '../services/storage';
 import Axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -50,7 +50,6 @@ const AuthProvider = ({children}) => {
 
       setSession(data);
     } catch (error) {
-      console.log('Error fetching userdata:', error);
       endSession();
     } finally {
       setIsLoading(false);
@@ -59,6 +58,8 @@ const AuthProvider = ({children}) => {
 
   const endSession = () => {
     setSession(null);
+    storageDelete('UserData');
+    storageDelete('AcessToken');
   };
 
   useEffect(() => {

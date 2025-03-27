@@ -22,7 +22,6 @@ const axios = Axios.create({
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
-
   const {isAuthenticated} = useAuth();
 
   const {
@@ -38,15 +37,15 @@ const Register = () => {
     await axios
       .post('/register', data)
       .then(response => {
-        console.log(response);
-
         if (response.data.status === 'created') {
           toast.show('User created', {
             type: 'success',
             placement: 'top',
           });
-
-          navigation.navigate('Login');
+          if (!isAuthenticated) {
+            navigation.navigate('Login');
+          }
+          navigation.navigate('Home');
         } else {
           toast.show('Fail to register user', {
             type: 'danger',
