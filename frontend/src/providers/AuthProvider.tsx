@@ -18,6 +18,7 @@ const axios = Axios.create({
 type Session = {
   userId: number;
   userName: string;
+  userImage?: string;
   isLogged: boolean;
 };
 

@@ -12,8 +12,8 @@ interface CustomInputProps {
   control: any;
   name: string;
   placeholder: string;
-  secureTextEntry: boolean;
-  rules: object;
+  secureTextEntry?: boolean;
+  rules?: object;
   keyboardType?: KeyboardTypeOptions;
 }
 
@@ -22,7 +22,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   name,
   rules = {},
   placeholder,
-  secureTextEntry,
+  secureTextEntry = false,
   keyboardType,
 }) => {
   return (

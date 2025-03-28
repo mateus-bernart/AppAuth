@@ -16,7 +16,8 @@ import Header from '../../component/Header';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {storageDelete, storageGet} from '../../services/storage';
 import {useAuth} from '../../providers/AuthProvider';
-import {useIsFocused} from '@react-navigation/native';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {AppNavigationProp} from '../../types/navigationTypes';
 
 const axios = Axios.create({
   baseURL: 'http://172.16.1.131:8000/api',
@@ -43,6 +44,7 @@ const Home = () => {
   const toast = useToast();
   const [userList, setUserList] = useState<User[]>([]);
   const isFocused = useIsFocused();
+  const navigation = useNavigation<AppNavigationProp>();
 
   const {endSession} = useAuth();
 
@@ -58,6 +60,12 @@ const Home = () => {
           endSession();
         }
       });
+  };
+
+  const getUser = async id => {
+    console.log(id);
+    const user = await axios.get(`/user/${id}`);
+    console.log(user);
   };
 
   const deleteUser = id => {
@@ -77,7 +85,6 @@ const Home = () => {
   useEffect(() => {
     if (isFocused) {
       fetchUsers();
-      console.log('fetch');
     }
   }, [isFocused]);
 
@@ -88,7 +95,11 @@ const Home = () => {
         data={userList}
         renderItem={({item}) => {
           return (
-            <TouchableOpacity style={styles.itemContainer}>
+            <TouchableOpacity
+              style={styles.itemContainer}
+              onPress={() => {
+                getUser(userList);
+              }}>
               <IconFontAwesome name="user-alt" size={40} />
               <View style={styles.itemDetailsContainer}>
                 <Text

@@ -18,7 +18,6 @@ import {storageGet, storageSet} from '../../services/storage';
 
 const axios = Axios.create({
   baseURL: 'http://172.16.1.131:8000/api',
-  //interceptor -> token storage para enviar para api
 });
 
 const Login = () => {

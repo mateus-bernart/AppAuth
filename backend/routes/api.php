@@ -11,9 +11,12 @@ Route::middleware('auth:sanctum')->group(function () {
     return $request->user();
   });
 
+  Route::get('/user/{id}', [UserController::class, 'getUser']);
+
   Route::get('/users', [UserController::class, 'getAll']);
   Route::post('/logout', [AuthController::class, 'logout']);
   Route::delete('/user/delete/{id}', [UserController::class, 'destroy']);
+  Route::post('/user/{id}', [UserController::class, 'update']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

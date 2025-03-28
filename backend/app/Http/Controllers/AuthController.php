@@ -16,11 +16,15 @@ class AuthController extends Controller
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed',
+            'street' => 'max:255',
+            'neighborhood' => 'max:255',
+            'street-number' => 'max:255',
+            'city' => 'max:255'
         ]);
 
         $user = User::create($fields);
         if ($user->wasRecentlyCreated) {
-            return ['name' => $user, 'status' => 'created'];
+            return ['name' => $user, 'street' => $user->street, 'status' => 'created'];
         } else {
             return ['status' => 'fail'];
         }

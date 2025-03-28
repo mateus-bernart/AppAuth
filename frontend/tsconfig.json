@@ -1,4 +1,7 @@
 {
   "extends": "@react-native/typescript-config/tsconfig.json",
-  "compilerOptions": {"noImplicitAny": false}
+  "compilerOptions": {
+    "noImplicitAny": false,
+    "useUnknownInCatchVariables": false
+  }
 }
