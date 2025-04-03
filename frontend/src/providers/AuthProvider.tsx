@@ -8,7 +8,6 @@ import React, {
 } from 'react';
 import {storageDelete, storageGet, storageSet} from '../services/storage';
 import Axios from 'axios';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const axios = Axios.create({
   baseURL: 'http://172.16.1.131:8000/api',
@@ -92,7 +91,6 @@ const AuthProvider = ({children}) => {
 };
 
 export const useAuth = (): AuthContextProps => {
-  //TODO: verificar se é undefined
   const context = useContext(AuthContext);
   return context;
 };

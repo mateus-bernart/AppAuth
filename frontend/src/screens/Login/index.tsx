@@ -1,4 +1,5 @@
 import {
+  Image,
   SafeAreaView,
   StyleSheet,
   Text,
@@ -9,16 +10,10 @@ import React from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../component/CustomInput';
-import Axios, {AxiosResponse} from 'axios';
 import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {storageGet, storageSet} from '../../services/storage';
-
-const axios = Axios.create({
-  baseURL: 'http://172.16.1.131:8000/api',
-});
+import axiosInstance from '../../services/api';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -34,7 +29,7 @@ const Login = () => {
   const {startSession} = useAuth();
 
   const onLoginPressed = async data => {
-    const response: any = await axios
+    const response: any = await axiosInstance
       .post('/login', data, {
         headers: {
           'Content-Type': 'application/json',
@@ -49,6 +44,7 @@ const Login = () => {
           },
           response.data.token,
         );
+        toast.show('Logged In', {type: 'success', placement: 'top'});
       })
       .catch(error =>
         toast.show('Invalid Credentials', {type: 'danger', placement: 'top'}),
@@ -56,7 +52,7 @@ const Login = () => {
   };
 
   return (
-    <>
+    <View style={{flex: 1}}>
       <SafeAreaView style={styles.body}>
         <View style={styles.header}>
           <Text style={styles.title}>Login</Text>
@@ -77,7 +73,8 @@ const Login = () => {
             control={control}
             name="password"
             placeholder="Type your password"
-            secureTextEntry={true}
+            secureTextEntry
+            iconRight
           />
           <View style={styles.formFooter}>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
@@ -94,8 +91,14 @@ const Login = () => {
             </TouchableOpacity>
           </View>
         </View>
+        <View style={styles.imageFooter}>
+          <Image
+            source={require('../../assets/Login-bro.png')}
+            style={{height: 300, width: 400}}
+          />
+        </View>
       </SafeAreaView>
-    </>
+    </View>
   );
 };
 
@@ -105,14 +108,17 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     marginHorizontal: 50,
-    justifyContent: 'center',
   },
   formTitle: {
     marginTop: 20,
     fontSize: 20,
-    alignItems: 'center',
     color: 'black',
     fontFamily: 'Poppins-Bold',
+  },
+  imageFooter: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginBottom: 20,
   },
   createAccountText: {
     marginTop: 10,
@@ -122,8 +128,8 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    width: '100%',
     justifyContent: 'center',
+    marginTop: 150,
   },
   formFooter: {
     flexDirection: 'row',
@@ -141,11 +147,11 @@ const styles = StyleSheet.create({
   },
   header: {
     position: 'absolute',
-    top: 60,
+    top: 100,
     alignSelf: 'center',
   },
   title: {
-    fontSize: 30,
+    fontSize: 35,
     fontFamily: 'Poppins-Bold',
   },
   button: {

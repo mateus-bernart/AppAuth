@@ -11,18 +11,19 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        //TODO: Helper UserService 
         $fields = $request->validate([
+            'street_number' => 'max:255',
             'name' => 'required|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|confirmed',
+            'phone_number' => 'max:255',
             'street' => 'max:255',
             'neighborhood' => 'max:255',
-            'street-number' => 'max:255',
             'city' => 'max:255'
         ]);
 
         $user = User::create($fields);
+
         if ($user->wasRecentlyCreated) {
             return ['name' => $user, 'street' => $user->street, 'status' => 'created'];
         } else {

@@ -1,43 +1,33 @@
 import {
+  Alert,
   FlatList,
   Image,
+  ImageSourcePropType,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useEffect, useState} from 'react';
+import React, {use, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import Axios, {AxiosResponse} from 'axios';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
 import Header from '../../component/Header';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {storageDelete, storageGet} from '../../services/storage';
 import {useAuth} from '../../providers/AuthProvider';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../types/navigationTypes';
+import axiosInstance from '../../services/api';
 
-const axios = Axios.create({
-  baseURL: 'http://172.16.1.131:8000/api',
-});
+const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
-axios.interceptors.request.use(
-  async function (config) {
-    const authToken: string | null | undefined = await storageGet('AcessToken');
-    if (authToken) config.headers.Authorization = `Bearer ${authToken}`;
-    return config;
-  },
-  function (error) {
-    return Promise.reject(error);
-  },
-);
+const apiURL = `${BASE_URL}/api`;
 
 interface User {
   id: number;
   name: string;
   email: string;
+  image: string;
 }
 
 const Home = () => {
@@ -46,34 +36,29 @@ const Home = () => {
   const isFocused = useIsFocused();
   const navigation = useNavigation<AppNavigationProp>();
 
-  const {endSession} = useAuth();
-
-  const fetchUsers = () => {
-    axios
-      .get<User, AxiosResponse>('/users')
-      .then(response => {
-        setUserList(response.data);
-      })
-      .catch(error => {
-        if (error.status === 401) {
-          toast.show('Unauthorized', {placement: 'top', type: 'danger'});
-          endSession();
-        }
-      });
+  const handleNavigation = (screens, params = {}) => {
+    navigation.navigate(screens, params);
   };
 
-  const getUser = async id => {
-    console.log(id);
-    const user = await axios.get(`/user/${id}`);
-    console.log(user);
+  const {endSession, session} = useAuth();
+
+  const fetchUsers = () => {
+    try {
+      axiosInstance.get<User[]>('/users').then(response => {
+        setUserList(response.data);
+      });
+    } catch (error) {
+      if (error.status === 401) {
+        toast.show('Unauthorized', {placement: 'top', type: 'danger'});
+        endSession();
+      }
+    }
   };
 
   const deleteUser = id => {
-    axios
+    axiosInstance
       .delete(`/user/delete/${id}`)
-      .then(response => {
-        fetchUsers();
-      })
+      .then(() => fetchUsers())
       .catch(e => {
         toast.show(e, {
           type: 'danger',
@@ -82,25 +67,42 @@ const Home = () => {
       });
   };
 
+  const confirmDeleteAlert = id =>
+    Alert.alert('Are you sure?', 'Delete user?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'DELETE', onPress: () => deleteUser(id)},
+    ]);
+
   useEffect(() => {
-    if (isFocused) {
-      fetchUsers();
-    }
+    fetchUsers();
   }, [isFocused]);
 
   return (
     <SafeAreaView style={styles.body}>
       <Header />
       <FlatList
-        data={userList}
+        data={userList.filter(user => user.id != session?.userId)}
         renderItem={({item}) => {
           return (
             <TouchableOpacity
               style={styles.itemContainer}
               onPress={() => {
-                getUser(userList);
+                handleNavigation('UserDetails', {userId: item.id});
               }}>
-              <IconFontAwesome name="user-alt" size={40} />
+              {item.image ? (
+                <Image
+                  source={{
+                    uri: `${BASE_URL}/storage/profile_images/${item.image}`,
+                  }}
+                  style={styles.profilePicture}
+                />
+              ) : (
+                <IconFontAwesome name="user-alt" size={50} />
+              )}
               <View style={styles.itemDetailsContainer}>
                 <Text
                   style={styles.itemName}
@@ -116,12 +118,9 @@ const Home = () => {
                 </Text>
               </View>
               <View style={styles.actionContainer}>
-                <TouchableOpacity style={styles.edit}>
-                  <IconFontAwesome name="pen" color="#008d0c" size={25} />
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.delete}
-                  onPress={() => deleteUser(item.id)}>
+                  onPress={() => confirmDeleteAlert(item.id)}>
                   <IconFontAwesome name="trash" color="#ff0000" size={25} />
                 </TouchableOpacity>
               </View>
@@ -138,6 +137,11 @@ export default Home;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
+  },
+  profilePicture: {
+    height: 50,
+    width: 50,
+    borderRadius: 12,
   },
   itemContainer: {
     flexDirection: 'row',
@@ -169,14 +173,9 @@ const styles = StyleSheet.create({
     gap: 10,
     alignItems: 'center',
   },
-  edit: {
-    backgroundColor: '#d5e2d6',
-    padding: 14,
-    borderRadius: 10,
-  },
   delete: {
     backgroundColor: '#ffcece',
-    padding: 14,
+    padding: 10,
     borderRadius: 10,
   },
   itemDetailsContainer: {

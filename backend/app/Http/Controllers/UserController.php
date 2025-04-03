@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -13,7 +16,7 @@ class UserController extends Controller
 
     public function getAll()
     {
-        $users = User::select('id', 'name', 'email')->get();
+        $users = User::select('id', 'name', 'email', 'image')->get();
         return $users;
     }
 
@@ -34,35 +37,105 @@ class UserController extends Controller
 
     public function getUser($id)
     {
-        $user = User::where('id', $id)->get();
-        return ['user' => $user];
+        return User::find($id);
     }
 
-    public function update(Request $request)
+    public function uploadImage(Request $request, $id)
     {
-        $authUser = Auth::user();
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+
+        if (!$request->hasFile('file')) {
+            return response()->json(['message' => 'No image uploaded'], 400);
+        }
+
+        $request->validate([
+            'file' => 'image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        $file = $request->file('file');
+        $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+        $file->storeAs('profile_images', $filename, 'public');
+
+        $user->image = $filename;
+        $user->save();
+
+        return response()->json([
+            'message' => 'Image uploaded successfully',
+            'imagePath' => asset('storage/profile_images/' . $filename),
+            'userUpdated' => $user
+        ], 200);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $authUser = User::find($id);
+
+        if (!$authUser) {
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+        }
+
+        $fields = $request->validate([
+            'name' => 'max:255',
+            'email' => 'max:255',
+            'password' => 'confirmed',
+            'phone_number' => 'max:255',
+            'street' => 'max:255',
+            'neighborhood' => 'max:255',
+            'street_number' => 'max:255',
+            'city' => 'max:255',
+        ]);
 
         try {
-            $request->validate([
-                'file' => 'image|mimes:jpeg,png,jpg|max:2048',
-            ]);
+            $authUser->update($fields);
+            $user = $authUser->refresh();
 
-            if ($request->hasFile('file')) {
-                $file = $request->file('file');
-                $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
-                $path = $file->storeAs('profile_images', $filename, 'public');
-
-                $authUser->update(['image' => $filename]);
-
-                return response()->json([
-                    'message' => 'Image uploaded successfully',
-                    'imagePath' => asset('storage/profile_images/' . $path),
-                ], 200);
-            }
-
-            return response()->json(['message' => 'No image uploaded'], 400);
+            return response()->json(['user' => $user], 200);
         } catch (\Throwable $th) {
             return response()->json(['message' => $th->getMessage(), 'code' => $th->getCode()], 422);
         }
+    }
+
+
+    public function removeUserImage($id)
+    {
+        $user = User::find($id);
+
+        if (!$user) {
+            return response()->json([
+                'error' => 'User not found',
+                404
+            ]);
+        }
+
+        if ($user->image) {
+            $imagePath = "profile_images/{$user->image}";
+            if (Storage::disk('public')->exists($imagePath)) {
+                if (Storage::disk('public')->delete($imagePath)) {
+                    $user->image = null;
+                    $user->save();
+
+                    return response()->json([
+                        'message' => 'Image deleted successfully.'
+                    ],  200);
+                } else {
+                    return response()->json([
+                        'message' => 'Image does not exist.'
+                    ], 404);
+                }
+            } else {
+                return response()->json([
+                    'message' => 'Image could not be deleted.'
+                ], 500);
+            }
+        }
+        return response()->json([
+            'message' => 'User does not have an image.'
+        ], 404);
     }
 }
