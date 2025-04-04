@@ -6,6 +6,7 @@ export type RootStackParamList = {
   Register: undefined;
   Home: undefined;
   UserDetails: undefined;
+  VerifyEmail: undefined;
 };
 
 export type AppNavigationProp = NavigationProp<RootStackParamList>;

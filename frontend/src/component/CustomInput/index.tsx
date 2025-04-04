@@ -62,7 +62,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
       rules={rules}
       render={({field: {value, onChange, onBlur}, fieldState: {error}}) => (
         <>
-          <View style={textStyle ? null : styles.inputFieldContainer}>
+          <View
+            style={[
+              textStyle ? null : styles.inputFieldContainer,
+              {borderColor: error ? 'red' : 'black'},
+              {borderWidth: error ? 1 : 0},
+            ]}>
             {iconLeft && (
               <IconFontAwesome
                 name={iconLeft}
@@ -71,10 +76,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
               />
             )}
             <TextInput
-              style={[
-                formStyle ? styles.formInput : styles.textInputStyle,
-                {borderColor: error ? 'red' : 'black'},
-              ]}
+              style={[formStyle ? styles.formInput : styles.textInputStyle]}
               value={value}
               onChangeText={onChange}
               onBlur={onBlur}
@@ -96,7 +98,12 @@ const CustomInput: React.FC<CustomInputProps> = ({
           </View>
           {error && (
             <Text
-              style={{color: 'red', alignSelf: 'stretch', marginVertical: 5}}>
+              style={{
+                color: 'red',
+                alignSelf: 'stretch',
+                marginVertical: 5,
+                fontWeight: 'bold',
+              }}>
               {error.message || 'Error'}
             </Text>
           )}

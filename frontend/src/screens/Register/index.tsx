@@ -1,14 +1,16 @@
 import {
+  Animated,
   KeyboardAvoidingView,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
-import {useNavigation} from '@react-navigation/native';
+import React, {useEffect, useRef, useState} from 'react';
+import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../component/CustomInput';
 import Axios from 'axios';
@@ -19,12 +21,55 @@ import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
 import axiosInstance from '../../services/api';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import {storageGet} from '../../services/storage';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const {isAuthenticated} = useAuth();
   const [iconDirection, setIconDirection] = useState(false);
+  const [emailToVerify, setEmailToVerify] = useState('');
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+  const isFocused = useIsFocused();
+
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -5,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 5,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const onDropdownClick = () => {
+    if (iconDirection) {
+      setIconDirection(false);
+    } else {
+      setIconDirection(true);
+    }
+  };
 
   const {
     control,
@@ -33,8 +78,23 @@ const Register = () => {
     watch,
     setError,
   } = useForm();
-  //default values
+
+  const handleNavigation = (screen, value) => {
+    navigation.navigate(screen, value);
+  };
+
   const passwordVerification = watch('password');
+
+  const sendOtp = async email => {
+    try {
+      const response = await axiosInstance.post('/email/send-otp', {
+        email,
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.log(error.response.data);
+    }
+  };
 
   const onRegisterPressed = async data => {
     await axiosInstance
@@ -46,7 +106,12 @@ const Register = () => {
             placement: 'top',
           });
           if (!isAuthenticated) {
-            navigation.navigate('Login');
+            sendOtp(data.email);
+            toast.show('Please verify your email', {
+              type: 'info',
+              placement: 'top',
+            });
+            setEmailToVerify(data.email);
           } else {
             navigation.navigate('Home');
           }
@@ -68,14 +133,6 @@ const Register = () => {
       });
   };
 
-  const onDropdownClick = () => {
-    if (iconDirection) {
-      setIconDirection(false);
-    } else {
-      setIconDirection(true);
-    }
-  };
-
   return (
     <SafeAreaView style={{flex: 1}}>
       <KeyboardAvoidingView
@@ -84,7 +141,7 @@ const Register = () => {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              navigation.goBack();
+              navigation.navigate('Login');
             }}>
             <IconFontAwesome name="chevron-left" size={30} />
           </TouchableOpacity>
@@ -98,9 +155,6 @@ const Register = () => {
           </View>
           {!isAuthenticated && (
             <View style={styles.formFooter}>
-              <Text style={styles.createAccountText}>
-                Already have an account?
-              </Text>
               <TouchableOpacity
                 onPress={() => {
                   if (isAuthenticated) {
@@ -108,7 +162,10 @@ const Register = () => {
                   }
                   navigation.navigate('Login');
                 }}>
-                <Text style={styles.signInText}>Sign in</Text>
+                <Text style={styles.createAccountText}>
+                  Already have an account?{' '}
+                  <Text style={styles.signInText}>Sign in</Text>
+                </Text>
               </TouchableOpacity>
             </View>
           )}
@@ -129,6 +186,12 @@ const Register = () => {
               </View>
               <View style={styles.containerInfo}>
                 <Text style={styles.formTitle}>Email</Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    handleNavigation('VerifyEmail', {userEmail: emailToVerify});
+                  }}>
+                  <Text>go to verify email</Text>
+                </TouchableOpacity>
                 <CustomInput
                   rules={{required: 'Email is required'}}
                   control={control}
@@ -272,13 +335,21 @@ const Register = () => {
             )}
           </View>
         </ScrollView>
-        <View style={styles.footerSave}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={handleSubmit(onRegisterPressed)}>
-            <Text style={styles.buttonText}>Save</Text>
-            <IconFontAwesome name="check" size={30} color="white" />
-          </TouchableOpacity>
+        <View style={styles.registerContainerWrapper}>
+          <View style={styles.shadowContainer} />
+          <Pressable
+            onPress={handleSubmit(onRegisterPressed)}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}>
+            <Animated.View
+              style={[
+                styles.registerContainer,
+                {transform: [{translateX}, {translateY}]},
+              ]}>
+              <Text style={styles.buttonText}>Submit</Text>
+              <IconFontAwesome name="check" size={30} color="white" />
+            </Animated.View>
+          </Pressable>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -299,11 +370,21 @@ const styles = StyleSheet.create({
   iconDropdown: {
     marginRight: 5,
   },
-  footerSave: {
+  shadowContainer: {
+    backgroundColor: '#084700',
+    position: 'absolute',
+    left: 15,
+    top: 25,
+    width: '100%',
+    borderRadius: 8,
+    padding: 27,
+  },
+  registerContainerWrapper: {
+    position: 'relative',
+    padding: 20,
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
-    padding: 20,
-    backgroundColor: '#dfdfdf',
+    backgroundColor: 'lightgray',
   },
   textHeader: {
     alignSelf: 'center',
@@ -348,18 +429,14 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
   },
   createAccountText: {
-    marginTop: 10,
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     color: 'gray',
   },
   signInText: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 18,
-    padding: 8,
-    backgroundColor: '#311aff',
-    color: 'white',
-    borderRadius: 14,
+    fontSize: 16,
+    color: 'blue',
   },
   formContainer: {
     flex: 1,
@@ -367,10 +444,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   formFooter: {
-    flexDirection: 'row',
     justifyContent: 'center',
     alignContent: 'center',
-    gap: 10,
+    alignItems: 'center',
   },
   header: {
     marginHorizontal: 30,
@@ -383,13 +459,13 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontFamily: 'Poppins-Bold',
   },
-  button: {
+  registerContainer: {
     backgroundColor: 'green',
     flexDirection: 'row',
-    gap: 10,
     borderRadius: 8,
     padding: 10,
     justifyContent: 'space-between',
+    alignItems: 'center',
   },
   buttonText: {
     color: 'white',

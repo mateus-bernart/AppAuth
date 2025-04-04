@@ -1,12 +1,14 @@
 import {
+  Animated,
   Image,
+  Pressable,
   SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useRef, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../component/CustomInput';
@@ -18,37 +20,74 @@ import axiosInstance from '../../services/api';
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
+  const translateX = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(0)).current;
+
+  const [emailIsVerified, setEmailIsVerified] = useState(false);
+
+  const handlePressIn = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: -5,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 5,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
+
+  const handlePressOut = () => {
+    Animated.parallel([
+      Animated.timing(translateX, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+      Animated.timing(translateY, {
+        toValue: 0,
+        duration: 100,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  };
 
   const {
     control,
     handleSubmit,
     formState: {errors},
-    setError,
   } = useForm();
 
   const {startSession} = useAuth();
 
   const onLoginPressed = async data => {
-    const response: any = await axiosInstance
-      .post('/login', data, {
+    try {
+      const response = await axiosInstance.post('/login', data, {
         headers: {
           'Content-Type': 'application/json',
         },
-      })
-      .then(response => {
-        startSession(
-          {
-            userId: response.data.user.id,
-            userName: response.data.user.name,
-            isLogged: true,
-          },
-          response.data.token,
-        );
-        toast.show('Logged In', {type: 'success', placement: 'top'});
-      })
-      .catch(error =>
-        toast.show('Invalid Credentials', {type: 'danger', placement: 'top'}),
+      });
+
+      console.log(response);
+
+      startSession(
+        {
+          userId: response.data.user.id,
+          userName: response.data.user.name,
+          isLogged: true,
+        },
+        response.data.token,
       );
+
+      toast.show('Logged In', {type: 'success', placement: 'top'});
+      
+    } catch (error) {
+      console.log(error);
+      toast.show('Invalid Credentials', {type: 'danger', placement: 'top'});
+    }
   };
 
   return (
@@ -79,16 +118,25 @@ const Login = () => {
           <View style={styles.formFooter}>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={styles.createAccountText}>
-                Don't have an account? Register
+                Don't have an account?{' '}
+                <Text style={styles.textRegister}>Register</Text>
               </Text>
             </TouchableOpacity>
           </View>
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleSubmit(onLoginPressed)}>
-              <Text style={styles.buttonText}>Send</Text>
-            </TouchableOpacity>
+          <View style={{position: 'relative', marginTop: 20}}>
+            <View style={styles.shadowContainer} />
+            <Pressable
+              onPress={handleSubmit(onLoginPressed)}
+              onPressIn={handlePressIn}
+              onPressOut={handlePressOut}>
+              <Animated.View
+                style={[
+                  styles.buttonContainer,
+                  {transform: [{translateX}, {translateY}]},
+                ]}>
+                <Text style={styles.buttonText}>Sign in</Text>
+              </Animated.View>
+            </Pressable>
           </View>
         </View>
         <View style={styles.imageFooter}>
@@ -126,6 +174,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
     color: 'gray',
   },
+  textRegister: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: 'blue',
+  },
   formContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -154,20 +207,29 @@ const styles = StyleSheet.create({
     fontSize: 35,
     fontFamily: 'Poppins-Bold',
   },
-  button: {
-    backgroundColor: 'green',
-    borderRadius: 8,
-    padding: 10,
-    paddingHorizontal: 20,
-  },
   buttonText: {
+    alignSelf: 'center',
     color: 'white',
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
   },
   buttonContainer: {
     marginTop: 20,
-    justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'green',
+    borderRadius: 8,
+    padding: 18,
+    width: '100%',
+    paddingHorizontal: 20,
+  },
+  shadowContainer: {
+    backgroundColor: '#084700',
+    position: 'absolute',
+    left: -5,
+    top: 25,
+    width: '100%',
+    borderRadius: 8,
+    padding: 31,
   },
 });

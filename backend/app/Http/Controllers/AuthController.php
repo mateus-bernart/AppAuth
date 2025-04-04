@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -29,35 +29,43 @@ class AuthController extends Controller
         } else {
             return ['status' => 'fail'];
         }
+
+        event(new Registered($user));
     }
 
     public function login(Request $request)
     {
-        $validatedData = $request->validate([
+        $request->validate([
             'email' => 'required|email|exists:users',
             'password' => 'required'
         ]);
 
-        //Auth attempt (mobile & web)
         $authorized = Auth::attempt(['email' => $request->email, 'password' => $request->password]);
+
         $user = User::where('email', $request->email)->first();
 
-        if ($authorized) {
-            $token = $user->createToken($request->email)->plainTextToken;
-            return ['token' => $token, 'user' => $user];
-        } else {
-            return ['message' => 'Incorrect Password'];
+        if (!$user) {
+            return response()->json(['message' => "User not found"]);
         }
 
-        return $user;
+        if (!$authorized) {
+            return response()->json(['message' => 'Incorrect Password'], 401);
+        }
+
+        if (!$user->email_verified) {
+            return response()->json(['message' => 'E-mail not verified yet!'], 403);
+        }
+
+        $token = $user->createToken($request->email)->plainTextToken;
+        return response()->json(['token' => $token, 'user' => $user], 200);
     }
 
     public function logout(Request $request)
     {
         $request->user()->tokens()->delete();
 
-        return [
+        return response()->json([
             'message' => 'You are logged out.'
-        ];
+        ], 200);
     }
 }

@@ -20,6 +20,13 @@ class UserController extends Controller
         return $users;
     }
 
+    public function verifyEmail($id) {
+        
+    }
+
+    public function verifyEmailAgain($id) {}
+
+
     public function destroy($id)
     {
         $user = User::find($id);
