@@ -7,6 +7,8 @@ export type RootStackParamList = {
   Home: undefined;
   UserDetails: undefined;
   VerifyEmail: undefined;
+  SendRecoverPassword: undefined;
+  VerifyRecoverPassword: undefined;
 };
 
 export type AppNavigationProp = NavigationProp<RootStackParamList>;

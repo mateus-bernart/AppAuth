@@ -32,3 +32,5 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/email/send-otp', [EmailVerificationController::class, 'sendOtp']);
 Route::post('/email/verify-otp', [EmailVerificationController::class, 'verifyOtp']);
+Route::post('/user/send-recover-password', [EmailVerificationController::class, 'sendRecoverPassword']);
+Route::post('/user/confirm-recover-password', [EmailVerificationController::class, 'recoverPasswordConfirmation']);

@@ -17,47 +17,16 @@ import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
 import axiosInstance from '../../services/api';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import SubmitButton from '../../component/SubmitButton';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
   const [emailToVerify, setEmailToVerify] = useState('');
   const [emailIsVerified, setEmailIsVerified] = useState(false);
 
   const handleNavigation = (screen, values) => {
     navigation.navigate(screen, values);
-  };
-
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
   };
 
   const {
@@ -169,7 +138,6 @@ const Login = () => {
           <View style={styles.formContainerField}>
             <Text style={styles.formTitle}>Password</Text>
           </View>
-
           <CustomInput
             rules={{required: 'Please insert your password'}}
             control={control}
@@ -178,29 +146,28 @@ const Login = () => {
             secureTextEntry
             iconRight
           />
+          <TouchableOpacity
+            onPress={() => navigation.navigate('SendRecoverPassword')}>
+            <View style={styles.formFooter}>
+              <Text style={styles.footerText}>
+                Forgot your password?{' '}
+                <Text style={styles.footerTextHighlighted}>Click here</Text>
+              </Text>
+            </View>
+          </TouchableOpacity>
+
+          <SubmitButton
+            text="Sign in"
+            onButtonPressed={handleSubmit(onLoginPressed)}
+          />
 
           <View style={styles.formFooter}>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.createAccountText}>
+              <Text style={styles.footerText}>
                 Don't have an account?{' '}
-                <Text style={styles.textRegister}>Register</Text>
+                <Text style={styles.footerTextHighlighted}>Register</Text>
               </Text>
             </TouchableOpacity>
-          </View>
-          <View style={{position: 'relative', marginTop: 20}}>
-            <View style={styles.shadowContainer} />
-            <Pressable
-              onPress={handleSubmit(onLoginPressed)}
-              onPressIn={handlePressIn}
-              onPressOut={handlePressOut}>
-              <Animated.View
-                style={[
-                  styles.buttonContainer,
-                  {transform: [{translateX}, {translateY}]},
-                ]}>
-                <Text style={styles.buttonText}>Sign in</Text>
-              </Animated.View>
-            </Pressable>
           </View>
         </View>
         <View style={styles.imageFooter}>
@@ -242,13 +209,13 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     marginBottom: 20,
   },
-  createAccountText: {
+  footerText: {
     marginTop: 10,
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     color: 'gray',
   },
-  textRegister: {
+  footerTextHighlighted: {
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
     color: 'blue',
@@ -259,7 +226,6 @@ const styles = StyleSheet.create({
     marginTop: 150,
   },
   formFooter: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
   },
   formInput: {
