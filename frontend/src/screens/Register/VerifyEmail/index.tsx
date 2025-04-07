@@ -57,16 +57,25 @@ const VerifyEmail = ({route}) => {
 
   const verifyOtp = async () => {
     try {
-      const response = await axiosInstance.post('/email/verify-otp', {
-        otp,
-        userEmail,
-      });
-      toast.show('Email verified.', {
-        type: 'success',
-        placement: 'top',
-      });
+      await axiosInstance
+        .post('/email/verify-otp', {
+          otp,
+          email: userEmail,
+        })
+        .then(response => {
+          console.log(response);
+          toast.show('Email verified.', {
+            type: 'success',
+            placement: 'top',
+          });
+        });
+
       navigation.navigate('Login');
     } catch (error) {
+      toast.show(error.response.data.message, {
+        type: 'danger',
+        placement: 'top',
+      });
       console.log(error.response.data);
     }
   };
@@ -76,8 +85,7 @@ const VerifyEmail = ({route}) => {
       <TouchableOpacity
         style={styles.header}
         onPress={() => {
-          //TODO: put goBack()
-          navigation.navigate('Register');
+          navigation.goBack();
         }}>
         <IconFontAwesome name="chevron-left" size={30} />
         <Text style={styles.headerTextContainer}>Verify email</Text>

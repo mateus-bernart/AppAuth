@@ -24,7 +24,7 @@ class EmailVerificationController extends Controller
 
         try {
             Mail::raw("Your CODE (OTP) is: $otp", function ($message) use ($user) {
-                $message->to('mateus.bernart@coperdia.com.br')->subject("Your Code for Email Verification");
+                $message->to($user->email)->subject("Your Code for Email Verification");
             });
         } catch (\Throwable $th) {
             return response()->json($th->getMessage());
@@ -35,17 +35,21 @@ class EmailVerificationController extends Controller
 
     public function verifyOtp(Request $request)
     {
-
         $request->validate([
             'otp' => 'required|numeric|digits:4'
         ]);
 
         $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 400);
+        }
+
         if ($user->otp === $request->otp) {
             $user->email_verified = true;
             $user->otp = null;
             $user->save();
-            return response()->json(['message' => 'Email verified successfully']);
+            return response()->json(['message' => 'Email verified successfully'], 200);
         }
 
         return response()->json(['message' => 'Invalid OTP'], 400);

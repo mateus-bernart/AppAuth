@@ -16,14 +16,19 @@ import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
 import axiosInstance from '../../services/api';
+import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
-
+  const [emailToVerify, setEmailToVerify] = useState('');
   const [emailIsVerified, setEmailIsVerified] = useState(false);
+
+  const handleNavigation = (screen, values) => {
+    navigation.navigate(screen, values);
+  };
 
   const handlePressIn = () => {
     Animated.parallel([
@@ -63,6 +68,17 @@ const Login = () => {
 
   const {startSession} = useAuth();
 
+  const sendOtp = async email => {
+    try {
+      const response = await axiosInstance.post('/email/send-otp', {
+        email,
+      });
+      console.log(response.data);
+    } catch (error) {
+      console.log(error.response.data);
+    }
+  };
+
   const onLoginPressed = async data => {
     try {
       const response = await axiosInstance.post('/login', data, {
@@ -70,8 +86,6 @@ const Login = () => {
           'Content-Type': 'application/json',
         },
       });
-
-      console.log(response);
 
       startSession(
         {
@@ -83,10 +97,36 @@ const Login = () => {
       );
 
       toast.show('Logged In', {type: 'success', placement: 'top'});
-      
     } catch (error) {
-      console.log(error);
-      toast.show('Invalid Credentials', {type: 'danger', placement: 'top'});
+      if (error.response) {
+        console.log('Error response data: ', error.response.data);
+        console.log('Status: ', error.response.status);
+
+        if (error.response.status === 403) {
+          toast.show(error.response.data.message || 'Email not verified.', {
+            type: 'danger',
+            placement: 'top',
+          });
+          setEmailIsVerified(false);
+          setEmailToVerify(error.response.data.email);
+        } else if (error.response.status === 401) {
+          toast.show(error.response.data.message || 'Incorrect Credentials.', {
+            type: 'danger',
+            placement: 'top',
+          });
+        } else {
+          toast.show(error.response.data.message || 'Login Failed.', {
+            type: 'danger',
+            placement: 'top',
+          });
+        }
+      } else {
+        console.log('Login Error: ', error.message);
+        toast.show('Something went wrong', {
+          type: 'danger',
+          placement: 'top',
+        });
+      }
     }
   };
 
@@ -97,7 +137,27 @@ const Login = () => {
           <Text style={styles.title}>Login</Text>
         </View>
         <View style={styles.formContainer}>
-          <Text style={styles.formTitle}>E-mail</Text>
+          <View style={styles.formContainerField}>
+            <Text style={styles.formTitle}>Email</Text>
+            <TouchableOpacity
+              onPress={() => {
+                handleNavigation('VerifyEmail', {
+                  userEmail: emailToVerify,
+                });
+                sendOtp(emailToVerify);
+              }}>
+              {emailToVerify && (
+                <View style={{flexDirection: 'row', gap: 10}}>
+                  <Text style={styles.verifyEmailText}>Go to verify email</Text>
+                  <IconFontAwesome
+                    name="chevron-right"
+                    size={20}
+                    color="green"
+                  />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
           <CustomInput
             rules={{required: 'Please insert your email'}}
             control={control}
@@ -106,7 +166,10 @@ const Login = () => {
             secureTextEntry={false}
             keyboardType="email-address"
           />
-          <Text style={styles.formTitle}>Password</Text>
+          <View style={styles.formContainerField}>
+            <Text style={styles.formTitle}>Password</Text>
+          </View>
+
           <CustomInput
             rules={{required: 'Please insert your password'}}
             control={control}
@@ -115,6 +178,7 @@ const Login = () => {
             secureTextEntry
             iconRight
           />
+
           <View style={styles.formFooter}>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
               <Text style={styles.createAccountText}>
@@ -157,8 +221,18 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 50,
   },
-  formTitle: {
+  verifyEmailText: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 16,
+    color: 'green',
+  },
+  formContainerField: {
     marginTop: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  formTitle: {
     fontSize: 20,
     color: 'black',
     fontFamily: 'Poppins-Bold',

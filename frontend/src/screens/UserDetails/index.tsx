@@ -193,8 +193,6 @@ const UserDetails = ({route}) => {
           street: response.data.street,
           street_number: response.data.street_number,
         });
-        
-        console.log(response.data.street_number);
 
         if (response.data.image) {
           const imageUrl = `${BASE_URL}/storage/profile_images/${response.data.image}`;

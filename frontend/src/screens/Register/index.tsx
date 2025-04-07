@@ -28,7 +28,7 @@ const Register = () => {
   const toast = useToast();
   const {isAuthenticated} = useAuth();
   const [iconDirection, setIconDirection] = useState(false);
-  const [emailToVerify, setEmailToVerify] = useState('');
+  const [emailToVerify, setEmailToVerify] = useState();
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
   const isFocused = useIsFocused();
@@ -112,11 +112,9 @@ const Register = () => {
               placement: 'top',
             });
             setEmailToVerify(data.email);
-          } else {
-            navigation.navigate('Home');
           }
         } else {
-          toast.show('Fail to register user', {
+          toast.show('Fail to register user, please check Wi-fi connection.', {
             type: 'danger',
             placement: 'top',
           });
@@ -141,7 +139,7 @@ const Register = () => {
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => {
-              navigation.navigate('Login');
+              navigation.goBack();
             }}>
             <IconFontAwesome name="chevron-left" size={30} />
           </TouchableOpacity>
@@ -185,13 +183,28 @@ const Register = () => {
                 />
               </View>
               <View style={styles.containerInfo}>
-                <Text style={styles.formTitle}>Email</Text>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleNavigation('VerifyEmail', {userEmail: emailToVerify});
-                  }}>
-                  <Text>go to verify email</Text>
-                </TouchableOpacity>
+                <View style={styles.emailHeaderContainer}>
+                  <Text style={styles.formTitle}>Email</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleNavigation('VerifyEmail', {
+                        userEmail: emailToVerify,
+                      });
+                    }}>
+                    {emailToVerify && (
+                      <View style={{flexDirection: 'row', gap: 10}}>
+                        <Text style={styles.verifyEmailText}>
+                          Go to verify email
+                        </Text>
+                        <IconFontAwesome
+                          name="chevron-right"
+                          size={20}
+                          color="green"
+                        />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
                 <CustomInput
                   rules={{required: 'Email is required'}}
                   control={control}
@@ -363,6 +376,11 @@ const styles = StyleSheet.create({
   scrollView: {
     marginHorizontal: 20,
   },
+  emailHeaderContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   container: {
     flex: 1,
     justifyContent: 'center',
@@ -388,6 +406,11 @@ const styles = StyleSheet.create({
   },
   textHeader: {
     alignSelf: 'center',
+  },
+  verifyEmailText: {
+    fontSize: 16,
+    fontFamily: 'Poppins-Bold',
+    color: 'green',
   },
   addressContainerHeader: {
     gap: 5,
@@ -419,11 +442,11 @@ const styles = StyleSheet.create({
     flexWrap: 'wrap',
   },
   containerInfo: {
+    marginTop: 10,
     width: '100%',
   },
   formTitle: {
     fontSize: 16,
-    marginTop: 10,
     alignItems: 'center',
     color: 'black',
     fontFamily: 'Poppins-Bold',

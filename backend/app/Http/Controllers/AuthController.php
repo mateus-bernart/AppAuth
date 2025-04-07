@@ -53,7 +53,7 @@ class AuthController extends Controller
         }
 
         if (!$user->email_verified) {
-            return response()->json(['message' => 'E-mail not verified yet!'], 403);
+            return response()->json(['message' => 'E-mail not verified yet!', 'email' => $request->email], 403);
         }
 
         $token = $user->createToken($request->email)->plainTextToken;
