@@ -66,13 +66,13 @@ const CustomInput: React.FC<CustomInputProps> = ({
             style={[
               textStyle ? null : styles.inputFieldContainer,
               {borderColor: error ? 'red' : 'black'},
-              {borderWidth: error ? 1 : 0},
+              {borderWidth: error ? 1.5 : 0},
             ]}>
             {iconLeft && (
               <IconFontAwesome
                 name={iconLeft}
                 size={20}
-                style={styles.iconLeft}
+                style={[styles.iconLeft, {color: error ? 'red' : 'black'}]}
               />
             )}
             <TextInput

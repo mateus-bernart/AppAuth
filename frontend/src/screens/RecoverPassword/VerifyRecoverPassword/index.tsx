@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import CustomInput from '../../../component/CustomInput';
 import SubmitButton from '../../../component/SubmitButton';
@@ -15,37 +15,83 @@ import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import axiosInstance from '../../../services/api';
+import {useToast} from 'react-native-toast-notifications';
+import dayjs from 'dayjs';
 
 const VerifyRecoverPassword = ({route}) => {
   const {control, handleSubmit} = useForm();
   const navigation = useNavigation<AppNavigationProp>();
-  const {userEmail} = route?.params || {};
+  const {email} = route?.params || {};
+  const [timeLeft, setTimeLeft] = useState('');
 
-  setTimeout(() => {
-    console.log(userEmail);
-  }, 400);
+  const toast = useToast();
 
-  // const handleNavigation = (screen, values) => {
-  //   navigation.navigate(screen, values);
-  // };
+  useEffect(() => {
+    let interval;
 
-  const onVerifyRecoverPasswordPressed = data => {
+    const fetchExpiration = async () => {
+      try {
+        const response = await axiosInstance.post('/user/check-otp-timeout', {
+          email: email,
+        });
+
+        const expiresAt = dayjs(response.data.expires_at);
+
+        interval = setInterval(() => {
+          const now = dayjs();
+          const diff = expiresAt.diff(now, 'second');
+
+          if (diff < 0) {
+            clearInterval(interval);
+            setTimeLeft('Expired');
+          } else {
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+          }
+        }, 1000);
+      } catch (error) {
+        setTimeLeft('Could not fetch expiration');
+        console.log(error.response);
+      }
+    };
+
+    fetchExpiration();
+    return () => clearInterval(interval);
+  }, [email]);
+
+  const onVerifyRecoverPasswordPressed = async data => {
     try {
-      const response = axiosInstance.post('/user/confirm-recover-password', {
-        email: userEmail,
-        password: data.password,
+      const response = await axiosInstance.post(
+        '/user/confirm-recover-password',
+        {
+          email: email,
+          password: data.password,
+          password_confirmation: data.password_confirmation,
+          code: data.code,
+        },
+      );
+      toast.show(response.data.message, {
+        type: 'success',
+        placement: 'top',
       });
-      console.log(response);
+      navigation.navigate('Login');
     } catch (error) {
       console.log(error.response);
+      toast.show(error.response.data.message, {
+        type: 'danger',
+        placement: 'top',
+      });
     }
   };
 
+  const sendCodeAgain = () => {};
+
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{flex: 1}}>
-      <SafeAreaView style={{flex: 1}}>
+    <SafeAreaView style={{flex: 1}}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{flex: 1}}>
         <View style={styles.headerNavigation}>
           <TouchableOpacity
             onPress={() => {
@@ -83,24 +129,61 @@ const VerifyRecoverPassword = ({route}) => {
             />
           </View>
           <View style={styles.inputContainer}>
-            <Text style={styles.formText}>Email</Text>
+            <Text style={styles.formText}>Confirm Password</Text>
             <CustomInput
-              rules={{required: 'Email is required'}}
+              rules={{required: 'Confirm password is required'}}
               control={control}
-              name="confirm_password"
-              placeholder="Confirm new password"
+              name="password_confirmation"
+              placeholder="Enter password confirmation"
               secureTextEntry
               iconRight
               iconLeft="lock"
             />
           </View>
+          <View style={styles.timeoutContainer}>
+            <Text style={styles.timeOutText}>Time to timeout code:</Text>
+            <Text
+              style={[
+                styles.timeOutText,
+                styles.timeOutTextHighlighted,
+                {
+                  backgroundColor:
+                    timeLeft === 'Expired' ? '#f0000075' : '#0c91007f',
+                },
+                {
+                  color: timeLeft === 'Expired' ? '#fff' : '#000',
+                },
+              ]}>
+              {timeLeft}
+            </Text>
+          </View>
           <SubmitButton
             onButtonPressed={handleSubmit(onVerifyRecoverPasswordPressed)}
-            text="Reset Password"
+            text="Confirm Password"
           />
+          {timeLeft === 'Expired' ? (
+            <TouchableOpacity
+              onPress={() => {
+                sendCodeAgain();
+              }}>
+              <View style={{marginTop: 20}}>
+                {timeLeft && (
+                  <Text style={styles.descriptionText}>
+                    Need to resend the code?{' '}
+                    <Text
+                      style={[styles.descriptionText, styles.highLightedText]}>
+                      Send again
+                    </Text>
+                  </Text>
+                )}
+              </View>
+            </TouchableOpacity>
+          ) : (
+            ''
+          )}
         </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 };
 
@@ -112,10 +195,27 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginHorizontal: 30,
   },
+  highLightedText: {
+    color: 'blue',
+    fontFamily: 'Poppins-Bold',
+  },
   descriptionText: {
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     alignSelf: 'center',
+  },
+  timeOutText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
+    alignSelf: 'center',
+  },
+  timeOutTextHighlighted: {
+    fontSize: 30,
+    padding: 10,
+    borderRadius: 8,
+  },
+  timeoutContainer: {
+    marginVertical: 20,
   },
   formText: {
     fontSize: 16,

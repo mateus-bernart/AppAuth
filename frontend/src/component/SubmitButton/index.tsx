@@ -37,7 +37,7 @@ const SubmitButton = ({text, onButtonPressed}) => {
   };
 
   return (
-    <View style={{position: 'relative', marginTop: 20}}>
+    <View style={{position: 'relative'}}>
       <View style={styles.shadowContainer} />
       <Pressable
         onPress={onButtonPressed}
@@ -62,13 +62,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#084700',
     position: 'absolute',
     left: -5,
-    top: 25,
+    top: 5,
     width: '100%',
     borderRadius: 8,
     padding: 31,
   },
   buttonContainer: {
-    marginTop: 20,
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'green',

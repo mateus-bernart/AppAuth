@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
     color: 'green',
   },
   formContainerField: {
-    marginTop: 20,
+    marginTop: 10,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -210,7 +210,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   footerText: {
-    marginTop: 10,
     fontSize: 15,
     fontFamily: 'Poppins-Medium',
     color: 'gray',
@@ -226,6 +225,7 @@ const styles = StyleSheet.create({
     marginTop: 150,
   },
   formFooter: {
+    marginVertical: 20,
     justifyContent: 'space-between',
   },
   formInput: {

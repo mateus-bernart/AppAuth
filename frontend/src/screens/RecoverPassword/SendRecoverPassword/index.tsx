@@ -1,4 +1,5 @@
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -6,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm} from 'react-hook-form';
 import CustomInput from '../../../component/CustomInput';
@@ -15,11 +16,13 @@ import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import axiosInstance from '../../../services/api';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import {useToast} from 'react-native-toast-notifications';
 
 const SendRecoverPassword = () => {
-  const {control, handleSubmit} = useForm();
-  const [userEmail, setUserEmail] = useState('');
+  const {control, handleSubmit, setError} = useForm();
+  const [email, setEmail] = useState('');
   const navigation = useNavigation<AppNavigationProp>();
+  const toast = useToast();
 
   const handleNavigation = (screen, values) => {
     navigation.navigate(screen, values);
@@ -30,53 +33,67 @@ const SendRecoverPassword = () => {
       const response = await axiosInstance.post('/user/send-recover-password', {
         email: data.email,
       });
+      setEmail(data.email);
+
       console.log(response.data);
-      setUserEmail(response.data.email);
+      toast.show(response.data.message, {
+        type: 'success',
+        placement: 'top',
+      });
+      handleNavigation('VerifyRecoverPassword', {
+        email: data.email,
+      });
     } catch (error) {
+      if (error.response?.status === 404) {
+        setError('email', {
+          type: 'manual',
+          message: "We couldn't find an account with that email.",
+        });
+      }
       console.log(error.response);
     }
-
-    handleNavigation('VerifyRecoverPassword', {userEmail: userEmail});
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      style={{flex: 1}}>
-      <SafeAreaView style={{flex: 1}}>
-        <View style={styles.headerNavigation}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <IconFontAwesome name="chevron-left" size={30} />
-          </TouchableOpacity>
+    <SafeAreaView style={{flex: 1}}>
+      <View style={styles.headerNavigation}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.goBack();
+          }}>
+          <IconFontAwesome name="chevron-left" size={30} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.body}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Recover Password</Text>
         </View>
-        <View style={styles.body}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Recover Password</Text>
-          </View>
-          <Text style={styles.descriptionText}>
-            Enter your email address below to reset your password.
-          </Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.formText}>Email</Text>
-            <CustomInput
-              rules={{required: 'Email is required'}}
-              control={control}
-              name="email"
-              placeholder="you@example.com"
-              keyboardType="email-address"
-              iconLeft="envelope"
-            />
-          </View>
-          <SubmitButton
-            onButtonPressed={handleSubmit(onRecoverPasswordPressed)}
-            text="Submit"
+        <Text style={styles.descriptionText}>
+          Enter your email address below to reset your password.
+        </Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.formText}>Email</Text>
+          <CustomInput
+            rules={{required: 'Email is required'}}
+            control={control}
+            name="email"
+            placeholder="you@example.com"
+            keyboardType="email-address"
+            iconLeft="envelope"
           />
         </View>
-      </SafeAreaView>
-    </KeyboardAvoidingView>
+        <SubmitButton
+          onButtonPressed={handleSubmit(onRecoverPasswordPressed)}
+          text="Submit"
+        />
+        <View style={styles.imageFooter}>
+          <Image
+            source={require('../../../assets/Resetpassword-bro.png')}
+            style={{height: 400, width: 400}}
+          />
+        </View>
+      </View>
+    </SafeAreaView>
   );
 };
 
@@ -84,9 +101,15 @@ export default SendRecoverPassword;
 
 const styles = StyleSheet.create({
   body: {
+    marginTop: 20,
     flex: 1,
     justifyContent: 'center',
     marginHorizontal: 30,
+  },
+  imageFooter: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   descriptionText: {
     fontSize: 15,
@@ -106,7 +129,7 @@ const styles = StyleSheet.create({
     fontSize: 30,
     fontFamily: 'Poppins-Bold',
   },
-  inputContainer: {marginTop: 20},
+  inputContainer: {marginVertical: 20},
   headerNavigation: {
     marginHorizontal: 30,
     marginVertical: 10,
