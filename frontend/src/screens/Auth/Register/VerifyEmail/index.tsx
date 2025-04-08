@@ -9,12 +9,12 @@ import {
 } from 'react-native';
 import React, {useRef, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useNavigation} from '@react-navigation/native';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import {OtpInput} from 'react-native-otp-entry';
-import axiosInstance from '../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
+import {AppNavigationProp} from '../../../../types/navigationTypes';
+import axiosInstance from '../../../../services/api';
 
 const VerifyEmail = ({route}) => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -92,7 +92,7 @@ const VerifyEmail = ({route}) => {
       </TouchableOpacity>
       <View style={styles.body}>
         <Image
-          source={require('../../../assets/Newmessage-bro.png')}
+          source={require('../../../../assets/Newmessage-bro.png')}
           style={{height: 300, width: 400}}
         />
         <View style={styles.messageEmailContainer}>

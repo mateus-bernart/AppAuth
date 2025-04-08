@@ -10,13 +10,13 @@ import {
 import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm} from 'react-hook-form';
-import CustomInput from '../../../component/CustomInput';
-import SubmitButton from '../../../component/SubmitButton';
 import {useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../../types/navigationTypes';
-import axiosInstance from '../../../services/api';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useToast} from 'react-native-toast-notifications';
+import CustomInput from '../../../../component/CustomInput';
+import SubmitButton from '../../../../component/SubmitButton';
+import {AppNavigationProp} from '../../../../types/navigationTypes';
+import axiosInstance from '../../../../services/api';
 
 const SendRecoverPassword = () => {
   const {control, handleSubmit, setError} = useForm();
@@ -88,7 +88,7 @@ const SendRecoverPassword = () => {
         />
         <View style={styles.imageFooter}>
           <Image
-            source={require('../../../assets/Resetpassword-bro.png')}
+            source={require('../../../../assets/Resetpassword-bro.png')}
             style={{height: 400, width: 400}}
           />
         </View>

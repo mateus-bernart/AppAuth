@@ -8,15 +8,15 @@ import {
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import CustomInput from '../../../component/CustomInput';
-import SubmitButton from '../../../component/SubmitButton';
 import {useForm} from 'react-hook-form';
 import {useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../../types/navigationTypes';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
-import axiosInstance from '../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import dayjs from 'dayjs';
+import CustomInput from '../../../../component/CustomInput';
+import SubmitButton from '../../../../component/SubmitButton';
+import {AppNavigationProp} from '../../../../types/navigationTypes';
+import axiosInstance from '../../../../services/api';
 
 const VerifyRecoverPassword = ({route}) => {
   const {control, handleSubmit} = useForm();

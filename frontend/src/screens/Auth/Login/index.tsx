@@ -11,13 +11,13 @@ import {
 import React, {useRef, useState} from 'react';
 import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
-import CustomInput from '../../component/CustomInput';
 import {useToast} from 'react-native-toast-notifications';
-import {AppNavigationProp} from '../../types/navigationTypes';
-import {useAuth} from '../../providers/AuthProvider';
-import axiosInstance from '../../services/api';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
-import SubmitButton from '../../component/SubmitButton';
+import CustomInput from '../../../component/CustomInput';
+import {AppNavigationProp} from '../../../types/navigationTypes';
+import {useAuth} from '../../../providers/AuthProvider';
+import axiosInstance from '../../../services/api';
+import SubmitButton from '../../../component/SubmitButton';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -172,7 +172,7 @@ const Login = () => {
         </View>
         <View style={styles.imageFooter}>
           <Image
-            source={require('../../assets/Login-bro.png')}
+            source={require('../../../assets/Login-bro.png')}
             style={{height: 300, width: 400}}
           />
         </View>

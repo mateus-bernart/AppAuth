@@ -14,18 +14,18 @@ class UserController extends Controller
 {
     public function __construct(private User $user) {}
 
-    public function getAll()
+    public function getAll(Request $request)
     {
-        $users = User::select('id', 'name', 'email', 'image')->get();
-        return $users;
+        $term = $request->query('q');
+        if ($term) {
+            return
+                User::where('name', 'like', "%{$term}%")
+                ->orWhere('email', 'like', "%{$term}%")
+                ->get();
+        }
+
+        return User::all();
     }
-
-    public function verifyEmail($id) {
-        
-    }
-
-    public function verifyEmailAgain($id) {}
-
 
     public function destroy($id)
     {

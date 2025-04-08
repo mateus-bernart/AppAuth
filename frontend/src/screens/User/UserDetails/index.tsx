@@ -16,9 +16,7 @@ import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import {useAuth} from '../../providers/AuthProvider';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../types/navigationTypes';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useToast} from 'react-native-toast-notifications';
 import {
@@ -27,9 +25,11 @@ import {
   MediaType,
 } from 'react-native-image-picker';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import axiosInstance from '../../services/api';
-import CustomInput from '../../component/CustomInput';
 import {useForm} from 'react-hook-form';
+import {useAuth} from '../../../providers/AuthProvider';
+import {AppNavigationProp} from '../../../types/navigationTypes';
+import axiosInstance from '../../../services/api';
+import CustomInput from '../../../component/CustomInput';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 

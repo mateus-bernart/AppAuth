@@ -9,15 +9,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {use, useEffect, useState} from 'react';
+import React, {use, useCallback, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
-import Header from '../../component/Header';
-import {useAuth} from '../../providers/AuthProvider';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../types/navigationTypes';
-import axiosInstance from '../../services/api';
+import Header from '../../../component/Header';
+import {useAuth} from '../../../providers/AuthProvider';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
+import {AppNavigationProp} from '../../../types/navigationTypes';
+import axiosInstance from '../../../services/api';
+import CustomInput from '../../../component/CustomInput';
+import {useForm} from 'react-hook-form';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -30,25 +32,28 @@ interface User {
   image: string;
 }
 
-const Home = () => {
+const UserManagement = () => {
   const toast = useToast();
   const [userList, setUserList] = useState<User[]>([]);
-  const isFocused = useIsFocused();
   const navigation = useNavigation<AppNavigationProp>();
+  const {endSession, session} = useAuth();
+
+  const {control, watch} = useForm();
+
+  const searchTerm = watch('term');
 
   const handleNavigation = (screens, params = {}) => {
     navigation.navigate(screens, params);
   };
 
-  const {endSession, session} = useAuth();
-
-  const fetchUsers = () => {
+  const fetchUsers = async () => {
     try {
-      axiosInstance.get<User[]>('/users').then(response => {
-        setUserList(response.data);
-      });
+      const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
+      const response = await axiosInstance.get<User[]>(`/users${query}`);
+      setUserList(response.data);
     } catch (error) {
-      if (error.status === 401) {
+      console.log('Error fetching users:', error);
+      if (error.response?.status === 401) {
         toast.show('Unauthorized', {placement: 'top', type: 'danger'});
         endSession();
       }
@@ -77,13 +82,25 @@ const Home = () => {
       {text: 'DELETE', onPress: () => deleteUser(id)},
     ]);
 
-  useEffect(() => {
-    fetchUsers();
-  }, [isFocused]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUsers();
+    }, [searchTerm]),
+  );
 
   return (
     <SafeAreaView style={styles.body}>
       <Header />
+      <View style={styles.searchUserContainer}>
+        <View style={styles.searchUser}>
+          <CustomInput
+            control={control}
+            name="term"
+            placeholder="Search by the name / email."
+            iconLeft="search"
+          />
+        </View>
+      </View>
       <FlatList
         data={userList.filter(user => user.id != session?.userId)}
         renderItem={({item}) => {
@@ -132,7 +149,7 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default UserManagement;
 
 const styles = StyleSheet.create({
   body: {
@@ -142,6 +159,18 @@ const styles = StyleSheet.create({
     height: 50,
     width: 50,
     borderRadius: 12,
+  },
+  searchUserContainer: {
+    backgroundColor: '#108b00be',
+    padding: 10,
+  },
+  searchUser: {
+    marginHorizontal: 10,
+  },
+  searchUserText: {
+    fontSize: 16,
+    color: 'white',
+    fontFamily: 'Poppins-Medium',
   },
   itemContainer: {
     flexDirection: 'row',

@@ -12,14 +12,14 @@ import {
 import React, {useEffect, useRef, useState} from 'react';
 import {useIsFocused, useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
-import CustomInput from '../../component/CustomInput';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import {AppNavigationProp} from '../../types/navigationTypes';
-import {useAuth} from '../../providers/AuthProvider';
-import axiosInstance from '../../services/api';
 import {SafeAreaView} from 'react-native-safe-area-context';
+import CustomInput from '../../../component/CustomInput';
+import {AppNavigationProp} from '../../../types/navigationTypes';
+import {useAuth} from '../../../providers/AuthProvider';
+import axiosInstance from '../../../services/api';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
