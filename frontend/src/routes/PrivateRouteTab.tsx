@@ -1,7 +1,7 @@
 import React from 'react';
 import Register from '../screens/Auth/Register';
 import UserDetails from '../screens/User/UserDetails';
-import Home from '../screens/Home';
+import Home from '../screens/Branches';
 import UserManagement from '../screens/User/UserManagement';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
@@ -58,7 +58,7 @@ const PrivateRouteTabs = () => {
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
               <IconFontAwesome name="home" size={25} color={color} />
-              <Text style={styles.textContainer}>Home</Text>
+              <Text style={styles.textContainer}>Branches</Text>
             </View>
           ),
         }}
@@ -70,7 +70,7 @@ const PrivateRouteTabs = () => {
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
               <IconFontAwesome name="file-alt" size={25} color={color} />
-              <Text style={styles.textContainer}>Manage</Text>
+              <Text style={styles.textContainer}>Users</Text>
             </View>
           ),
         }}

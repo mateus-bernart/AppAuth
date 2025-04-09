@@ -403,6 +403,7 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     borderTopLeftRadius: 20,
     backgroundColor: 'lightgray',
+    height: 180,
   },
   textHeader: {
     alignSelf: 'center',

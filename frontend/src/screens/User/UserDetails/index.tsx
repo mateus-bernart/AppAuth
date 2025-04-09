@@ -444,7 +444,8 @@ const styles = StyleSheet.create({
   editButtonContainer: {
     position: 'absolute',
     bottom: 0,
-    margin: 30,
+    marginBottom: 100,
+    marginRight: 10,
     alignSelf: 'flex-end',
   },
   containerName: {
