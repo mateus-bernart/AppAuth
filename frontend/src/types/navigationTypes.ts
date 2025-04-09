@@ -9,6 +9,7 @@ export type RootStackParamList = {
   VerifyEmail: undefined;
   SendRecoverPassword: undefined;
   VerifyRecoverPassword: undefined;
+  UserManagement: undefined;
 };
 
 export type AppNavigationProp = NavigationProp<RootStackParamList>;

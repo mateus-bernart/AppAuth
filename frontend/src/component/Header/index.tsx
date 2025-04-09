@@ -29,6 +29,12 @@ const Header = () => {
         }>
         <IconFontAwesome name="user-alt" size={30} style={styles.iconProfile} />
       </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() =>
+          handleNavigation('UserManagement', {userId: session?.userId})
+        }>
+        <IconFontAwesome name="user-alt" size={30} style={styles.iconProfile} />
+      </TouchableOpacity>
       <Text style={styles.textHeader}>USER MANAGEMENT</Text>
       <TouchableOpacity onPress={() => navigation.navigate('Register')}>
         <IconFontAwesome

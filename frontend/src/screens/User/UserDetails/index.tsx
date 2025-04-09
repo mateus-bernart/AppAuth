@@ -11,12 +11,11 @@ import {
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
-import React, {useEffect, useRef, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useIsFocused} from '@react-navigation/native';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useToast} from 'react-native-toast-notifications';
 import {
@@ -27,44 +26,28 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm} from 'react-hook-form';
 import {useAuth} from '../../../providers/AuthProvider';
-import {AppNavigationProp} from '../../../types/navigationTypes';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../component/CustomInput';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
-type UserInfoProps = {
-  id: number;
-  name: string;
-  email: string;
-  phone_number: string;
-  street: string;
-  neighborhood: string;
-  street_number: string;
-  image?: string;
-};
-
 const UserDetails = ({route}) => {
   const {session, endSession} = useAuth();
-  const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [modalCameraVisible, setModalCameraVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
-  const {userId} = route?.params || {};
+
+  const userId = route?.params?.userId ?? session?.userId;
+
   const isFocused = useIsFocused();
   const [editable, setEditable] = useState(false);
 
   const inputForm = useRef<TextInput>(null);
-
   const handleFocusInputForm = () => {
     inputForm.current?.focus();
   };
 
   const endpoint = `/user/${userId}`;
-
-  const handleBack = () => {
-    navigation.goBack();
-  };
 
   const handleLogout = () => {
     endSession();
@@ -238,9 +221,14 @@ const UserDetails = ({route}) => {
     }
   }, [editable]);
 
-  useEffect(() => {
-    fetchUserInfo();
-  }, [isFocused]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchUserInfo();
+      console.log('Screen is focused');
+    }, []),
+  );
+
+  useEffect(() => {}, [isFocused]);
 
   const {control, reset, handleSubmit, setValue, watch} = useForm({
     defaultValues: {
@@ -302,11 +290,6 @@ const UserDetails = ({route}) => {
         {/* ================ HEADER ============= */}
 
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.iconHeader}
-            onPress={() => handleBack()}>
-            <IconFontAwesome name="chevron-left" size={30} />
-          </TouchableOpacity>
           <Text style={styles.headerText}>User Details</Text>
           <TouchableOpacity
             onPress={() => handleLogout()}

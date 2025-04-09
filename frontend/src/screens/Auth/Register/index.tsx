@@ -134,14 +134,16 @@ const Register = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            onPress={() => {
-              navigation.goBack();
-            }}>
-            <IconFontAwesome name="chevron-left" size={30} />
-          </TouchableOpacity>
-        </View>
+        {!isAuthenticated && (
+          <View style={styles.header}>
+            <TouchableOpacity
+              onPress={() => {
+                navigation.goBack();
+              }}>
+              <IconFontAwesome name="chevron-left" size={30} />
+            </TouchableOpacity>
+          </View>
+        )}
         <ScrollView
           contentContainerStyle={styles.scrollView}
           keyboardShouldPersistTaps="handled"

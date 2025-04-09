@@ -90,7 +90,6 @@ const UserManagement = () => {
 
   return (
     <SafeAreaView style={styles.body}>
-      <Header />
       <View style={styles.searchUserContainer}>
         <View style={styles.searchUser}>
           <CustomInput
@@ -154,6 +153,13 @@ export default UserManagement;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
+  },
+  header: {
+    marginHorizontal: 30,
+    marginVertical: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
   },
   profilePicture: {
     height: 50,
