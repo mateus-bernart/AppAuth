@@ -224,11 +224,8 @@ const UserDetails = ({route}) => {
   useFocusEffect(
     useCallback(() => {
       fetchUserInfo();
-      console.log('Screen is focused');
     }, []),
   );
-
-  useEffect(() => {}, [isFocused]);
 
   const {control, reset, handleSubmit, setValue, watch} = useForm({
     defaultValues: {

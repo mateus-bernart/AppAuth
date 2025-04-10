@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\UserUpdateRequest;
+use App\Models\Branch;
+use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -14,7 +16,7 @@ class UserController extends Controller
 {
     public function __construct(private User $user) {}
 
-    public function getAll(Request $request)
+    public function getAllUsers(Request $request)
     {
         $term = $request->query('q');
         if ($term) {
@@ -25,6 +27,19 @@ class UserController extends Controller
         }
 
         return User::all();
+    }
+
+    public function getAllBranches(Request $request)
+    {
+        $term = $request->query('q');
+        if ($term) {
+            return
+                Branch::where('code', 'like', "%{$term}%")
+                ->orWhere('description', 'like', "%{$term}%")
+                ->get();
+        }
+
+        return Branch::all();
     }
 
     public function destroy($id)
@@ -45,6 +60,13 @@ class UserController extends Controller
     public function getUser($id)
     {
         return User::find($id);
+    }
+
+    public function getBranch($id)
+    {
+        $branch = Branch::find($id);
+
+        return response()->json(['branch' => $branch]);
     }
 
     public function uploadImage(Request $request, $id)

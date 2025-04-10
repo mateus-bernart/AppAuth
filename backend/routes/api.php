@@ -13,7 +13,9 @@ Route::middleware('auth:sanctum')->group(function () {
     return $request->user();
   });
   Route::get('/user/{id}', [UserController::class, 'getUser']);
-  Route::get('/users', [UserController::class, 'getAll']);
+  Route::get('/users', [UserController::class, 'getAllUsers']);
+  Route::get('/branches', [UserController::class, 'getAllBranches']);
+  Route::get('/branch/{id}', [UserController::class, 'getBranch']);
 
   Route::put('/user/{id}', [UserController::class, 'update']);
 

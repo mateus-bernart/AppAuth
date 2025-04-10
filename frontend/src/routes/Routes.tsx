@@ -1,9 +1,8 @@
 import {ActivityIndicator, View} from 'react-native';
 import React from 'react';
 import {useAuth} from '../providers/AuthProvider';
-import PrivateRoutes from './PrivateRouteTab';
 import PublicRoutes from './PublicRoutes';
-import PrivateStack from './PrivateStack';
+import PrivateRouteTabs from './PrivateRoutes';
 
 const Routes = () => {
   const {session, isLoading} = useAuth();
@@ -16,7 +15,7 @@ const Routes = () => {
     );
   }
 
-  return session?.isLogged ? <PrivateStack /> : <PublicRoutes />;
+  return session?.isLogged ? <PrivateRouteTabs /> : <PublicRoutes />;
 };
 
 export default Routes;

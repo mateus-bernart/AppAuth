@@ -14,7 +14,6 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->text("street")->nullable();
             $table->text("neighborhood")->nullable();
-            $table->text("street_number")->nullable();
             $table->text("city")->nullable();
         });
     }
@@ -28,7 +27,6 @@ return new class extends Migration
             $table->dropColumn([
                 "street",
                 "neighborhood",
-                "street_number",
                 "city"
             ]);
         });

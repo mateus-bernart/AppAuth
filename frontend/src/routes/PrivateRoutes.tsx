@@ -1,19 +1,21 @@
 import React from 'react';
 import Register from '../screens/Auth/Register';
 import UserDetails from '../screens/User/UserDetails';
-import Home from '../screens/Branches';
 import UserManagement from '../screens/User/UserManagement';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {Image, StyleSheet, View} from 'react-native';
 import {Text} from 'react-native-gesture-handler';
+import Branches from '../screens/Branch/Branches';
+import BranchStack from './navigation/branches';
+import UserStack from './navigation/users';
 
 const Tab = createBottomTabNavigator();
 
 const PrivateRouteTabs = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Home"
+      initialRouteName="Branches"
       backBehavior="history"
       screenOptions={{
         tabBarActiveTintColor: 'white',
@@ -52,8 +54,8 @@ const PrivateRouteTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Home"
-        component={Home}
+        name="Branches"
+        component={BranchStack}
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
@@ -65,7 +67,7 @@ const PrivateRouteTabs = () => {
       />
       <Tab.Screen
         name="Manage"
-        component={UserManagement}
+        component={UserStack}
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>

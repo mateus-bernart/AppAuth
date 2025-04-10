@@ -15,10 +15,10 @@ import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
 import {useForm} from 'react-hook-form';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../types/navigationTypes';
-import {useAuth} from '../../providers/AuthProvider';
-import axiosInstance from '../../services/api';
-import CustomInput from '../../component/CustomInput';
+import {AppNavigationProp} from '../../../types/navigationTypes';
+import {useAuth} from '../../../providers/AuthProvider';
+import axiosInstance from '../../../services/api';
+import CustomInput from '../../../component/CustomInput';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -26,14 +26,13 @@ const apiURL = `${BASE_URL}/api`;
 
 interface Branch {
   id: number;
-  name: string;
-  email: string;
-  image: string;
+  code: string;
+  description: string;
 }
 
-const UserManagement = () => {
+const Branches = () => {
   const toast = useToast();
-  const [userList, setUserList] = useState<Branch[]>([]);
+  const [branchList, setBranchList] = useState<Branch[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
   const {endSession, session} = useAuth();
 
@@ -45,11 +44,11 @@ const UserManagement = () => {
     navigation.navigate(screens, params);
   };
 
-  const fetchUsers = async () => {
+  const fetchBranchs = async () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await axiosInstance.get<Branch[]>(`/branches${query}`);
-      setUserList(response.data);
+      setBranchList(response.data);
     } catch (error) {
       console.log('Error fetching branches:', error);
       if (error.response?.status === 401) {
@@ -59,10 +58,10 @@ const UserManagement = () => {
     }
   };
 
-  const deleteUser = id => {
+  const deleteBranch = id => {
     axiosInstance
       .delete(`/branch/delete/${id}`)
-      .then(() => fetchUsers())
+      .then(() => fetchBranchs())
       .catch(e => {
         toast.show(e, {
           type: 'danger',
@@ -78,19 +77,19 @@ const UserManagement = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'DELETE', onPress: () => deleteUser(id)},
+      {text: 'DELETE', onPress: () => deleteBranch(id)},
     ]);
 
   useFocusEffect(
     useCallback(() => {
-      fetchUsers();
+      fetchBranchs();
     }, [searchTerm]),
   );
 
   return (
     <SafeAreaView style={styles.body}>
-      <View style={styles.searchUserContainer}>
-        <View style={styles.searchUser}>
+      <View style={styles.searchBranchContainer}>
+        <View style={styles.searchBranch}>
           <CustomInput
             control={control}
             name="term"
@@ -100,36 +99,26 @@ const UserManagement = () => {
         </View>
       </View>
       <FlatList
-        data={userList.filter(branch => branch.id != session?.userId)}
+        data={branchList.filter(branch => branch.id)}
         renderItem={({item}) => {
           return (
             <TouchableOpacity
               style={styles.itemContainer}
               onPress={() => {
-                handleNavigation('UserDetails', {userId: item.id});
+                handleNavigation('BranchStock', {branchId: item.id});
               }}>
-              {item.image ? (
-                <Image
-                  source={{
-                    uri: `${BASE_URL}/storage/profile_images/${item.image}`,
-                  }}
-                  style={styles.profilePicture}
-                />
-              ) : (
-                <IconFontAwesome name="branch-alt" size={50} />
-              )}
               <View style={styles.itemDetailsContainer}>
                 <Text
                   style={styles.itemName}
                   numberOfLines={1}
                   ellipsizeMode="tail">
-                  {item.name}
+                  {item.description}
                 </Text>
                 <Text
                   style={styles.itemDetails}
                   numberOfLines={1}
                   ellipsizeMode="tail">
-                  {item.email}
+                  {item.code}
                 </Text>
               </View>
               <View style={styles.actionContainer}>
@@ -147,7 +136,7 @@ const UserManagement = () => {
   );
 };
 
-export default UserManagement;
+export default Branches;
 
 const styles = StyleSheet.create({
   body: {
@@ -165,14 +154,14 @@ const styles = StyleSheet.create({
     width: 50,
     borderRadius: 12,
   },
-  searchUserContainer: {
+  searchBranchContainer: {
     backgroundColor: '#108b00be',
     padding: 10,
   },
-  searchUser: {
+  searchBranch: {
     marginHorizontal: 10,
   },
-  searchUserText: {
+  searchBranchText: {
     fontSize: 16,
     color: 'white',
     fontFamily: 'Poppins-Medium',
