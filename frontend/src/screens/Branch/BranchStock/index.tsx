@@ -15,6 +15,7 @@ import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import CustomInput from '../../../component/CustomInput';
 import {useForm} from 'react-hook-form';
+import Header from '../../../component/Header';
 
 export type Product = {
   id: number;
@@ -72,15 +73,7 @@ const BranchStock = ({route}) => {
 
   return (
     <SafeAreaView style={styles.body}>
-      
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}>
-          <IconFontAwesome name="chevron-left" size={30} />
-        </TouchableOpacity>
-      </View>
+      <Header title="BRANCHES" />
       <View style={styles.searchBranchContainer}>
         <View style={styles.searchBranch}>
           <CustomInput

@@ -90,7 +90,7 @@ const Branches = () => {
 
   return (
     <SafeAreaView style={styles.body}>
-      <Header title="BRANCHES" />
+      <Header title="BRANCHES" icon={false} />
       <View style={styles.searchBranchContainer}>
         <View style={styles.searchBranch}>
           <CustomInput
