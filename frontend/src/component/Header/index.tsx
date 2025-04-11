@@ -10,39 +10,20 @@ import React from 'react';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../types/navigationTypes';
-import {useAuth} from '../../providers/AuthProvider';
 
-const Header = () => {
+const Header = ({title}) => {
   const navigation = useNavigation<AppNavigationProp>();
-  const {session} = useAuth();
-
-  const handleNavigation = (screens, params = {}) => {
-    navigation.navigate(screens, params);
-  };
 
   return (
     <View style={styles.container}>
-      {/* <Image source={userImage}></Image> */}
       <TouchableOpacity
-        onPress={() =>
-          handleNavigation('UserDetails', {userId: session?.userId})
-        }>
-        <IconFontAwesome name="user-alt" size={30} style={styles.iconProfile} />
+        onPress={() => {
+          navigation.goBack();
+        }}>
+        <IconFontAwesome name="chevron-left" size={30} />
       </TouchableOpacity>
-      <TouchableOpacity
-        onPress={() =>
-          handleNavigation('UserManagement', {userId: session?.userId})
-        }>
-        <IconFontAwesome name="user-alt" size={30} style={styles.iconProfile} />
-      </TouchableOpacity>
-      <Text style={styles.textHeader}>USER MANAGEMENT</Text>
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-        <IconFontAwesome
-          name="user-plus"
-          size={30}
-          style={styles.iconAddUser}
-        />
-      </TouchableOpacity>
+      <Text style={styles.textHeader}>{title}</Text>
+      <View></View>
     </View>
   );
 };
@@ -58,7 +39,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     backgroundColor: 'White',
-    padding: 20,
+    marginHorizontal: 30,
+    marginVertical: 10,
   },
   iconProfile: {
     backgroundColor: '#3467d3',

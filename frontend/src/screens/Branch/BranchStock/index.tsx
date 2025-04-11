@@ -13,50 +13,51 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
+import CustomInput from '../../../component/CustomInput';
+import {useForm} from 'react-hook-form';
 
-interface Branch {
+export type Product = {
   id: number;
   name: string;
-  email: string;
-  image: string;
-}
+  description: string;
+  code: string;
+  batch: string;
+  quantity: string;
+  price: number;
+};
 
 const BranchStock = ({route}) => {
   const branchId = route.params?.branchId;
-  const [branchList, setBranchList] = useState<Branch[]>([]);
+  const [productList, setProductList] = useState<Product[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
 
+  const {control, watch} = useForm();
+  const searchTerm = watch('term');
+
   const fetchBranchInfo = async () => {
     try {
-      const response = await axiosInstance.get(`/branch/${branchId}`);
-      // setBranchList(response.data);
+      const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
+      const response = await axiosInstance.get(
+        `/branch/${branchId}/stocks${query}`,
+      );
+
       console.log(response);
+
+      const products = response.data.stock.map(stock => ({
+        ...stock.product,
+        quantity: stock.quantity,
+        batch: stock.batch,
+      }));
+
+      setProductList(products);
+
+      //branch or stock
+      console.log(response.data);
     } catch (error) {
+      toast.show('Error to find products', {type: 'danger', placement: 'top'});
       console.log(error.response);
     }
-  };
-
-  const confirmDeleteAlert = id =>
-    Alert.alert('Are you sure?', 'Delete user?', [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      {text: 'DELETE', onPress: () => deleteUser(id)},
-    ]);
-
-  const deleteUser = id => {
-    axiosInstance
-      .delete(`/user/delete/${id}`)
-      .then(() => fetchBranchInfo())
-      .catch(e => {
-        toast.show(e, {
-          type: 'danger',
-          placement: 'top',
-        });
-      });
   };
 
   const handleNavigation = (screens, params = {}) => {
@@ -66,16 +67,41 @@ const BranchStock = ({route}) => {
   useFocusEffect(
     useCallback(() => {
       fetchBranchInfo();
-    }, []),
+    }, [searchTerm]),
   );
 
   return (
     <SafeAreaView style={styles.body}>
+      
+      <View style={styles.header}>
+        <TouchableOpacity
+          onPress={() => {
+            navigation.goBack();
+          }}>
+          <IconFontAwesome name="chevron-left" size={30} />
+        </TouchableOpacity>
+      </View>
+      <View style={styles.searchBranchContainer}>
+        <View style={styles.searchBranch}>
+          <CustomInput
+            control={control}
+            name="term"
+            placeholder="Search by the name / email."
+            iconLeft="search"
+          />
+        </View>
+      </View>
       <FlatList
-        data={branchList.filter(branch => branch.id)}
+        data={productList.filter(branch => branch.id)}
         renderItem={({item}) => {
           return (
-            <TouchableOpacity style={styles.itemContainer} onPress={() => {}}>
+            <TouchableOpacity
+              style={styles.itemContainer}
+              onPress={() => {
+                handleNavigation('BranchStockProductDetails', {
+                  product: item,
+                });
+              }}>
               <View style={styles.itemDetailsContainer}>
                 <Text
                   style={styles.itemName}
@@ -84,18 +110,17 @@ const BranchStock = ({route}) => {
                   {item.name}
                 </Text>
                 <Text
+                  style={styles.itemBatch}
+                  numberOfLines={1}
+                  ellipsizeMode="tail">
+                  Batch: {item.batch}
+                </Text>
+                <Text
                   style={styles.itemDetails}
                   numberOfLines={1}
                   ellipsizeMode="tail">
-                  {item.email}
+                  Quantity: {item.quantity}
                 </Text>
-              </View>
-              <View style={styles.actionContainer}>
-                <TouchableOpacity
-                  style={styles.delete}
-                  onPress={() => confirmDeleteAlert(item.id)}>
-                  <IconFontAwesome name="trash" color="#ff0000" size={25} />
-                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           );
@@ -110,13 +135,30 @@ export default BranchStock;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
-    marginHorizontal: 20,
+  },
+  header: {
+    marginHorizontal: 30,
+    marginVertical: 10,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  searchBranchContainer: {
+    padding: 10,
+    backgroundColor: 'green',
+  },
+  searchBranch: {
+    marginHorizontal: 10,
   },
   itemDetailsContainer: {
     flex: 1,
   },
   itemName: {
+    fontSize: 20,
     fontFamily: 'Poppins-Bold',
+  },
+  itemBatch: {
+    fontFamily: 'Poppins-Medium',
   },
   itemDetails: {
     color: 'gray',

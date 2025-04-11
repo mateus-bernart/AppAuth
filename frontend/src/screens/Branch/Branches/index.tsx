@@ -19,6 +19,7 @@ import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../component/CustomInput';
+import Header from '../../../component/Header';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -48,6 +49,7 @@ const Branches = () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await axiosInstance.get<Branch[]>(`/branches${query}`);
+      console.log(response);
       setBranchList(response.data);
     } catch (error) {
       console.log('Error fetching branches:', error);
@@ -88,6 +90,7 @@ const Branches = () => {
 
   return (
     <SafeAreaView style={styles.body}>
+      <Header title="BRANCHES" />
       <View style={styles.searchBranchContainer}>
         <View style={styles.searchBranch}>
           <CustomInput

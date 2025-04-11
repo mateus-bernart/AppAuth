@@ -2,23 +2,26 @@
 
 use App\Http\Controllers\Auth\EmailVerificationController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BranchController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\StockController;
 use App\Http\Controllers\UserController;
-use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
-
 
 Route::middleware('auth:sanctum')->group(function () {
   Route::get('/user', function (Request $request) {
     return $request->user();
   });
+
+  Route::get('/branches', [BranchController::class, 'getAllBranches']);
+  Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
+  Route::get('/branch/{branchId}/stocks', [BranchController::class, 'getBranchWithStock']);
+
   Route::get('/user/{id}', [UserController::class, 'getUser']);
   Route::get('/users', [UserController::class, 'getAllUsers']);
-  Route::get('/branches', [UserController::class, 'getAllBranches']);
-  Route::get('/branch/{id}', [UserController::class, 'getBranch']);
 
   Route::put('/user/{id}', [UserController::class, 'update']);
-
   Route::post('/logout', [AuthController::class, 'logout']);
   Route::post('/user/{id}/upload-image', [UserController::class, 'uploadImage']);
 

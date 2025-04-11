@@ -111,6 +111,7 @@ const Register = () => {
             });
             setEmailToVerify(data.email);
           }
+          navigation.navigate('UserManagement');
         } else {
           toast.show('Fail to register user, please check Wi-fi connection.', {
             type: 'danger',
@@ -134,16 +135,14 @@ const Register = () => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.container}>
-        {!isAuthenticated && (
-          <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => {
-                navigation.goBack();
-              }}>
-              <IconFontAwesome name="chevron-left" size={30} />
-            </TouchableOpacity>
-          </View>
-        )}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}>
+            <IconFontAwesome name="chevron-left" size={30} />
+          </TouchableOpacity>
+        </View>
         <ScrollView
           contentContainerStyle={styles.scrollView}
           keyboardShouldPersistTaps="handled"
@@ -348,7 +347,11 @@ const Register = () => {
             )}
           </View>
         </ScrollView>
-        <View style={styles.registerContainerWrapper}>
+        <View
+          style={[
+            styles.registerContainerWrapper,
+            {height: isAuthenticated ? 180 : 100},
+          ]}>
           <View style={styles.shadowContainer} />
           <Pressable
             onPress={handleSubmit(onRegisterPressed)}

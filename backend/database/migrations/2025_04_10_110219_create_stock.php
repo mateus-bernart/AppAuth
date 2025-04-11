@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('stocks', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('product_id')->constrained('products');
-            $table->foreignId('branch_id')->constrained('branches');
-            $table->string('batch')->unique();
-            $table->integer('quantity');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('stocks')) {
+            Schema::create('stocks', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('product_id')->constrained('products');
+                $table->foreignId('branch_id')->constrained('branches');
+                $table->string('batch')->unique();
+                $table->integer('quantity');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

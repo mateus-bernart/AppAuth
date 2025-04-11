@@ -77,18 +77,6 @@ const PrivateRouteTabs = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="Register"
-        component={Register}
-        options={{
-          tabBarIcon: ({color}) => (
-            <View style={styles.container}>
-              <IconFontAwesome name="user-plus" size={25} color={color} />
-              <Text style={styles.textContainer}>Register</Text>
-            </View>
-          ),
-        }}
-      />
     </Tab.Navigator>
   );
 };

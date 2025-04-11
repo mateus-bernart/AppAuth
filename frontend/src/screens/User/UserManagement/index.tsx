@@ -20,6 +20,7 @@ import {AppNavigationProp} from '../../../types/navigationTypes';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../component/CustomInput';
 import {useForm} from 'react-hook-form';
+import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -89,7 +90,8 @@ const UserManagement = () => {
   );
 
   return (
-    <SafeAreaView style={styles.body}>
+    <SafeAreaView style={[styles.body, {position: 'relative'}]}>
+      <Header title="USER MANAGEMENT" />
       <View style={styles.searchUserContainer}>
         <View style={styles.searchUser}>
           <CustomInput
@@ -144,6 +146,15 @@ const UserManagement = () => {
           );
         }}
       />
+      <View style={styles.editButtonContainer}>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => {
+            navigation.navigate('Register');
+          }}>
+          <IconFontAwesome5 name="plus" size={30} color="white" />
+        </TouchableOpacity>
+      </View>
     </SafeAreaView>
   );
 };
@@ -153,6 +164,18 @@ export default UserManagement;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
+  },
+  editButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    marginBottom: 150,
+    marginRight: 10,
+    alignSelf: 'flex-end',
+  },
+  editButton: {
+    borderRadius: 20,
+    padding: 20,
+    backgroundColor: 'green',
   },
   header: {
     marginHorizontal: 30,
@@ -167,7 +190,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   searchUserContainer: {
-    backgroundColor: '#108b00be',
+    backgroundColor: 'green',
     padding: 10,
   },
   searchUser: {

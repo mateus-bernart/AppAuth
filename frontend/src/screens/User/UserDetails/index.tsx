@@ -28,6 +28,7 @@ import {useForm} from 'react-hook-form';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../component/CustomInput';
+import Header from '../../../component/Header';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -245,7 +246,7 @@ const UserDetails = ({route}) => {
     <SafeAreaView style={{flex: 1}}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{flex: 1}}>
+        style={{flex: 1, position: 'relative'}}>
         {/* ================ MODAL ============= */}
         <Modal
           transparent={true}
@@ -285,15 +286,13 @@ const UserDetails = ({route}) => {
         </Modal>
 
         {/* ================ HEADER ============= */}
+        <Header title="USER DETAILS" />
 
-        <View style={styles.header}>
-          <Text style={styles.headerText}>User Details</Text>
-          <TouchableOpacity
-            onPress={() => handleLogout()}
-            style={styles.iconLogout}>
-            <IconMaterialIcons name="logout" size={35} color="red" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity
+          onPress={() => handleLogout()}
+          style={styles.iconLogout}>
+          <IconMaterialIcons name="logout" size={35} color="red" />
+        </TouchableOpacity>
 
         {/* ================ BODY ============= */}
 
@@ -491,7 +490,8 @@ const styles = StyleSheet.create({
   },
   iconLogout: {
     position: 'absolute',
-    right: 20,
+    right: 30,
+    top: 5,
     color: 'red',
   },
   profileImage: {

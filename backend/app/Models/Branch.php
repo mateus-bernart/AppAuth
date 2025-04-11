@@ -12,4 +12,9 @@ class Branch extends Model
         'code',
         'description'
     ];
+
+    public function stock()
+    {
+        return $this->hasMany(Stock::class);
+    }
 }

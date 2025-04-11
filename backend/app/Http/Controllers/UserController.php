@@ -2,13 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\UserUpdateRequest;
-use App\Models\Branch;
-use App\Models\Stock;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -29,19 +24,6 @@ class UserController extends Controller
         return User::all();
     }
 
-    public function getAllBranches(Request $request)
-    {
-        $term = $request->query('q');
-        if ($term) {
-            return
-                Branch::where('code', 'like', "%{$term}%")
-                ->orWhere('description', 'like', "%{$term}%")
-                ->get();
-        }
-
-        return Branch::all();
-    }
-
     public function destroy($id)
     {
         $user = User::find($id);
@@ -60,13 +42,6 @@ class UserController extends Controller
     public function getUser($id)
     {
         return User::find($id);
-    }
-
-    public function getBranch($id)
-    {
-        $branch = Branch::find($id);
-
-        return response()->json(['branch' => $branch]);
     }
 
     public function uploadImage(Request $request, $id)
@@ -129,7 +104,6 @@ class UserController extends Controller
             return response()->json(['message' => $th->getMessage(), 'code' => $th->getCode()], 422);
         }
     }
-
 
     public function removeUserImage($id)
     {

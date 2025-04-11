@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('branches', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedInteger('code')->unique();
-            $table->string('description');
-        });
+        if (!Schema::hasTable('branches')) {
+            Schema::create('branches', function (Blueprint $table) {
+                $table->id();
+                $table->unsignedInteger('code')->unique();
+                $table->string('description');
+            });
+        }
     }
 
     /**
@@ -23,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('branches');
+        Schema::disableForeignKeyConstraints();
+        Schema::dropIfExists('products');
+        Schema::enableForeignKeyConstraints();
     }
 };
