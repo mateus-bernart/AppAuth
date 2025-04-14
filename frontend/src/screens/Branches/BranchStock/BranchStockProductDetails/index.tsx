@@ -7,6 +7,8 @@ import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
+import Header from '../../../../component/Header';
+import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const BranchStockProductDetails = () => {
   const toast = useToast();
@@ -15,42 +17,45 @@ const BranchStockProductDetails = () => {
   const {product} = route.params as {product?: Product};
   const navigation = useNavigation<AppNavigationProp>();
 
-  const confirmDeleteAlert = id =>
-    Alert.alert('Are you sure?', 'Delete user?', [
+  const confirmDeleteAlert = () =>
+    Alert.alert('Delete Product?', 'Are you sure?', [
       {
         text: 'Cancel',
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'DELETE', onPress: () => deleteProduct(id)},
+      {text: 'DELETE', onPress: () => deleteProduct()},
     ]);
 
-  const deleteProduct = id => {
+  const deleteProduct = () => {
     axiosInstance
-      .delete(`/user/delete/${id}`)
-      .then(() => fetchProducts())
+      .delete(`/product/delete/${product?.id}`)
+      .then(response => {
+        toast.show(response.data, {
+          type: 'success',
+          placement: 'top',
+        });
+        navigation.goBack();
+      })
       .catch(e => {
-        toast.show(e, {
+        console.log(e.response);
+        toast.show(e.response, {
           type: 'danger',
           placement: 'top',
         });
       });
   };
 
-  const fetchProducts = () => {
-    const response = axiosInstance.get('/products/');
-  };
-
   return (
     <SafeAreaView style={{flex: 1, marginBottom: 100}}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.goBack();
-          }}>
-          <IconFontAwesome name="chevron-left" size={30} />
-        </TouchableOpacity>
-      </View>
+      <Header title="PRODUCT DETAILS" />
+
+      <TouchableOpacity
+        onPress={() => confirmDeleteAlert()}
+        style={styles.iconLogout}>
+        <IconFontAwesome name="trash" size={30} color="red" />
+      </TouchableOpacity>
+
       <View style={styles.container}>
         <View style={styles.productNameContainer}>
           <Text style={styles.productNameText}>{product?.name}</Text>
@@ -72,12 +77,67 @@ const BranchStockProductDetails = () => {
               <Text style={styles.productInfoValueText}>{product?.price}</Text>
             </View>
           </View>
+
           <View style={styles.productTableInfo}>
             <View style={styles.productInfoTitleContainer}>
               <Text style={styles.productInfoTitleText}>Other info</Text>
             </View>
             <View style={styles.productInfoValueContainer}>
               <Text style={styles.productInfoValueText}>value here</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Weight</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>0.5 kg</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Avg. Rating</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>4.7/5</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Monthly Sales</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>320 units</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Profit Margin</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>35%</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Return Rate</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>2%</Text>
+            </View>
+          </View>
+
+          <View style={styles.productTableInfo}>
+            <View style={styles.productInfoTitleContainer}>
+              <Text style={styles.productInfoTitleText}>Lead Time</Text>
+            </View>
+            <View style={styles.productInfoValueContainer}>
+              <Text style={styles.productInfoValueText}>7 days</Text>
             </View>
           </View>
         </View>
@@ -98,6 +158,7 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
+    marginTop: 25,
     marginHorizontal: 20,
   },
   productNameText: {
@@ -118,20 +179,31 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     alignItems: 'center',
   },
+  iconLogout: {
+    position: 'absolute',
+    right: 30,
+    top: 50,
+    color: 'red',
+    backgroundColor: 'pink',
+    padding: 10,
+    borderRadius: 8,
+  },
   produtDetailContainer: {
     margin: 20,
   },
   productTableInfo: {
     flexDirection: 'row',
-    justifyContent: 'center',
     backgroundColor: '#ebebebac',
-    borderWidth: 0.1,
+    borderWidth: 0.2,
     gap: 100,
     marginHorizontal: 20,
   },
   tableHeader: {
-    borderTopRightRadius: 10,
-    borderTopLeftRadius: 10,
+    borderTopWidth: 0.6,
+    borderLeftWidth: 0.5,
+    borderRightWidth: 0.5,
+    borderTopRightRadius: 8,
+    borderTopLeftRadius: 8,
   },
   productDetailWrapper: {
     flex: 1,
@@ -140,20 +212,21 @@ const styles = StyleSheet.create({
   descriptionText: {
     fontSize: 16,
     fontFamily: 'Poppins-Medium',
-    textAlign: 'justify',
+    textAlign: 'center',
   },
   productInfoValueText: {
     fontSize: 18,
     fontFamily: 'Poppins-Bold',
   },
   productInfoTitleContainer: {
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'center',
     flex: 1,
   },
   productInfoTitleText: {
     fontSize: 16,
     fontFamily: 'Poppins-Medium',
+    marginLeft: 10,
   },
   productInfoValueContainer: {
     flex: 1,

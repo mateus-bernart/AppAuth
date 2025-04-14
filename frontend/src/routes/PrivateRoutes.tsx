@@ -6,7 +6,7 @@ import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {Image, StyleSheet, View} from 'react-native';
 import {Text} from 'react-native-gesture-handler';
-import Branches from '../screens/Branch/Branches';
+import Branches from '../screens/Branches';
 import BranchStack from './navigation/branches';
 import UserStack from './navigation/users';
 

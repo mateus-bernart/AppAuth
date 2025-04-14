@@ -10,27 +10,31 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->group(function () {
+  // ============ USER ===========
   Route::get('/user', function (Request $request) {
     return $request->user();
   });
-
-  Route::get('/branches', [BranchController::class, 'getAllBranches']);
-  Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
-  Route::get('/branch/{branchId}/stocks', [BranchController::class, 'getBranchWithStock']);
-
   Route::get('/user/{id}', [UserController::class, 'getUser']);
   Route::get('/users', [UserController::class, 'getAllUsers']);
-
   Route::put('/user/{id}', [UserController::class, 'update']);
   Route::post('/logout', [AuthController::class, 'logout']);
   Route::post('/user/{id}/upload-image', [UserController::class, 'uploadImage']);
-
   Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
   })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-
   Route::delete('/user/{id}/remove-image/', [UserController::class, 'removeUserImage']);
-  Route::delete('/user/delete/{id}', [UserController::class, 'destroy']);
+  Route::delete('/user/delete/{id}', [UserController::class, 'deleteUser']);
+
+  // ============ BRANCH ===========
+  Route::get('/branches', [BranchController::class, 'getAllBranches']);
+  Route::get('/branch/{branchId}/stocks', [BranchController::class, 'getBranchWithStock']);
+
+  // ============ PRODUCT ===========
+  Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
+  Route::delete('/product/delete/{id}', [ProductController::class, 'deleteProduct']);
+
+  // ============ STOCK ===========
+  Route::post('/stock/{productId}/adjust-stock', [StockController::class, 'adjustStock']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

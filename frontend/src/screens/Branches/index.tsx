@@ -15,11 +15,12 @@ import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
 import {useForm} from 'react-hook-form';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../../types/navigationTypes';
-import {useAuth} from '../../../providers/AuthProvider';
-import axiosInstance from '../../../services/api';
-import CustomInput from '../../../component/CustomInput';
-import Header from '../../../component/Header';
+import {AppNavigationProp} from '../../types/navigationTypes';
+import {useAuth} from '../../providers/AuthProvider';
+import axiosInstance from '../../services/api';
+import CustomInput from '../../component/CustomInput';
+import Header from '../../component/Header';
+import SearchBar from '../../component/SearchBar';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -60,28 +61,6 @@ const Branches = () => {
     }
   };
 
-  const deleteBranch = id => {
-    axiosInstance
-      .delete(`/branch/delete/${id}`)
-      .then(() => fetchBranchs())
-      .catch(e => {
-        toast.show(e, {
-          type: 'danger',
-          placement: 'top',
-        });
-      });
-  };
-
-  const confirmDeleteAlert = id =>
-    Alert.alert('Are you sure?', 'Delete branch?', [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      {text: 'DELETE', onPress: () => deleteBranch(id)},
-    ]);
-
   useFocusEffect(
     useCallback(() => {
       fetchBranchs();
@@ -90,17 +69,8 @@ const Branches = () => {
 
   return (
     <SafeAreaView style={styles.body}>
-      <Header title="BRANCHES" icon={false} />
-      <View style={styles.searchBranchContainer}>
-        <View style={styles.searchBranch}>
-          <CustomInput
-            control={control}
-            name="term"
-            placeholder="Search by the name / email."
-            iconLeft="search"
-          />
-        </View>
-      </View>
+      <Header title="BRANCHES" iconLeft={false} />
+      <SearchBar control={control} />
       <FlatList
         data={branchList.filter(branch => branch.id)}
         renderItem={({item}) => {
@@ -121,15 +91,8 @@ const Branches = () => {
                   style={styles.itemDetails}
                   numberOfLines={1}
                   ellipsizeMode="tail">
-                  {item.code}
+                  # {item.code}
                 </Text>
-              </View>
-              <View style={styles.actionContainer}>
-                <TouchableOpacity
-                  style={styles.delete}
-                  onPress={() => confirmDeleteAlert(item.id)}>
-                  <IconFontAwesome name="trash" color="#ff0000" size={25} />
-                </TouchableOpacity>
               </View>
             </TouchableOpacity>
           );
@@ -158,7 +121,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   searchBranchContainer: {
-    backgroundColor: '#108b00be',
+    backgroundColor: 'green',
     padding: 10,
   },
   searchBranch: {
@@ -188,9 +151,11 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   itemName: {
+    fontSize: 18,
     fontFamily: 'Poppins-Bold',
   },
   itemDetails: {
+    fontSize: 16,
     color: 'gray',
     fontFamily: 'Poppins-Regular',
   },

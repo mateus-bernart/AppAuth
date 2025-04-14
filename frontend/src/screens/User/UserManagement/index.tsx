@@ -21,6 +21,7 @@ import axiosInstance from '../../../services/api';
 import CustomInput from '../../../component/CustomInput';
 import {useForm} from 'react-hook-form';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import SearchBar from '../../../component/SearchBar';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -74,7 +75,7 @@ const UserManagement = () => {
   };
 
   const confirmDeleteAlert = id =>
-    Alert.alert('Are you sure?', 'Delete user?', [
+    Alert.alert('Delete user?', 'Are you sure?', [
       {
         text: 'Cancel',
         onPress: () => console.log('Cancel Pressed'),
@@ -92,16 +93,7 @@ const UserManagement = () => {
   return (
     <SafeAreaView style={[styles.body, {position: 'relative'}]}>
       <Header title="USER MANAGEMENT" />
-      <View style={styles.searchUserContainer}>
-        <View style={styles.searchUser}>
-          <CustomInput
-            control={control}
-            name="term"
-            placeholder="Search by the name / email."
-            iconLeft="search"
-          />
-        </View>
-      </View>
+      <SearchBar control={control} />
       <FlatList
         data={userList.filter(user => user.id != session?.userId)}
         renderItem={({item}) => {

@@ -247,6 +247,15 @@ const UserDetails = ({route}) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{flex: 1, position: 'relative'}}>
+        {/* ================ HEADER ============= */}
+        <Header title="USER DETAILS" />
+
+        <TouchableOpacity
+          onPress={() => handleLogout()}
+          style={styles.iconLogout}>
+          <IconMaterialIcons name="logout" size={35} color="red" />
+        </TouchableOpacity>
+
         {/* ================ MODAL ============= */}
         <Modal
           transparent={true}
@@ -284,15 +293,6 @@ const UserDetails = ({route}) => {
             </View>
           </TouchableWithoutFeedback>
         </Modal>
-
-        {/* ================ HEADER ============= */}
-        <Header title="USER DETAILS" />
-
-        <TouchableOpacity
-          onPress={() => handleLogout()}
-          style={styles.iconLogout}>
-          <IconMaterialIcons name="logout" size={35} color="red" />
-        </TouchableOpacity>
 
         {/* ================ BODY ============= */}
 

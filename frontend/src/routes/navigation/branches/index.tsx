@@ -1,9 +1,9 @@
 import {View, Text} from 'react-native';
 import React from 'react';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import Branches from '../../../screens/Branch/Branches';
-import BranchStock from '../../../screens/Branch/BranchStock';
-import BranchStockProductDetails from '../../../screens/Branch/BranchStock/BranchStockProductDetails';
+import Branches from '../../../screens/Branches';
+import BranchStock from '../../../screens/Branches/BranchStock';
+import BranchStockProductDetails from '../../../screens/Branches/BranchStock/BranchStockProductDetails';
 
 const Stack = createNativeStackNavigator();
 

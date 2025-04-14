@@ -14,7 +14,7 @@ return new class extends Migration
         if (!Schema::hasTable('stocks')) {
             Schema::create('stocks', function (Blueprint $table) {
                 $table->id();
-                $table->foreignId('product_id')->constrained('products');
+                $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
                 $table->foreignId('branch_id')->constrained('branches');
                 $table->string('batch')->unique();
                 $table->integer('quantity');

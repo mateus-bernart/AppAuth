@@ -24,7 +24,7 @@ class UserController extends Controller
         return User::all();
     }
 
-    public function destroy($id)
+    public function deleteUser($id)
     {
         $user = User::find($id);
         if ($user) {

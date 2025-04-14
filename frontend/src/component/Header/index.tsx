@@ -7,34 +7,57 @@ import {
   View,
 } from 'react-native';
 import React from 'react';
-import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
+import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../types/navigationTypes';
 
 type HeaderProps = {
   title: string;
-  icon?: boolean;
+  iconLeft?: boolean;
+  iconRightName?: string;
 };
 
-const Header: React.FC<HeaderProps> = ({title, icon = true}) => {
+const Header: React.FC<HeaderProps> = ({
+  title,
+  iconLeft = true,
+  iconRightName,
+}) => {
   const navigation = useNavigation<AppNavigationProp>();
 
   return (
     <View style={styles.container}>
-      {icon && (
-        <View style={styles.iconContainer}>
+      <View style={styles.iconContainer}>
+        {iconLeft && (
           <TouchableOpacity
             onPress={() => {
               navigation.goBack();
             }}>
-            <IconFontAwesome name="chevron-left" size={30} />
+            <IconFontAwesome5 name="chevron-left" size={30} />
           </TouchableOpacity>
+        )}
+      </View>
+      {title.length > 15 ? (
+        <View style={[styles.titleContainer, {flex: 1}]}>
+          <Text style={[styles.textHeader, {fontSize: 12}]}>{title}</Text>
+        </View>
+      ) : (
+        <View style={styles.titleContainer}>
+          <Text style={styles.textHeader}>{title}</Text>
         </View>
       )}
-      <View style={styles.textContainer}>
-        <Text style={styles.textHeader}>{title}</Text>
-      </View>
-      <View></View>
+
+      {iconRightName ? (
+        <View style={styles.iconRightContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.goBack();
+            }}>
+            <IconFontAwesome5 name={iconRightName} size={30} color="red" />
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <View style={styles.sideContainer}></View>
+      )}
     </View>
   );
 };
@@ -43,22 +66,35 @@ export default Header;
 
 const styles = StyleSheet.create({
   textHeader: {
+    fontSize: 16,
     fontFamily: 'Poppins-Medium',
   },
   container: {
+    height: 30,
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'White',
     marginHorizontal: 30,
     marginVertical: 10,
   },
-  iconContainer: {
+  sideContainer: {
+    flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textContainer: {
+  iconRightContainer: {
+    flex: 1,
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+  },
+  iconContainer: {
+    flex: 1,
+  },
+  titleContainer: {
+    flex: 2,
     alignItems: 'center',
     justifyContent: 'center',
+    flexWrap: 'nowrap',
   },
   iconProfile: {
     backgroundColor: '#3467d3',
