@@ -7,7 +7,7 @@ import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
-import Header from '../../../../component/Header';
+import Header from '../../../../components/Header';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 const BranchStockProductDetails = () => {
@@ -75,15 +75,6 @@ const BranchStockProductDetails = () => {
             </View>
             <View style={styles.productInfoValueContainer}>
               <Text style={styles.productInfoValueText}>{product?.price}</Text>
-            </View>
-          </View>
-
-          <View style={styles.productTableInfo}>
-            <View style={styles.productInfoTitleContainer}>
-              <Text style={styles.productInfoTitleText}>Other info</Text>
-            </View>
-            <View style={styles.productInfoValueContainer}>
-              <Text style={styles.productInfoValueText}>value here</Text>
             </View>
           </View>
 

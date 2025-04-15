@@ -13,8 +13,8 @@ import {useForm} from 'react-hook-form';
 import {useNavigation} from '@react-navigation/native';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useToast} from 'react-native-toast-notifications';
-import CustomInput from '../../../../component/CustomInput';
-import SubmitButton from '../../../../component/SubmitButton';
+import CustomInput from '../../../../components/CustomInput';
+import SubmitButton from '../../../../components/SubmitButton';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import axiosInstance from '../../../../services/api';
 

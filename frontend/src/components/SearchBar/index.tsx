@@ -25,7 +25,6 @@ export default SearchBar;
 
 const styles = StyleSheet.create({
   searchUserContainer: {
-    backgroundColor: 'green',
     padding: 10,
   },
   searchUser: {

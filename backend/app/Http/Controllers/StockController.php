@@ -29,7 +29,7 @@ class StockController extends Controller
         if ($request->action === 'increment') {
             $stock->increment('quantity');
         } else {
-            if ($stock->quantity < 0) {
+            if ($stock->quantity <= 0) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Cannot decrement - stock already at zero'

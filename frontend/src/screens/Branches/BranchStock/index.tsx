@@ -13,10 +13,11 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
-import CustomInput from '../../../component/CustomInput';
+import CustomInput from '../../../components/CustomInput';
 import {useForm} from 'react-hook-form';
-import Header from '../../../component/Header';
-import SearchBar from '../../../component/SearchBar';
+import Header from '../../../components/Header';
+import SearchBar from '../../../components/SearchBar';
+import SlideInView from '../../../components/SlideView';
 
 export type Product = {
   id: number;
@@ -40,7 +41,7 @@ const BranchStock = ({route}) => {
   const toast = useToast();
   const [branchInfo, setBranchInfo] = useState<Branch | null>(null);
   const [editable, setEditable] = useState(false);
-  // const [numberChanged, setNumberChanged] = useState(false);
+  const [updatedQuantities, setUpdatedQuantities] = useState({});
 
   const {control, watch} = useForm();
   const searchTerm = watch('term');
@@ -72,8 +73,12 @@ const BranchStock = ({route}) => {
         `/stock/${productId}/adjust-stock`,
         {action, branch_id: branchId},
       );
-      console.log(response);
+
+      const newQuantity = response.data.new_quantity;
+
+      setUpdatedQuantities(prev => ({...prev, [productId]: newQuantity}));
     } catch (error) {
+      toast.show('Error updating quantity', {type: 'danger'});
       console.log(error.response);
     }
   };
@@ -104,6 +109,7 @@ const BranchStock = ({route}) => {
     if (editable) {
       setEditable(false);
       fetchBranchInfo();
+      toast.show('Stock updated', {type: 'success', placement: 'top'});
     } else {
       setEditable(true);
     }
@@ -135,9 +141,16 @@ const BranchStock = ({route}) => {
       <FlatList
         data={productList.filter(branch => branch.id)}
         renderItem={({item}) => {
+          const newQuantity = updatedQuantities[item.id];
+
+          const wasChanged =
+            newQuantity !== undefined && newQuantity !== item.quantity;
+
+          console.log(wasChanged);
+
           return (
             <View style={styles.itemContainer}>
-              <View style={styles.itemDetailsContainer}>
+              <View style={styles.itemDetailWrapper}>
                 <TouchableOpacity
                   onPress={() => {
                     handleNavigation('BranchStockProductDetails', {
@@ -145,32 +158,85 @@ const BranchStock = ({route}) => {
                     });
                   }}>
                   <Text
-                    style={styles.itemName}
+                    style={[
+                      styles.itemName,
+                      {borderTopRightRadius: !editable ? 10 : 0},
+                    ]}
                     numberOfLines={1}
                     ellipsizeMode="tail">
                     {item.name}
                   </Text>
-                  <Text
-                    style={styles.itemBatch}
-                    numberOfLines={1}
-                    ellipsizeMode="tail">
-                    Batch: {item.batch}
-                  </Text>
-                  <View style={{alignItems: 'center'}}>
+                  <View style={styles.itemDetailContainer}>
                     <Text
-                      style={styles.itemDetails}
+                      style={styles.itemBatch}
                       numberOfLines={1}
                       ellipsizeMode="tail">
-                      Quantity:
+                      Batch: {item.batch}
                     </Text>
-                    <Text style={styles.detailsHighlighted}>
-                      {item.quantity}
-                    </Text>
+                    <View style={{alignItems: 'center'}}>
+                      <Text
+                        style={styles.itemDetails}
+                        numberOfLines={1}
+                        ellipsizeMode="tail">
+                        Quantity:
+                      </Text>
+                      <View style={styles.quantityValueContainer}>
+                        {wasChanged ? (
+                          <SlideInView
+                            direction="right"
+                            distance={30}
+                            style={{}}>
+                            <Text
+                              style={[
+                                styles.detailsHighlighted,
+                                wasChanged && styles.oldNumber,
+                              ]}>
+                              {item.quantity}
+                            </Text>
+                          </SlideInView>
+                        ) : (
+                          <Text
+                            style={[
+                              styles.detailsHighlighted,
+                              wasChanged && styles.oldNumber,
+                            ]}>
+                            {item.quantity}
+                          </Text>
+                        )}
+
+                        {wasChanged && (
+                          <>
+                            <SlideInView
+                              direction="left"
+                              distance={10}
+                              style={{}}>
+                              <IconFontAwesome
+                                name="arrow-right"
+                                size={20}
+                                style={{marginBottom: 5}}
+                              />
+                            </SlideInView>
+                            <SlideInView
+                              direction="left"
+                              distance={10}
+                              style={{}}>
+                              <Text
+                                style={[
+                                  styles.detailsHighlighted,
+                                  styles.newQuantityValue,
+                                ]}>
+                                {newQuantity}
+                              </Text>
+                            </SlideInView>
+                          </>
+                        )}
+                      </View>
+                    </View>
                   </View>
                 </TouchableOpacity>
               </View>
-              <View style={{flex: editable ? 1 : 0}}>
-                {editable ? (
+              {editable && (
+                <View style={{...(editable && {flex: 1})}}>
                   <>
                     <TouchableOpacity
                       onPress={() => {
@@ -197,10 +263,8 @@ const BranchStock = ({route}) => {
                       <IconFontAwesome name="chevron-down" size={40} />
                     </TouchableOpacity>
                   </>
-                ) : (
-                  <></>
-                )}
-              </View>
+                </View>
+              )}
             </View>
           );
         }}
@@ -222,7 +286,7 @@ const styles = StyleSheet.create({
     top: 55,
     right: 20,
     borderRadius: 8,
-    backgroundColor: '#0043d3',
+    backgroundColor: 'green',
     color: 'green',
   },
   editStockText: {
@@ -244,9 +308,8 @@ const styles = StyleSheet.create({
   searchBranch: {
     marginHorizontal: 10,
   },
-  itemDetailsContainer: {
+  itemDetailWrapper: {
     flex: 3,
-    padding: 14,
   },
   buttonAdjustActive: {
     flex: 1,
@@ -267,20 +330,42 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 20,
     fontFamily: 'Poppins-Bold',
+    color: 'white',
+    borderTopLeftRadius: 10,
+    backgroundColor: 'green',
+    padding: 10,
+  },
+  itemDetailContainer: {
+    padding: 10,
   },
   itemBatch: {
     fontFamily: 'Poppins-Medium',
+    fontSize: 16,
   },
   itemDetails: {
     marginTop: 10,
-    fontSize: 16,
+    fontSize: 18,
     color: 'gray',
     fontFamily: 'Poppins-Regular',
+  },
+  quantityValueContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
   },
   detailsHighlighted: {
     color: '#005c0c',
     fontFamily: 'Poppins-Bold',
-    fontSize: 28,
+    fontSize: 30,
+  },
+  newQuantityValue: {
+    fontSize: 32,
+  },
+  oldNumber: {
+    color: 'black',
+    fontSize: 22,
+    textDecorationLine: 'line-through',
   },
   actionContainer: {
     flexDirection: 'row',
@@ -289,7 +374,6 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    gap: 20,
     marginVertical: 10,
     backgroundColor: 'white',
     marginHorizontal: 20,

@@ -13,15 +13,16 @@ import React, {use, useCallback, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
-import Header from '../../../component/Header';
+import Header from '../../../components/Header';
 import {useAuth} from '../../../providers/AuthProvider';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import axiosInstance from '../../../services/api';
-import CustomInput from '../../../component/CustomInput';
+import CustomInput from '../../../components/CustomInput';
 import {useForm} from 'react-hook-form';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import SearchBar from '../../../component/SearchBar';
+import SearchBar from '../../../components/SearchBar';
+import FloatingButton from '../../../components/FloatingButton';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -138,15 +139,7 @@ const UserManagement = () => {
           );
         }}
       />
-      <View style={styles.editButtonContainer}>
-        <TouchableOpacity
-          style={styles.editButton}
-          onPress={() => {
-            navigation.navigate('Register');
-          }}>
-          <IconFontAwesome5 name="plus" size={30} color="white" />
-        </TouchableOpacity>
-      </View>
+      <FloatingButton iconName="plus" size={30} />
     </SafeAreaView>
   );
 };
@@ -156,18 +149,6 @@ export default UserManagement;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
-  },
-  editButtonContainer: {
-    position: 'absolute',
-    bottom: 0,
-    marginBottom: 150,
-    marginRight: 10,
-    alignSelf: 'flex-end',
-  },
-  editButton: {
-    borderRadius: 20,
-    padding: 20,
-    backgroundColor: 'green',
   },
   header: {
     marginHorizontal: 30,

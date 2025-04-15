@@ -13,11 +13,11 @@ import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
-import CustomInput from '../../../component/CustomInput';
+import CustomInput from '../../../components/CustomInput';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
-import SubmitButton from '../../../component/SubmitButton';
+import SubmitButton from '../../../components/SubmitButton';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();

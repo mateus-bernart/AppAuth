@@ -16,7 +16,7 @@ import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import CustomInput from '../../../component/CustomInput';
+import CustomInput from '../../../components/CustomInput';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';

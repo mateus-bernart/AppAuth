@@ -18,9 +18,9 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../types/navigationTypes';
 import {useAuth} from '../../providers/AuthProvider';
 import axiosInstance from '../../services/api';
-import CustomInput from '../../component/CustomInput';
-import Header from '../../component/Header';
-import SearchBar from '../../component/SearchBar';
+import CustomInput from '../../components/CustomInput';
+import Header from '../../components/Header';
+import SearchBar from '../../components/SearchBar';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 

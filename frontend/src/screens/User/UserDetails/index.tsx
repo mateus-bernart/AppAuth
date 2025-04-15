@@ -27,8 +27,9 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm} from 'react-hook-form';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
-import CustomInput from '../../../component/CustomInput';
-import Header from '../../../component/Header';
+import CustomInput from '../../../components/CustomInput';
+import Header from '../../../components/Header';
+import FloatingButton from '../../../components/FloatingButton';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -409,18 +410,12 @@ const UserDetails = ({route}) => {
             </View>
           </View>
         </ScrollView>
-        <View style={styles.editButtonContainer}>
-          <TouchableOpacity
-            style={styles.editButton}
-            onPress={handleSubmit(handleEdit)}>
-            {!editable ? (
-              <IconFontAwesome5 name="pen" size={30} color="white" />
-            ) : (
-              <IconFontAwesome5 name="check" size={30} color="white" />
-            )}
-          </TouchableOpacity>
-        </View>
       </KeyboardAvoidingView>
+      {!editable ? (
+        <FloatingButton size={30} iconName="pen" />
+      ) : (
+        <FloatingButton size={30} iconName="check" />
+      )}
     </SafeAreaView>
   );
 };
@@ -514,6 +509,7 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
+    marginBottom: 50,
   },
   userHeaderContainer: {
     height: 200,
