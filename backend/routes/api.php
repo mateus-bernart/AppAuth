@@ -31,10 +31,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
   // ============ PRODUCT ===========
   Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
+  Route::post('/branch/{branchId}/product/create', [ProductController::class, 'createProduct']);
   Route::delete('/product/delete/{id}', [ProductController::class, 'deleteProduct']);
 
   // ============ STOCK ===========
-  Route::post('/stock/{productId}/adjust-stock', [StockController::class, 'adjustStock']);
+  Route::post('/stock/{product}/log-adjustment', [StockController::class, 'logAdjustment']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

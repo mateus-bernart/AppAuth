@@ -80,6 +80,7 @@ const Branches = () => {
               onPress={() => {
                 handleNavigation('BranchStock', {branchId: item.id});
               }}>
+              <View style={styles.itemBand} />
               <View style={styles.itemDetailsContainer}>
                 <Text
                   style={styles.itemName}
@@ -106,6 +107,13 @@ export default Branches;
 
 const styles = StyleSheet.create({
   body: {
+    flex: 1,
+    marginBottom: 100,
+  },
+  itemBand: {
+    backgroundColor: 'green',
+    borderTopLeftRadius: 10,
+    borderBottomLeftRadius: 10,
     flex: 1,
   },
   header: {
@@ -134,9 +142,6 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    gap: 20,
-    alignItems: 'center',
-    padding: 14,
     marginVertical: 10,
     backgroundColor: 'white',
     marginHorizontal: 20,
@@ -149,6 +154,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 5,
+  },
+  itemDetailsContainer: {
+    flex: 16,
+    padding: 14,
   },
   itemName: {
     fontSize: 18,
@@ -168,8 +177,5 @@ const styles = StyleSheet.create({
     backgroundColor: '#ffcece',
     padding: 10,
     borderRadius: 10,
-  },
-  itemDetailsContainer: {
-    flex: 1,
   },
 });

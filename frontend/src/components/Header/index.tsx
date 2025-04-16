@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   container: {
-    height: 30,
+    height: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

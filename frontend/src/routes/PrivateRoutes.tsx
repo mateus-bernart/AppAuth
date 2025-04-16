@@ -34,7 +34,7 @@ const PrivateRouteTabs = () => {
           height: 80,
         },
         tabBarItemStyle: {
-          height: 80,
+          height: 90,
         },
         tabBarIconStyle: {
           width: '100%',
@@ -47,7 +47,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="user-alt" size={25} color={color} />
+              <IconFontAwesome name="user-alt" size={30} color={color} />
               <Text style={styles.textContainer}>Profile</Text>
             </View>
           ),
@@ -59,7 +59,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="home" size={25} color={color} />
+              <IconFontAwesome name="home" size={30} color={color} />
               <Text style={styles.textContainer}>Branches</Text>
             </View>
           ),
@@ -71,7 +71,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="file-alt" size={25} color={color} />
+              <IconFontAwesome name="file-alt" size={30} color={color} />
               <Text style={styles.textContainer}>Users</Text>
             </View>
           ),
@@ -83,17 +83,15 @@ const PrivateRouteTabs = () => {
 
 export const styles = StyleSheet.create({
   container: {
-    gap: 4,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     height: '100%',
   },
   textContainer: {
-    fontSize: 14,
+    fontSize: 18,
     fontFamily: 'Poppins-Medium',
     color: 'white',
-    marginTop: 4,
   },
 });
 

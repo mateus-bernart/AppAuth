@@ -29,7 +29,6 @@ import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../components/CustomInput';
 import Header from '../../../components/Header';
-import FloatingButton from '../../../components/FloatingButton';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -40,8 +39,8 @@ const UserDetails = ({route}) => {
   const [selectedImage, setSelectedImage] = useState<any>(null);
 
   const userId = route?.params?.userId ?? session?.userId;
+  const isMyProfile = !route?.params?.userId;
 
-  const isFocused = useIsFocused();
   const [editable, setEditable] = useState(false);
 
   const inputForm = useRef<TextInput>(null);
@@ -194,7 +193,13 @@ const UserDetails = ({route}) => {
   };
 
   const handleEdit = async data => {
+    if (!isMyProfile) return;
+
     if (!editable) {
+      toast.show('Click on the button again to save.', {
+        type: 'info',
+        placement: 'top',
+      });
       setEditable(state => !state);
       return;
     }
@@ -249,7 +254,19 @@ const UserDetails = ({route}) => {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={{flex: 1, position: 'relative'}}>
         {/* ================ HEADER ============= */}
-        <Header title="USER DETAILS" />
+        <Header title="USER DETAILS" iconLeft={!isMyProfile} />
+
+        {isMyProfile && (
+          <TouchableOpacity
+            onPress={handleSubmit(handleEdit)}
+            style={styles.iconEdit}>
+            <IconMaterialIcons
+              name={editable ? 'check' : 'create'}
+              size={35}
+              color="white"
+            />
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           onPress={() => handleLogout()}
@@ -411,11 +428,6 @@ const UserDetails = ({route}) => {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      {!editable ? (
-        <FloatingButton size={30} iconName="pen" />
-      ) : (
-        <FloatingButton size={30} iconName="check" />
-      )}
     </SafeAreaView>
   );
 };
@@ -488,6 +500,13 @@ const styles = StyleSheet.create({
     right: 30,
     top: 5,
     color: 'red',
+  },
+  iconEdit: {
+    position: 'absolute',
+    padding: 10,
+    backgroundColor: '#47b64c',
+    left: 30,
+    borderRadius: 10,
   },
   profileImage: {
     height: 150,

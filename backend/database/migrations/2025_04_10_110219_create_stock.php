@@ -16,7 +16,7 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
                 $table->foreignId('branch_id')->constrained('branches');
-                $table->string('batch')->unique();
+                $table->string('batch');
                 $table->integer('quantity');
                 $table->timestamps();
             });

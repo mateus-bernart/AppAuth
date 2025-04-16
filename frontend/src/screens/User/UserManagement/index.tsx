@@ -18,11 +18,9 @@ import {useAuth} from '../../../providers/AuthProvider';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import axiosInstance from '../../../services/api';
-import CustomInput from '../../../components/CustomInput';
 import {useForm} from 'react-hook-form';
-import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import SearchBar from '../../../components/SearchBar';
-import FloatingButton from '../../../components/FloatingButton';
+import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -93,8 +91,13 @@ const UserManagement = () => {
 
   return (
     <SafeAreaView style={[styles.body, {position: 'relative'}]}>
-      <Header title="USER MANAGEMENT" />
+      <Header title="USER MANAGEMENT" iconLeft={false} />
       <SearchBar control={control} />
+      <TouchableOpacity
+        onPress={() => navigation.navigate('Register')}
+        style={styles.iconEdit}>
+        <IconFontAwesome5 name="user-plus" size={35} color="white" />
+      </TouchableOpacity>
       <FlatList
         data={userList.filter(user => user.id != session?.userId)}
         renderItem={({item}) => {
@@ -139,7 +142,6 @@ const UserManagement = () => {
           );
         }}
       />
-      <FloatingButton iconName="plus" size={30} />
     </SafeAreaView>
   );
 };
@@ -156,6 +158,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     flexDirection: 'row',
+  },
+  iconEdit: {
+    position: 'absolute',
+    padding: 10,
+    backgroundColor: '#41a746',
+    right: 30,
+    top: 50,
+    borderRadius: 10,
   },
   profilePicture: {
     height: 50,

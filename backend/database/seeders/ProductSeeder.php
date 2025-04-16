@@ -76,7 +76,7 @@ class ProductSeeder extends Seeder
 
         foreach ($products as $product) {
             do {
-                $code = rand(1000, 9999);
+                $code = rand(1000, 99999);
             } while (in_array($code, $usedCodes));
 
             $usedCodes[] = $code;

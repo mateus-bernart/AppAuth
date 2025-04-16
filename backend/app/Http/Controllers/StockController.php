@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Stock;
+use App\Models\StockLog;
 use Illuminate\Http\Request;
 
 class StockController extends Controller
@@ -14,35 +15,40 @@ class StockController extends Controller
         return response()->json(['stock' => $stock]);
     }
 
-    public function adjustStock(Request $request,  $productId)
+    public function logAdjustment($productId, Request $request)
     {
+
         $request->validate([
-            'action' => 'required|in:increment,decrement',
-            'branch_id' => 'required|exists:branches,id'
+            'branch_id' => 'required|exists:branches,id',
+            'new_quantity' => 'required|integer|min:0',
         ]);
 
-        //adjust this, first is coming from branch 8
         $stock = Stock::where('product_id', $productId)
             ->where('branch_id', $request->branch_id)
             ->firstOrFail();
 
-        if ($request->action === 'increment') {
-            $stock->increment('quantity');
-        } else {
-            if ($stock->quantity <= 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Cannot decrement - stock already at zero'
-                ], 400);
-            }
-            $stock->decrement('quantity');
+        $quantityChange = $request->new_quantity - $stock->quantity;
+
+        if (!$quantityChange) {
+            return response()->json(['success' => true, 'message' => 'No changes.']);
         }
+
+        $log = StockLog::create([
+            'user_id' => auth()->id(),
+            'branch_id' => $request->branch_id,
+            'product_id' => $productId,
+            'old_quantity' => $stock->quantity,
+            'new_quantity' => $request->new_quantity,
+            'quantity_change' => $quantityChange,
+            'action' => 'manual_adjustment'
+        ]);
+
+        $stock->update(['quantity' => $request->new_quantity]);
 
         return response()->json([
             'success' => true,
-            'branch' => $stock->branch_id,
-            'product' => $stock->product,
-            'new_quantity' => $stock->quantity
-        ], 200);
+            'log_id' => $log->id,
+            'quantity_change' => $quantityChange
+        ]);
     }
 }

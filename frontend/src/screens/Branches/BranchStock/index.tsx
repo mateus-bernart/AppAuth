@@ -6,13 +6,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {act, useCallback, useEffect, useState} from 'react';
 import axiosInstance from '../../../services/api';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useToast} from 'react-native-toast-notifications';
-import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
+import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import CustomInput from '../../../components/CustomInput';
 import {useForm} from 'react-hook-form';
 import Header from '../../../components/Header';
@@ -34,6 +34,8 @@ type Branch = {
   code: string;
 };
 
+type UpdatedQuantities = Record<number, number>;
+
 const BranchStock = ({route}) => {
   const branchId = route.params?.branchId;
   const [productList, setProductList] = useState<Product[]>([]);
@@ -41,7 +43,10 @@ const BranchStock = ({route}) => {
   const toast = useToast();
   const [branchInfo, setBranchInfo] = useState<Branch | null>(null);
   const [editable, setEditable] = useState(false);
-  const [updatedQuantities, setUpdatedQuantities] = useState({});
+
+  const [updatedQuantities, setUpdatedQuantities] = useState<UpdatedQuantities>(
+    {},
+  );
 
   const {control, watch} = useForm();
   const searchTerm = watch('term');
@@ -67,20 +72,34 @@ const BranchStock = ({route}) => {
     }
   };
 
-  const handleAdjustQuantity = async (action, productId) => {
+  const handleAdjustQuantity = async (
+    action: 'increment' | 'decrement',
+    productId: number,
+  ) => {
     try {
-      const response = await axiosInstance.post(
-        `/stock/${productId}/adjust-stock`,
-        {action, branch_id: branchId},
-      );
+      const currentValue = getCurrentQuantity(productId);
 
-      const newQuantity = response.data.new_quantity;
+      const newValue =
+        action === 'increment'
+          ? currentValue + 1
+          : Math.max(0, currentValue - 1);
 
-      setUpdatedQuantities(prev => ({...prev, [productId]: newQuantity}));
+      setUpdatedQuantities(prev => ({
+        ...prev,
+        [productId]: newValue,
+      }));
     } catch (error) {
       toast.show('Error updating quantity', {type: 'danger'});
       console.log(error.response);
     }
+  };
+
+  const getCurrentQuantity = (productId: number): number => {
+    return (
+      updatedQuantities[productId] ??
+      productList.find(p => p.id === productId)?.quantity ??
+      0
+    );
   };
 
   const handleConfirmEdit = () => {
@@ -91,7 +110,7 @@ const BranchStock = ({route}) => {
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'YES', onPress: () => handleEnableEdit()},
+        {text: 'YES', onPress: () => setEditable(true)},
       ]);
     } else {
       Alert.alert('Confirm Changes?', 'Are you sure?', [
@@ -100,18 +119,47 @@ const BranchStock = ({route}) => {
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'YES', onPress: () => handleEnableEdit()},
-      ]);
-    }
-  };
+        {
+          text: 'YES',
+          onPress: async () => {
+            try {
+              await Promise.all(
+                Object.entries(updatedQuantities).map(
+                  async ([productId, newQuantity]) => {
+                    const response = await axiosInstance.post(
+                      `/stock/${productId}/log-adjustment`,
+                      {
+                        branch_id: branchId,
+                        new_quantity: newQuantity,
+                      },
+                    );
+                    console.log(response.data);
+                  },
+                ),
+              );
 
-  const handleEnableEdit = () => {
-    if (editable) {
-      setEditable(false);
-      fetchBranchInfo();
-      toast.show('Stock updated', {type: 'success', placement: 'top'});
-    } else {
-      setEditable(true);
+              setEditable(false);
+              fetchBranchInfo();
+              setUpdatedQuantities({});
+
+              if (Object.keys(updatedQuantities).length === 0) {
+                toast.show('No changes', {type: 'info', placement: 'top'});
+                return;
+              }
+
+              toast.show('Changes confirmed and stored', {
+                type: 'success',
+                placement: 'top',
+              });
+            } catch (error) {
+              toast.show('Failed to store changes', {
+                type: 'danger',
+                placement: 'top',
+              });
+            }
+          },
+        },
+      ]);
     }
   };
 
@@ -138,15 +186,19 @@ const BranchStock = ({route}) => {
         )}
       </TouchableOpacity>
       <SearchBar control={control} />
+      {editable && (
+        <TouchableOpacity
+          onPress={() => handleNavigation('AddProduct', {branchId: branchId})}>
+          <View style={styles.addProductButtonContainer}>
+            <Text style={styles.addProductButtonText}>Add new Product</Text>
+          </View>
+        </TouchableOpacity>
+      )}
       <FlatList
         data={productList.filter(branch => branch.id)}
         renderItem={({item}) => {
-          const newQuantity = updatedQuantities[item.id];
-
-          const wasChanged =
-            newQuantity !== undefined && newQuantity !== item.quantity;
-
-          console.log(wasChanged);
+          const newQuantity = updatedQuantities[item.id] ?? item.quantity;
+          const wasChanged = updatedQuantities[item.id] !== undefined;
 
           return (
             <View style={styles.itemContainer}>
@@ -243,24 +295,21 @@ const BranchStock = ({route}) => {
                         handleAdjustQuantity('increment', item.id);
                       }}
                       style={[
-                        editable
-                          ? styles.buttonAdjustActive
-                          : styles.buttonAdjustInactive,
+                        editable && styles.buttonAdjust,
                         {borderTopRightRadius: 10},
+                        {borderBottomWidth: 1},
                       ]}>
-                      <IconFontAwesome name="chevron-up" size={40} />
+                      <IconFontAwesome name="plus" size={40} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
                         handleAdjustQuantity('decrement', item.id);
                       }}
                       style={[
-                        editable
-                          ? styles.buttonAdjustActive
-                          : styles.buttonAdjustInactive,
+                        editable && styles.buttonAdjust,
                         {borderBottomRightRadius: 10},
                       ]}>
-                      <IconFontAwesome name="chevron-down" size={40} />
+                      <IconFontAwesome name="minus" size={40} />
                     </TouchableOpacity>
                   </>
                 </View>
@@ -294,6 +343,19 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: 'white',
   },
+  addProductButtonContainer: {
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#4b55ec',
+    marginHorizontal: 20,
+    borderRadius: 8,
+  },
+  addProductButtonText: {
+    color: 'white',
+    fontFamily: 'Poppins-Bold',
+    fontSize: 20,
+  },
   header: {
     marginHorizontal: 30,
     marginVertical: 10,
@@ -311,21 +373,13 @@ const styles = StyleSheet.create({
   itemDetailWrapper: {
     flex: 3,
   },
-  buttonAdjustActive: {
+  buttonAdjust: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',
     height: '100%',
     backgroundColor: '#d8d8d8',
-  },
-  buttonAdjustInactive: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#ffffff',
   },
   itemName: {
     fontSize: 20,
