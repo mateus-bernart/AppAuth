@@ -18,11 +18,14 @@ import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
+import {saveProductOffline} from '../../../../helpers/databaseHelpers/stockProduct';
+import {useDatabase} from '../../../../providers/DatabaseProvider';
 
 const AddProduct = ({route}) => {
   const branchId = route?.params?.branchId;
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
+  const db = useDatabase();
 
   const {
     control,
@@ -66,23 +69,21 @@ const AddProduct = ({route}) => {
 
   const handleAddProduct = async data => {
     try {
-      const response = await axiosInstance.post(
-        `/branch/${branchId}/product/create/`,
-        {
-          name: data.name,
-          description: data.description,
-          code: data.code,
-          quantity: data.quantity,
-          batch: data.batch,
-          price: data.price,
-          branchId: branchId,
-        },
-      );
-      toast.show('Product added successfully', {
-        type: 'success',
-        placement: 'top',
-      });
-      console.log(response);
+      saveProductOffline(db, data, branchId);
+
+      // const response = await axiosInstance.post(
+      //   `/branch/${branchId}/product/create/`,
+      //   {
+      //     name: data.name,
+      //     description: data.description,
+      //     code: data.code,
+      //     quantity: data.quantity,
+      //     batch: data.batch,
+      //     price: data.price,
+      //     branchId: branchId,
+      //   },
+      // );
+
       navigation.goBack();
     } catch (e) {
       if (e.response && e.response.data && e.response.data.errors) {

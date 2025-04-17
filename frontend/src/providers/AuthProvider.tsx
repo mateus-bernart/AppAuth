@@ -7,12 +7,6 @@ import React, {
   useState,
 } from 'react';
 import {storageDelete, storageGet, storageSet} from '../services/storage';
-import Axios from 'axios';
-
-const axios = Axios.create({
-  baseURL: 'http://172.16.1.131:8000/api',
-  //interceptor -> token storage para enviar para api
-});
 
 type Session = {
   userId: number;

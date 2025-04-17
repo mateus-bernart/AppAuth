@@ -9,6 +9,7 @@ import {Text} from 'react-native-gesture-handler';
 import Branches from '../screens/Branches';
 import BranchStack from './navigation/branches';
 import UserStack from './navigation/users';
+import Sync from '../screens/Sync';
 
 const Tab = createBottomTabNavigator();
 
@@ -27,7 +28,7 @@ const PrivateRouteTabs = () => {
         tabBarStyle: {
           position: 'absolute',
           bottom: 55,
-          marginHorizontal: 30,
+          marginHorizontal: 10,
           elevation: 8,
           backgroundColor: '#0e7a00',
           borderRadius: 20,
@@ -77,6 +78,18 @@ const PrivateRouteTabs = () => {
           ),
         }}
       />
+      <Tab.Screen
+        name="Sync"
+        component={Sync}
+        options={{
+          tabBarIcon: ({color}) => (
+            <View style={styles.container}>
+              <IconFontAwesome name="sync" size={30} color={color} />
+              <Text style={styles.textContainer}>Sync</Text>
+            </View>
+          ),
+        }}
+      />
     </Tab.Navigator>
   );
 };
@@ -89,7 +102,7 @@ export const styles = StyleSheet.create({
     height: '100%',
   },
   textContainer: {
-    fontSize: 18,
+    fontSize: 16,
     fontFamily: 'Poppins-Medium',
     color: 'white',
   },

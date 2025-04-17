@@ -5,6 +5,7 @@ import IconEntypo from 'react-native-vector-icons/Entypo';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import AuthProvider from './providers/AuthProvider';
 import Routes from './routes/Routes';
+import {DatabaseProvider} from './providers/DatabaseProvider';
 
 const App = () => {
   return (
@@ -17,7 +18,9 @@ const App = () => {
         dangerIcon={<IconEntypo name="warning" size={30} />}
         successIcon={<IconFontAwesome name="check" size={30} color="white" />}>
         <NavigationContainer>
-          <Routes />
+          <DatabaseProvider>
+            <Routes />
+          </DatabaseProvider>
         </NavigationContainer>
       </ToastProvider>
     </AuthProvider>
