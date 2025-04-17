@@ -142,11 +142,6 @@ const BranchStock = ({route}) => {
               fetchBranchInfo();
               setUpdatedQuantities({});
 
-              if (Object.keys(updatedQuantities).length === 0) {
-                toast.show('No changes', {type: 'info', placement: 'top'});
-                return;
-              }
-
               toast.show('Changes confirmed and stored', {
                 type: 'success',
                 placement: 'top',
@@ -328,6 +323,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     position: 'relative',
+    marginBottom: 90,
   },
   editStockButton: {
     padding: 8,

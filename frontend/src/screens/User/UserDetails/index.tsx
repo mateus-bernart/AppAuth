@@ -379,7 +379,7 @@ const UserDetails = ({route}) => {
                     }}
                     control={control}
                     name="phone_number"
-                    placeholder="(+33)3333-3333"
+                    placeholder="Not set yet"
                     keyboardType="number-pad"
                     iconLeft="phone-alt"
                     editable={editable}
@@ -397,7 +397,7 @@ const UserDetails = ({route}) => {
                     <CustomInput
                       control={control}
                       name="street"
-                      placeholder="123 Main Street"
+                      placeholder="Not set yet"
                       iconLeft="map-signs"
                       editable={editable}
                     />
@@ -407,7 +407,7 @@ const UserDetails = ({route}) => {
                     <CustomInput
                       control={control}
                       name="neighborhood"
-                      placeholder="Downtown, etc."
+                      placeholder="Not set yet"
                       iconLeft="map"
                       editable={editable}
                     />
@@ -417,7 +417,7 @@ const UserDetails = ({route}) => {
                     <CustomInput
                       control={control}
                       name="street_number"
-                      placeholder="Apt 4B or House 42"
+                      placeholder="Not set yet"
                       iconLeft="home"
                       editable={editable}
                     />
