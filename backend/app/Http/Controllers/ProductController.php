@@ -16,13 +16,18 @@ class ProductController extends Controller
 
     public function createProduct(Request $request, $branchId)
     {
+
+        $request->merge([
+            'price' => str_replace(',', '.', $request->input('price'))
+        ]);
+
         $fields = $request->validate([
-            'name'        => 'required|max:255',
-            'description' => 'required|max:255',
-            'code'        => 'required|digits:6|unique:products',
-            'quantity'    => 'required|max:255',
-            'batch'       => 'required|max:255',
-            'price'       => 'required|max:255',
+            'name'        => 'required|max:255|string',
+            'description' => 'required|max:1000|nullable',
+            'code'        => 'required|unique:products|integer|digits:6',
+            'quantity'    => 'required|integer|min:0',
+            'batch'       => 'required|integer|min:0',
+            'price'       => 'required|numeric|min:0',
         ]);
 
         $product = Product::create($fields);

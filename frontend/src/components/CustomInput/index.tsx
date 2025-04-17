@@ -78,7 +78,16 @@ const CustomInput: React.FC<CustomInputProps> = ({
             <TextInput
               style={[formStyle ? styles.formInput : styles.textInputStyle]}
               value={value}
-              onChangeText={onChange}
+              onChangeText={text => {
+                let formatted = text;
+                if (name === 'price') {
+                  formatted = text.replace(',', '.');
+                  formatted = formatted.replace(/[^0-9.]/g, '');
+                } else if (keyboardType === 'number-pad') {
+                  formatted = text.replace(/[^0-9]/g, '');
+                }
+                onChange(formatted);
+              }}
               onBlur={onBlur}
               placeholder={placeholder}
               secureTextEntry={!eyeToggle && secureTextEntry}

@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class Product extends Model
 {
     protected $fillable = [
-        'code',
         'name',
         'description',
+        'code',
+        'price',
     ];
 
     public function stock()

@@ -82,6 +82,7 @@ const AddProduct = ({route}) => {
         type: 'success',
         placement: 'top',
       });
+      console.log(response);
       navigation.goBack();
     } catch (e) {
       if (e.response && e.response.data && e.response.data.errors) {
@@ -114,6 +115,7 @@ const AddProduct = ({route}) => {
                 name="name"
                 placeholder="Enter product name"
                 iconLeft="user"
+                keyboardType="default"
               />
             </View>
             <View style={styles.containerInfo}>
@@ -124,6 +126,7 @@ const AddProduct = ({route}) => {
                 name="description"
                 placeholder="Enter product Description"
                 iconLeft="file-alt"
+                keyboardType="default"
               />
             </View>
             <View style={styles.containerInfo}>
@@ -134,6 +137,7 @@ const AddProduct = ({route}) => {
                 name="code"
                 placeholder="Enter product Code"
                 iconLeft="code"
+                keyboardType="number-pad"
               />
             </View>
             <View style={styles.containerInfo}>
@@ -144,6 +148,7 @@ const AddProduct = ({route}) => {
                 name="quantity"
                 placeholder="Enter product Quantity"
                 iconLeft="ellipsis-h"
+                keyboardType="number-pad"
               />
             </View>
             <View style={styles.containerInfo}>
@@ -154,6 +159,7 @@ const AddProduct = ({route}) => {
                 name="batch"
                 placeholder="Enter product Batch"
                 iconLeft="truck-moving"
+                keyboardType="number-pad"
               />
             </View>
             <View style={styles.containerInfo}>
@@ -164,6 +170,7 @@ const AddProduct = ({route}) => {
                 name="price"
                 placeholder="Enter product Price"
                 iconLeft="money-check-alt"
+                keyboardType="decimal-pad"
               />
             </View>
           </ScrollView>
