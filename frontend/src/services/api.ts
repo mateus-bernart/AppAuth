@@ -9,6 +9,8 @@ const axiosInstance = Axios.create({
   },
 });
 
+console.log(BASE_URL);
+
 axiosInstance.interceptors.request.use(
   async function (config) {
     const authToken = await storageGet('AcessToken');
