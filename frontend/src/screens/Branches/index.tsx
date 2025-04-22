@@ -50,7 +50,6 @@ const Branches = () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await axiosInstance.get<Branch[]>(`/branches${query}`);
-      console.log(response);
       setBranchList(response.data);
     } catch (error) {
       console.log('Error fetching branches:', error);

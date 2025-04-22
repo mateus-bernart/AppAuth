@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
+
+    public function checkCode($productCode)
+    {
+        $exists = Product::where('code', $productCode)->exists();
+        return response()->json(['exists' => $exists], 200);
+    }
+
     public function getBranchStockProducts($branchId)
     {
         $products = Stock::where('branch_id', $branchId)->get();

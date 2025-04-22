@@ -16,7 +16,7 @@ const Tab = createBottomTabNavigator();
 const PrivateRouteTabs = () => {
   return (
     <Tab.Navigator
-      initialRouteName="Branches"
+      initialRouteName="BranchStack"
       backBehavior="history"
       screenOptions={{
         tabBarActiveTintColor: 'white',
@@ -55,7 +55,7 @@ const PrivateRouteTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Branches"
+        name="BranchStack"
         component={BranchStack}
         options={{
           tabBarIcon: ({color}) => (

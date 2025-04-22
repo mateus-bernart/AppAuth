@@ -18,7 +18,10 @@ import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import {useNavigation} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
-import {saveProductOffline} from '../../../../helpers/databaseHelpers/stockProduct';
+import {
+  checkCodeAvailable,
+  saveProductOffline,
+} from '../../../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
 
 const AddProduct = ({route}) => {
@@ -69,7 +72,25 @@ const AddProduct = ({route}) => {
 
   const handleAddProduct = async data => {
     try {
-      saveProductOffline(db, data, branchId);
+      const result = await checkCodeAvailable(db, data.code);
+
+      if (result.exists) {
+        setError('code', {
+          type: 'manual',
+          message:
+            result.source === 'local'
+              ? 'This product code is already in your device.'
+              : 'This code is already in the database.',
+        });
+        return;
+      }
+
+      await saveProductOffline(db, data, branchId);
+
+      toast.show('Product added locally', {
+        type: 'success',
+        placement: 'top',
+      });
 
       // const response = await axiosInstance.post(
       //   `/branch/${branchId}/product/create/`,
@@ -90,13 +111,13 @@ const AddProduct = ({route}) => {
         Object.keys(e.response.data.errors).map(key => {
           setError(key, {message: e.response.data.errors[key][0]});
         });
-        toast.show("Coudn' add the product", {
+        toast.show("Coudn't add the product", {
           type: 'danger',
           placement: 'top',
         });
         console.log(e.response);
       } else {
-        console.log('Unexpected error structure:', e.response);
+        console.log('Unexpected error structure:', e);
       }
     }
   };
@@ -137,7 +158,7 @@ const AddProduct = ({route}) => {
                 control={control}
                 name="code"
                 placeholder="Enter product Code"
-                iconLeft="code"
+                iconLeft="hashtag"
                 keyboardType="number-pad"
               />
             </View>
@@ -148,7 +169,7 @@ const AddProduct = ({route}) => {
                 control={control}
                 name="quantity"
                 placeholder="Enter product Quantity"
-                iconLeft="ellipsis-h"
+                iconLeft="boxes"
                 keyboardType="number-pad"
               />
             </View>
