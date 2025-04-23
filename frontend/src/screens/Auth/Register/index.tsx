@@ -27,7 +27,7 @@ const Register = () => {
   const toast = useToast();
   const {isAuthenticated} = useAuth();
   const [iconDirection, setIconDirection] = useState(false);
-  const [emailToVerify, setEmailToVerify] = useState();
+  const [emailToVerify, setEmailToVerify] = useState(false);
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -111,7 +111,6 @@ const Register = () => {
             });
             setEmailToVerify(data.email);
           }
-          navigation.navigate('UserManagement');
         } else {
           toast.show('Fail to register user, please check Wi-fi connection.', {
             type: 'danger',

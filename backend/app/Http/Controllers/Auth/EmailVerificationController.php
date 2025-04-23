@@ -54,6 +54,7 @@ class EmailVerificationController extends Controller
 
         if ($user->otp === $request->otp) {
             $user->email_verified = true;
+            $user->email_verified_at = now();
             $user->otp = null;
             $user->otp_expires_at = null;
             $user->save();

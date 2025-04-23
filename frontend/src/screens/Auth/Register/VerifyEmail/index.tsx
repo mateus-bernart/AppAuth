@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -15,44 +15,69 @@ import {OtpInput} from 'react-native-otp-entry';
 import {useToast} from 'react-native-toast-notifications';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import axiosInstance from '../../../../services/api';
+import dayjs from 'dayjs';
+import SubmitButton from '../../../../components/SubmitButton';
 
 const VerifyEmail = ({route}) => {
   const navigation = useNavigation<AppNavigationProp>();
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
   const toast = useToast();
+  const [otpTrigger, setOtpTrigger] = useState(0);
+
+  const [timeLeft, setTimeLeft] = useState('');
 
   const [otp, setOtp] = useState('');
   const {userEmail} = route?.params || {};
 
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  const handleNavigation = (screen, value) => {
+    navigation.navigate(screen, value);
   };
 
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+  useEffect(() => {
+    let interval;
+
+    const fetchExpiration = async () => {
+      try {
+        const response = await axiosInstance.post('/user/check-otp-timeout', {
+          email: userEmail,
+        });
+
+        const expiresAt = dayjs(response.data.expires_at);
+
+        clearInterval(interval);
+
+        interval = setInterval(() => {
+          const now = dayjs();
+          const diff = expiresAt.diff(now, 'second');
+
+          if (diff < 0) {
+            clearInterval(interval);
+            setTimeLeft('Expired');
+          } else {
+            const minutes = Math.floor(diff / 60);
+            const seconds = diff % 60;
+            setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+          }
+        }, 1000);
+      } catch (error) {
+        setTimeLeft('Could not fetch expiration');
+        console.log(error.response);
+      }
+    };
+
+    if (userEmail) fetchExpiration();
+    return () => clearInterval(interval);
+  }, [otpTrigger]);
+
+  const reSendOtp = async email => {
+    try {
+      const response = await axiosInstance.post('/email/send-otp', {
+        email,
+      });
+      setOtpTrigger(prev => prev + 1);
+      console.log(response.data);
+    } catch (error) {
+      console.log(error.response.data);
+    }
   };
 
   const verifyOtp = async () => {
@@ -93,7 +118,7 @@ const VerifyEmail = ({route}) => {
       <View style={styles.body}>
         <Image
           source={require('../../../../assets/Newmessage-bro.png')}
-          style={{height: 300, width: 400}}
+          style={{height: 200, width: 300}}
         />
         <View style={styles.messageEmailContainer}>
           <Text style={styles.descriptionText}>
@@ -113,7 +138,14 @@ const VerifyEmail = ({route}) => {
           numberOfDigits={4}
           onTextChange={text => setOtp(text)}
         />
-        <TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => {
+            reSendOtp(userEmail);
+            toast.show('Email send again', {
+              type: 'success',
+              placement: 'top',
+            });
+          }}>
           <View style={styles.messageEmailContainer}>
             <Text style={styles.descriptionText}>
               Didn't receive a code?{' '}
@@ -123,23 +155,26 @@ const VerifyEmail = ({route}) => {
             </Text>
           </View>
         </TouchableOpacity>
-      </View>
-      <View style={{position: 'relative', margin: 30}}>
-        <View style={styles.shadowContainer} />
-        <Pressable
-          onPress={() => {
-            verifyOtp();
-          }}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}>
-          <Animated.View
+        <View style={styles.timeoutContainer}>
+          <Text style={styles.timeOutText}>Time to timeout code:</Text>
+          <Text
             style={[
-              styles.buttonContainer,
-              {transform: [{translateX}, {translateY}]},
+              styles.timeOutText,
+              styles.timeOutTextHighlighted,
+              {
+                backgroundColor:
+                  timeLeft === 'Expired' ? '#f0000075' : '#0c91007f',
+              },
+              {
+                color: timeLeft === 'Expired' ? '#fff' : '#000',
+              },
             ]}>
-            <Text style={styles.buttonText}>Verify Email</Text>
-          </Animated.View>
-        </Pressable>
+            {timeLeft}
+          </Text>
+        </View>
+      </View>
+      <View style={{marginHorizontal: 30, marginTop: 20}}>
+        <SubmitButton text={'Verify'} onButtonPressed={() => verifyOtp()} />
       </View>
       <TouchableOpacity>
         <View style={styles.messageEmailContainer}>
@@ -227,5 +262,18 @@ const styles = StyleSheet.create({
   highLightedText: {
     color: 'blue',
     fontFamily: 'Poppins-Bold',
+  },
+  timeoutContainer: {
+    marginVertical: 30,
+  },
+  timeOutText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
+    alignSelf: 'center',
+  },
+  timeOutTextHighlighted: {
+    fontSize: 30,
+    padding: 10,
+    borderRadius: 8,
   },
 });
