@@ -36,7 +36,8 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/products/check-code/{productId}', [ProductController::class, 'checkCode']);
 
   // ============ STOCK ===========
-  Route::post('/stock/{product}/log-adjustment', [StockController::class, 'logAdjustment']);
+  Route::post('/stock/{productId}/log-adjustment', [StockController::class, 'logAdjustment']);
+  Route::post('/stock/{productId}/log-add', [StockController::class, 'logAdd']);
 });
 
 Route::post('/register', [AuthController::class, 'register']);

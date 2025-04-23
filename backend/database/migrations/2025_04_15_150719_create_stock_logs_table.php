@@ -18,10 +18,9 @@ return new class extends Migration
             $table->foreignId('product_id')->constrained();
             $table->integer('old_quantity');
             $table->integer('new_quantity');
-            $table->integer('quantity_change');
+            $table->integer('quantity_change')->nullable();
             $table->string('action');
             $table->timestamps();
-
             $table->index(['product_id', 'branch_id']);
             $table->index('created_at');
         });

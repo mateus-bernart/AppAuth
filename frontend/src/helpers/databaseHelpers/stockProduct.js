@@ -70,18 +70,18 @@ export const saveProductOffline = async (db, product, branchId) => {
         ],
       );
 
-      const insertId = createdProduct[0].insertId;
+      const productId = createdProduct[0].insertId;
 
       await db.executeSql(
         `INSERT INTO 
         stocks (product_id, branch_id, batch, quantity, created_at, updated_at, synced) 
         VALUES (?, ?, ?, ?, ?, ?, ?)`,
-        [insertId, branchId, product.batch, product.quantity, now, now, 0],
+        [productId, branchId, product.batch, product.quantity, now, now, 0],
       );
 
       resolve('Product created and saved locally');
     } catch (error) {
-      console.log('Error saving the product: ', error);
+      console.log('❌ Error saving the product: ', error);
       reject(error);
     }
   });
@@ -97,8 +97,9 @@ export const deleteData = async db => {
         [],
       );
     });
+    console.log('✅ Products deleted ');
   } catch (error) {
-    console.log('Error deleting the product:', error.response);
+    console.log('❌ Error deleting the product:', error.response);
   }
 };
 
@@ -129,7 +130,7 @@ export const showData = async db => {
       });
     });
   } catch (error) {
-    console.log('Error fetching products:', error);
+    console.log('❌ Error fetching products:', error);
     reject(error);
     throw error;
   }
@@ -152,9 +153,9 @@ const syncBranches = async db => {
         );
       }
     });
-    console.log('Branches updated');
+    console.log('✅ Branches updated');
   } catch (error) {
-    console.log('Error syncthing branches: ', error);
+    console.log('❌ Error syncthing branches: ', error);
   }
 };
 
@@ -204,7 +205,7 @@ export const syncProducts = db => {
         const unsynced = [];
 
         if (rows.length === 0) {
-          console.log('No data to update');
+          console.log('✅ No data to update');
           return resolve('no_changes');
         }
 
@@ -227,20 +228,31 @@ export const syncProducts = db => {
               },
             );
 
+            //Log stock
+            const backendProductId = response.data.product.id;
+            try {
+              const response = await axiosInstance.post(
+                `/stock/${backendProductId}/log-add`,
+                {
+                  branch_id: branchId,
+                  quantity: product.quantity,
+                },
+              );
+            } catch (error) {
+              console.log('❌ Log Error:', error.response);
+              return reject('Error Logging, check Wi-fi connection');
+            }
+
             if (response.status === 200 || response.status === 201) {
               await db.executeSql(
                 `UPDATE products SET synced = 1 WHERE id = ?;`,
                 [product.id],
               );
+
               await db.executeSql(
                 `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
                 [product.id, branchId],
               );
-
-              console.log(`Product ${product.name} synchronized`);
-
-              await db.executeSql(`DELETE FROM products WHERE synced = 1`);
-              await db.executeSql(`DELETE FROM stocks WHERE synced = 1`);
             }
           } catch (err) {
             console.log(
@@ -250,11 +262,14 @@ export const syncProducts = db => {
             return reject('Error syncthing, check Wi-fi connection');
           }
         }
-
+        console.log(`✅ Product ${product.name} synchronized`);
         resolve('synced');
       } catch (err) {
         console.log('❌ Inespected error synchronizing: ', err);
         reject('Internal Error while synchronizing.');
+      } finally {
+        await db.executeSql(`DELETE FROM products WHERE synced = 1`);
+        await db.executeSql(`DELETE FROM stocks WHERE synced = 1`);
       }
     }
   });

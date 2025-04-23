@@ -47,7 +47,7 @@ class ProductController extends Controller
         ]);
 
         if ($product->wasRecentlyCreated) {
-            return ['name' => $product, 'status' => 'created'];
+            return ['product' => $product, 'status' => 'created'];
         } else {
             return ['status' => 'fail'];
         }

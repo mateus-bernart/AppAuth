@@ -86,7 +86,7 @@ const AddProduct = ({route}) => {
       }
 
       await saveProductOffline(db, data, branchId);
-
+      
       toast.show('Product added locally', {
         type: 'success',
         placement: 'top',
@@ -154,7 +154,13 @@ const AddProduct = ({route}) => {
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Code</Text>
               <CustomInput
-                rules={{required: 'Code is required'}}
+                rules={{
+                  required: 'Code is required',
+                  maxLength: {
+                    value: 6,
+                    message: 'Code must contain 6 digits',
+                  },
+                }}
                 control={control}
                 name="code"
                 placeholder="Enter product Code"
