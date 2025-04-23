@@ -23,6 +23,7 @@ import {
   saveProductOffline,
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
+import {isOnline} from '../../../../helpers/networkHelper';
 
 const AddProduct = ({route}) => {
   const branchId = route?.params?.branchId;
@@ -71,9 +72,10 @@ const AddProduct = ({route}) => {
   };
 
   const handleAddProduct = async data => {
+    const online = await isOnline();
+
     try {
       const result = await checkCodeAvailable(db, data.code);
-
       if (result.exists) {
         setError('code', {
           type: 'manual',
@@ -85,25 +87,27 @@ const AddProduct = ({route}) => {
         return;
       }
 
-      await saveProductOffline(db, data, branchId);
-      
-      toast.show('Product added locally', {
+      if (!online) {
+        await saveProductOffline(db, data, branchId);
+      } else {
+        const response = await axiosInstance.post(
+          `/branch/${branchId}/product/create/`,
+          {
+            name: data.name,
+            description: data.description,
+            code: data.code,
+            quantity: data.quantity,
+            batch: data.batch,
+            price: data.price,
+            branchId: branchId,
+          },
+        );
+      }
+
+      toast.show('Product added', {
         type: 'success',
         placement: 'top',
       });
-
-      // const response = await axiosInstance.post(
-      //   `/branch/${branchId}/product/create/`,
-      //   {
-      //     name: data.name,
-      //     description: data.description,
-      //     code: data.code,
-      //     quantity: data.quantity,
-      //     batch: data.batch,
-      //     price: data.price,
-      //     branchId: branchId,
-      //   },
-      // );
 
       navigation.goBack();
     } catch (e) {
