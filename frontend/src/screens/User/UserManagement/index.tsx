@@ -64,7 +64,10 @@ const UserManagement = () => {
   const deleteUser = id => {
     axiosInstance
       .delete(`/user/delete/${id}`)
-      .then(() => fetchUsers())
+      .then(response => {
+        toast.show(response.data.message, {type: 'success', placement: 'top'});
+        fetchUsers();
+      })
       .catch(e => {
         toast.show(e, {
           type: 'danger',

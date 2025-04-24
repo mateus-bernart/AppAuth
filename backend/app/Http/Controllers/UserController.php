@@ -30,7 +30,7 @@ class UserController extends Controller
         if ($user) {
             $result = $user->delete();
             if ($result) {
-                return ['message' => 'User was deleted'];
+                return ['message' => 'User deleted'];
             } else {
                 return ['message' => 'User wasn\'t deleted'];
             }
