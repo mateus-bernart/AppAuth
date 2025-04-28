@@ -11,6 +11,7 @@ class Stock extends Model
         'branch_id',
         'batch',
         'quantity',
+        'synced',
     ];
 
     public function product()

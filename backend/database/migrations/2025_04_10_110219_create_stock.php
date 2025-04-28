@@ -18,6 +18,7 @@ return new class extends Migration
                 $table->foreignId('branch_id')->constrained('branches');
                 $table->string('batch');
                 $table->integer('quantity');
+                $table->integer('synced')->default(0);
                 $table->timestamps();
             });
         }

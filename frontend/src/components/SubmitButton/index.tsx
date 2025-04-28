@@ -1,8 +1,19 @@
 import {Animated, Pressable, StyleSheet, Text, View} from 'react-native';
 import React, {useRef} from 'react';
-import {useForm} from 'react-hook-form';
 
-const SubmitButton = ({text, onButtonPressed}) => {
+type SubmitButtonProps = {
+  text: string;
+  onButtonPressed: any;
+  textSize?: number;
+  height?: number;
+};
+
+const SubmitButton: React.FC<SubmitButtonProps> = ({
+  text,
+  onButtonPressed,
+  textSize,
+  height,
+}) => {
   const translateX = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(0)).current;
 
@@ -48,7 +59,13 @@ const SubmitButton = ({text, onButtonPressed}) => {
             styles.buttonContainer,
             {transform: [{translateX}, {translateY}]},
           ]}>
-          <Text style={styles.buttonText}>{text}</Text>
+          <Text
+            style={[
+              styles.buttonText,
+              {fontSize: textSize || 15, height: height || 'auto'},
+            ]}>
+            {text}
+          </Text>
         </Animated.View>
       </Pressable>
     </View>

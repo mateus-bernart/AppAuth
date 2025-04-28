@@ -1,6 +1,8 @@
 import {
   Alert,
   FlatList,
+  Image,
+  ImageSourcePropType,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -27,6 +29,7 @@ export type Product = {
   batch: string;
   quantity: string;
   price: number;
+  image: Image | null;
 };
 
 type Branch = {
@@ -175,7 +178,7 @@ const BranchStock = ({route}) => {
         style={styles.editStockButton}
         onPress={() => handleConfirmEdit()}>
         {!editable ? (
-          <Text style={styles.editStockText}>Edit Stock</Text>
+          <Text style={styles.editStockText}>Modify</Text>
         ) : (
           <Text style={styles.editStockText}>Confirm</Text>
         )}

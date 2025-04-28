@@ -31,9 +31,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
   // ============ PRODUCT ===========
   Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
-  Route::post('/branch/{branchId}/product/create', [ProductController::class, 'createProduct']);
-  Route::delete('/product/delete/{id}', [ProductController::class, 'deleteProduct']);
   Route::get('/products/check-code/{productId}', [ProductController::class, 'checkCode']);
+  Route::get('/product/{productId}', [ProductController::class, 'getProduct']);
+  Route::post('/branch/{branchId}/product/create', [ProductController::class, 'createProduct']);
+  Route::post('/product/{productId}/add-image', [ProductController::class, 'addImage']);
+  Route::delete('/product/delete/{id}', [ProductController::class, 'deleteProduct']);
+  Route::delete('/product/{productId}/remove-image', [ProductController::class, 'removeImage']);
 
   // ============ STOCK ===========
   Route::post('/stock/{productId}/log-adjustment', [StockController::class, 'logAdjustment']);

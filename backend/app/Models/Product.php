@@ -11,6 +11,8 @@ class Product extends Model
         'description',
         'code',
         'price',
+        'synced',
+        'image'
     ];
 
     public function stock()

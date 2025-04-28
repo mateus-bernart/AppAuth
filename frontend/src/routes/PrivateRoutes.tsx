@@ -27,11 +27,11 @@ const PrivateRouteTabs = () => {
         headerShown: false,
         tabBarStyle: {
           position: 'absolute',
-          bottom: 55,
+          bottom: 60,
           marginHorizontal: 10,
           elevation: 8,
           backgroundColor: '#0e7a00',
-          borderRadius: 20,
+          borderRadius: 10,
           height: 80,
         },
         tabBarItemStyle: {

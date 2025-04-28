@@ -6,9 +6,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useRef} from 'react';
+import React, {useRef, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Header from '../../../../components/Header';
 import CustomInput from '../../../../components/CustomInput';
@@ -24,12 +25,16 @@ import {
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
 import {isOnline} from '../../../../helpers/networkHelper';
+import SubmitButton from '../../../../components/SubmitButton';
+import {Asset, launchImageLibrary, MediaType} from 'react-native-image-picker';
+import {BASE_URL} from '../../../../services/config';
 
 const AddProduct = ({route}) => {
   const branchId = route?.params?.branchId;
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
   const db = useDatabase();
+  const [image, setImage] = useState<Asset | undefined>(undefined);
 
   const {
     control,
@@ -38,92 +43,83 @@ const AddProduct = ({route}) => {
     formState: {errors},
   } = useForm();
 
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
+  const pickImage = async () => {
+    const result = await launchImageLibrary({
+      mediaType: 'photo',
+      includeBase64: false,
+    });
 
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    if (result.didCancel) {
+      console.log('User cancelled camera');
+    } else if (result.errorCode) {
+      console.log('Camera Error: ', result.errorMessage);
+    } else {
+      setImage(result.assets?.[0]);
+    }
   };
 
   const handleAddProduct = async data => {
     const online = await isOnline();
 
-    try {
-      const result = await checkCodeAvailable(db, data.code);
-      if (result.exists) {
-        setError('code', {
-          type: 'manual',
-          message:
-            result.source === 'local'
-              ? 'This product code is already in your device.'
-              : 'This code is already in the database.',
-        });
-        return;
-      }
+    const result = await checkCodeAvailable(db, data.code);
+    if (result.exists) {
+      setError('code', {
+        type: 'manual',
+        message:
+          result.source === 'local'
+            ? 'This product code is already in your device.'
+            : 'This code is already in the database.',
+      });
+      return;
+    }
 
-      if (!online) {
-        await saveProductOffline(db, data, branchId);
-      } else {
-        const response = await axiosInstance.post(
-          `/branch/${branchId}/product/create/`,
-          {
-            name: data.name,
-            description: data.description,
-            code: data.code,
-            quantity: data.quantity,
-            batch: data.batch,
-            price: data.price,
-            branchId: branchId,
-          },
-        );
-      }
+    if (!online) {
+      await saveProductOffline(db, data, branchId);
+    } else {
+      const formData = new FormData();
 
-      toast.show('Product added', {
-        type: 'success',
-        placement: 'top',
+      Object.entries(data).forEach(([key, value]) => {
+        formData.append(key, value);
       });
 
-      navigation.goBack();
-    } catch (e) {
-      if (e.response && e.response.data && e.response.data.errors) {
-        Object.keys(e.response.data.errors).map(key => {
-          setError(key, {message: e.response.data.errors[key][0]});
+      if (image) {
+        formData.append('image', {
+          uri: image?.uri,
+          type: image.type,
+          name: image.fileName,
         });
-        toast.show("Coudn't add the product", {
-          type: 'danger',
-          placement: 'top',
-        });
-        console.log(e.response);
-      } else {
-        console.log('Unexpected error structure:', e);
+      }
+
+      try {
+        const response = await axiosInstance.post(
+          `/branch/${branchId}/product/create/`,
+          formData,
+          {headers: {'Content-Type': 'multipart/form-data'}},
+        );
+
+        console.log('Product response: ', response);
+      } catch (e) {
+        if (e.response && e.response.data && e.response.data.errors) {
+          Object.keys(e.response.data.errors).map(key => {
+            setError(key, {message: e.response.data.errors[key][0]});
+          });
+          toast.show("Coudn't add the product", {
+            type: 'danger',
+            placement: 'top',
+          });
+          console.log(e.response);
+        } else {
+          console.log('Unexpected error structure:', e.response);
+        }
       }
     }
+
+    toast.show('Product added', {
+      type: 'success',
+      placement: 'top',
+    });
+
+    navigation.goBack();
   };
 
   return (
@@ -205,24 +201,36 @@ const AddProduct = ({route}) => {
                 keyboardType="decimal-pad"
               />
             </View>
+            <View style={styles.containerInfo}>
+              <Text style={styles.formTitle}>Image</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  pickImage();
+                }}>
+                <View style={styles.imageContainer}>
+                  <IconFontAwesome name="image" size={25} />
+                  {image ? (
+                    <Text style={styles.imageTextPlaceholder}>
+                      {image.fileName}
+                    </Text>
+                  ) : (
+                    <Text style={styles.imageTextPlaceholder}>
+                      Click to insert image
+                    </Text>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
       <View style={[styles.registerContainerWrapper]}>
-        <View style={styles.shadowContainer} />
-        <Pressable
-          onPress={handleSubmit(handleAddProduct)}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}>
-          <Animated.View
-            style={[
-              styles.registerContainer,
-              {transform: [{translateX}, {translateY}]},
-            ]}>
-            <Text style={styles.buttonText}>Submit</Text>
-            <IconFontAwesome name="check" size={30} color="white" />
-          </Animated.View>
-        </Pressable>
+        <SubmitButton
+          text={'Save'}
+          height={25}
+          textSize={20}
+          onButtonPressed={handleSubmit(handleAddProduct)}
+        />
       </View>
     </>
   );
@@ -274,5 +282,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     color: 'black',
     fontFamily: 'Poppins-Bold',
+  },
+  imageContainer: {
+    flexDirection: 'row',
+    gap: 20,
+    backgroundColor: 'lightgray',
+    borderRadius: 8,
+    padding: 15,
+  },
+  imageTextPlaceholder: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 12,
   },
 });

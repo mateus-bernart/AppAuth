@@ -6,7 +6,7 @@ export const isOnline = async () => {
     const state = await NetInfo.fetch();
     return state.isConnected && state.isInternetReachable !== false;
   } catch (error) {
-    console.log('❌ Error checking connection: ', e);
+    console.log('❌ Error checking connection: ', error);
     return false;
   }
 };

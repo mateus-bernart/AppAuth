@@ -21,6 +21,7 @@ import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import Header from '../../../components/Header';
+import SubmitButton from '../../../components/SubmitButton';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -343,20 +344,12 @@ const Register = () => {
           styles.registerContainerWrapper,
           {height: isAuthenticated ? 240 : 150},
         ]}>
-        <View style={styles.shadowContainer} />
-        <Pressable
-          onPress={handleSubmit(onRegisterPressed)}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}>
-          <Animated.View
-            style={[
-              styles.registerContainer,
-              {transform: [{translateX}, {translateY}]},
-            ]}>
-            <Text style={styles.buttonText}>Submit</Text>
-            <IconFontAwesome name="check" size={30} color="white" />
-          </Animated.View>
-        </Pressable>
+        <SubmitButton
+          text={'Save'}
+          onButtonPressed={handleSubmit(onRegisterPressed)}
+          textSize={20}
+          height={25}
+        />
       </View>
     </>
   );
