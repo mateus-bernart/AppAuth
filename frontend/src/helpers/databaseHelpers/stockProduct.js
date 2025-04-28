@@ -53,12 +53,13 @@ export const checkCodeAvailable = async (db, productCode) => {
 export const saveProductOffline = async (db, product, branchId) => {
   return new Promise(async (resolve, reject) => {
     const now = dayjs().format('YYYY-MM-DDTHH:mm:ss');
+    console.log(product);
 
     try {
       const createdProduct = await db.executeSql(
-        `INSERT INTO 
-        products (code, name, description, created_at, updated_at, price, synced) 
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO
+        products (code, name, description, created_at, updated_at, price, synced, image) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           product.code,
           product.name,
@@ -67,6 +68,7 @@ export const saveProductOffline = async (db, product, branchId) => {
           now,
           product.price,
           0,
+          product.image,
         ],
       );
 
@@ -168,109 +170,90 @@ export const fullSync = async db => {
 
 export const syncProducts = db => {
   return new Promise(async (resolve, reject) => {
-    await fullSync(db);
+    try {
+      await fullSync(db);
 
-    const [results] = await db.executeSql(
-      `
-      SELECT p.*, s.quantity, s.batch, s.branch_id
-      FROM products p
-      INNER JOIN stocks s ON P.id = s.product_id
-      WHERE s.synced = 0;
-    `,
-    );
+      const [results] = await db.executeSql(
+        `
+        SELECT p.*, s.quantity, s.batch, s.branch_id
+        FROM products p
+        INNER JOIN stocks s ON P.id = s.product_id
+        WHERE s.synced = 0;
+      `,
+      );
 
-    const rows = results.rows;
-    if (rows.length === 0) {
-      console.log('✅ Nothing to synchronize');
-      return resolve('no_changes');
-    }
-
-    const unsynced = [];
-    for (let i = 0; i < rows.length; i++) {
-      unsynced.push(rows.item(i));
-    }
-
-    for (const product of unsynced) {
-      const branchId = product.branch_id;
-
-      try {
-        await db.executeSql(
-          `SELECT p.*, s.quantity, s.batch, s.branch_id
-             FROM products p 
-             INNER JOIN stocks s ON p.id = s.product_id 
-             WHERE s.synced = 0;`,
-        );
-
-        const rows = results.rows;
-        const unsynced = [];
-
-        if (rows.length === 0) {
-          console.log('✅ No data to update');
-          return resolve('no_changes');
-        }
-
-        for (let i = 0; i < rows.length; i++) {
-          unsynced.push(rows.item(i));
-        }
-
-        for (const product of unsynced) {
-          try {
-            const response = await axiosInstance.post(
-              `/branch/${branchId}/product/create`,
-              {
-                name: product.name,
-                description: product.description,
-                code: product.code,
-                quantity: product.quantity,
-                batch: product.batch,
-                price: product.price,
-                branchId: product.branch_id,
-              },
-            );
-
-            //Log stock
-            const backendProductId = response.data.product.id;
-            try {
-              const response = await axiosInstance.post(
-                `/stock/${backendProductId}/log-add`,
-                {
-                  branch_id: branchId,
-                  quantity: product.quantity,
-                },
-              );
-            } catch (error) {
-              console.log('❌ Log Error:', error.response);
-              return reject('Error Logging, check Wi-fi connection');
-            }
-
-            if (response.status === 200 || response.status === 201) {
-              await db.executeSql(
-                `UPDATE products SET synced = 1 WHERE id = ?;`,
-                [product.id],
-              );
-
-              await db.executeSql(
-                `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
-                [product.id, branchId],
-              );
-            }
-          } catch (err) {
-            console.log(
-              '❌ Error syncthing the product:',
-              err.response || err.message,
-            );
-            return reject('Error syncthing, check Wi-fi connection');
-          }
-        }
-        console.log(`✅ Product ${product.name} synchronized`);
-        resolve('synced');
-      } catch (err) {
-        console.log('❌ Inespected error synchronizing: ', err);
-        reject('Internal Error while synchronizing.');
-      } finally {
-        await db.executeSql(`DELETE FROM products WHERE synced = 1`);
-        await db.executeSql(`DELETE FROM stocks WHERE synced = 1`);
+      const rows = results.rows;
+      if (rows.length === 0) {
+        console.log('✅ Nothing to synchronize');
+        return resolve('no_changes');
       }
+
+      const unsynced = [];
+      for (let i = 0; i < rows.length; i++) {
+        unsynced.push(rows.item(i));
+      }
+
+      for (const product of unsynced) {
+        const branchId = product.branch_id;
+
+        try {
+          const formData = new FormData();
+
+          formData.append('name', product.name);
+          formData.append('description', product.description);
+          formData.append('code', String(product.code));
+          formData.append('quantity', String(product.quantity));
+          formData.append('batch', String(product.batch));
+          formData.append('price', String(product.price));
+          formData.append('branchId', String(branchId));
+
+          if (product.image) {
+            formData.append('image', {
+              uri: product.image,
+              type: 'image/jpeg',
+              name: `image_${Date.now()}.jpg`,
+            });
+          }
+
+          const response = await axiosInstance.post(
+            `/branch/${branchId}/product/create`,
+            formData,
+            {headers: {'Content-Type': 'multipart/form-data'}},
+          );
+
+          //Log stock
+          const backendProductId = response.data.product.id;
+
+          await axiosInstance.post(`/stock/${backendProductId}/log-add`, {
+            branch_id: branchId,
+            quantity: product.quantity,
+          });
+
+          await db.executeSql(`UPDATE products SET synced = 1 WHERE id = ?;`, [
+            product.id,
+          ]);
+
+          await db.executeSql(
+            `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
+            [product.id, branchId],
+          );
+
+          console.log(`✅ Product ${product.name} synchronized`);
+        } catch (err) {
+          console.log(
+            '❌ Error syncthing the product:',
+            err.response || err.message,
+          );
+          return reject('Error syncthing, check Wi-fi connection');
+        }
+      }
+      await db.executeSql(`DELETE FROM products WHERE synced = 1`);
+      await db.executeSql(`DELETE FROM stocks WHERE synced = 1`);
+
+      resolve('synced');
+    } catch (err) {
+      console.log('❌ Inespected error synchronizing: ', err);
+      reject('Internal Error while synchronizing.');
     }
   });
 };

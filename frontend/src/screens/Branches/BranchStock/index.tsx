@@ -70,7 +70,10 @@ const BranchStock = ({route}) => {
       setProductList(products);
       setBranchInfo(response.data.branch);
     } catch (error) {
-      toast.show('Error to find products', {type: 'danger', placement: 'top'});
+      toast.show('Error to find products, check internet connection', {
+        type: 'danger',
+        placement: 'top',
+      });
       console.log(error.response);
     }
   };

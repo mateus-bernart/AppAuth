@@ -8,7 +8,8 @@ export const createProductsTable = async db => {
     price REAL,
     created_at TEXT,
     updated_at TEXT,
-    synced INTEGER DEFAULT 0
+    synced INTEGER DEFAULT 0,
+    image TEXT
   );
 `);
 };

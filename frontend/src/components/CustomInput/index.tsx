@@ -24,6 +24,7 @@ interface CustomInputProps {
   ref?: Ref<TextInput> | undefined;
   textStyle?: boolean;
   formStyle?: boolean;
+  maxLength?: number;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -40,6 +41,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
   ref,
   textStyle,
   formStyle = true,
+  maxLength,
 }) => {
   const [eyeToggle, setEyeToggle] = useState(false);
 
@@ -95,6 +97,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
               defaultValue={defaultValue}
               editable={editable}
               ref={ref}
+              maxLength={maxLength}
             />
             {iconRight && (
               <TouchableOpacity

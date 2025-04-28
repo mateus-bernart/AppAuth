@@ -58,6 +58,20 @@ const AddProduct = ({route}) => {
     }
   };
 
+  const formDataToObject = (formData: FormData) => {
+    const obj: {[key: string]: any} = {};
+
+    formData.getParts().forEach(part => {
+      if ('fieldName' in part) {
+        if (typeof part.fieldName === 'string') {
+          obj[part.fieldName] = 'string' in part ? part.string : part.uri;
+        }
+      }
+    });
+
+    return obj;
+  };
+
   const handleAddProduct = async data => {
     const online = await isOnline();
 
@@ -73,23 +87,24 @@ const AddProduct = ({route}) => {
       return;
     }
 
-    if (!online) {
-      await saveProductOffline(db, data, branchId);
-    } else {
-      const formData = new FormData();
+    const formData = new FormData();
 
-      Object.entries(data).forEach(([key, value]) => {
-        formData.append(key, value);
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    if (image) {
+      formData.append('image', {
+        uri: image?.uri,
+        type: image.type,
+        name: image.fileName,
       });
+    }
 
-      if (image) {
-        formData.append('image', {
-          uri: image?.uri,
-          type: image.type,
-          name: image.fileName,
-        });
-      }
-
+    if (!online) {
+      const offlineProduct = formDataToObject(formData);
+      await saveProductOffline(db, offlineProduct, branchId);
+    } else {
       try {
         const response = await axiosInstance.post(
           `/branch/${branchId}/product/create/`,
@@ -158,7 +173,15 @@ const AddProduct = ({route}) => {
                   required: 'Code is required',
                   maxLength: {
                     value: 6,
-                    message: 'Code must contain 6 digits',
+                    message: 'Code must contain exactly 6 digits',
+                  },
+                  minLength: {
+                    value: 6,
+                    message: 'Code must contain exactly 6 digits',
+                  },
+                  pattern: {
+                    value: /^\d{6}$/,
+                    message: 'Code must be a 6-digit number',
                   },
                 }}
                 control={control}
@@ -166,6 +189,7 @@ const AddProduct = ({route}) => {
                 placeholder="Enter product Code"
                 iconLeft="hashtag"
                 keyboardType="number-pad"
+                maxLength={6}
               />
             </View>
             <View style={styles.containerInfo}>
@@ -177,6 +201,7 @@ const AddProduct = ({route}) => {
                 placeholder="Enter product Quantity"
                 iconLeft="boxes"
                 keyboardType="number-pad"
+                maxLength={10}
               />
             </View>
             <View style={styles.containerInfo}>
@@ -188,6 +213,7 @@ const AddProduct = ({route}) => {
                 placeholder="Enter product Batch"
                 iconLeft="truck-moving"
                 keyboardType="number-pad"
+                maxLength={10}
               />
             </View>
             <View style={styles.containerInfo}>
@@ -199,6 +225,7 @@ const AddProduct = ({route}) => {
                 placeholder="Enter product Price"
                 iconLeft="money-check-alt"
                 keyboardType="decimal-pad"
+                maxLength={10}
               />
             </View>
             <View style={styles.containerInfo}>

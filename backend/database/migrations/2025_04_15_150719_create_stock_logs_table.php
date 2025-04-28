@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained();
             $table->foreignId('branch_id')->constrained();
-            $table->foreignId('product_id')->constrained();
+            $table->foreignId('product_id')->nullable()->constrained()->onDelete('set null');
             $table->integer('old_quantity');
             $table->integer('new_quantity');
             $table->integer('quantity_change')->nullable();
