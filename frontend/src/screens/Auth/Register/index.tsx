@@ -206,10 +206,15 @@ const Register = () => {
                 <View style={styles.containerInfo}>
                   <Text style={styles.formTitle}>Phone number</Text>
                   <CustomInput
+                    maxLength={11}
                     rules={{
                       minLength: {
                         value: 11,
-                        message: 'Phone number should be minimum 11 characters',
+                        message: 'Phone number should be 11 characters',
+                      },
+                      maxLength: {
+                        value: 11,
+                        message: 'Phone number should be 11 characters',
                       },
                     }}
                     control={control}

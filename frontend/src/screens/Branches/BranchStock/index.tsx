@@ -15,7 +15,6 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
-import CustomInput from '../../../components/CustomInput';
 import {useForm} from 'react-hook-form';
 import Header from '../../../components/Header';
 import SearchBar from '../../../components/SearchBar';
@@ -197,6 +196,7 @@ const BranchStock = ({route}) => {
         )}
       </TouchableOpacity>
       <SearchBar control={control} />
+
       {editable && (
         <TouchableOpacity
           onPress={() => handleNavigation('AddProduct', {branchId: branchId})}>
@@ -231,7 +231,7 @@ const BranchStock = ({route}) => {
                   </Text>
                   <View style={styles.itemDetailContainer}>
                     <View style={styles.infoWrapper}>
-                      <View style={styles.infoContainer}>
+                      <View style={[styles.infoContainer]}>
                         <Text
                           style={styles.itemBatch}
                           numberOfLines={1}
@@ -296,18 +296,20 @@ const BranchStock = ({route}) => {
                           )}
                         </View>
                       </View>
-                      <SlideInView direction="left" distance={10} style={{}}>
-                        <View
-                          style={[
-                            styles.imageContainer,
-                            {alignItems: editable ? 'center' : 'flex-end'},
-                          ]}>
-                          <Image
-                            source={{uri: getImageByProductId(item.id)}}
-                            style={styles.imageStyle}
-                          />
-                        </View>
-                      </SlideInView>
+                      {item.image && (
+                        <SlideInView direction="left" distance={10} style={{}}>
+                          <View
+                            style={[
+                              styles.imageContainer,
+                              {alignItems: editable ? 'center' : 'flex-end'},
+                            ]}>
+                            <Image
+                              source={{uri: getImageByProductId(item.id)}}
+                              style={styles.imageStyle}
+                            />
+                          </View>
+                        </SlideInView>
+                      )}
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -481,7 +483,7 @@ const styles = StyleSheet.create({
   },
   imageStyle: {
     height: 120,
-    width: 120,
-    borderRadius: 12,
+    width: 160,
+    borderRadius: 10,
   },
 });
