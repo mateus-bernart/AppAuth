@@ -80,17 +80,24 @@ const BranchStockProductDetails = () => {
   };
 
   const handleRemoveImage = () => {
-    Alert.alert('Remove Image?', 'Are you sure you want to remove the image?', [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      {
-        text: 'OK',
-        onPress: () => removeImage(),
-      },
-    ]);
+    Alert.alert(
+      'Update or Remove Image',
+      'Would you like to update the image or remove it?',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Update',
+          onPress: () => handlenAddImage(),
+        },
+        {
+          text: 'Remove',
+          onPress: () => removeImage(),
+        },
+      ],
+    );
   };
 
   const removeImage = async () => {
@@ -257,11 +264,8 @@ const BranchStockProductDetails = () => {
               <>
                 <View style={styles.imageContainer}>
                   <Text style={styles.imageText}>Product image</Text>
-                  <Image source={{uri: imageUrl}} style={styles.imageStyle} />
-                  <TouchableOpacity
-                    onPress={() => handleRemoveImage()}
-                    style={styles.iconDeleteImage}>
-                    <IconFontAwesome name={'trash'} size={25} color="red" />
+                  <TouchableOpacity onPress={() => handleRemoveImage()}>
+                    <Image source={{uri: imageUrl}} style={styles.imageStyle} />
                   </TouchableOpacity>
                 </View>
               </>

@@ -20,6 +20,7 @@ import {useForm} from 'react-hook-form';
 import Header from '../../../components/Header';
 import SearchBar from '../../../components/SearchBar';
 import SlideInView from '../../../components/SlideView';
+import {BASE_URL} from '../../../services/config';
 
 export type Product = {
   id: number;
@@ -53,6 +54,15 @@ const BranchStock = ({route}) => {
 
   const {control, watch} = useForm();
   const searchTerm = watch('term');
+
+  const getImageByProductId = (productId: number): string => {
+    const product = productList.find(p => p.id === productId);
+    return product?.image
+      ? `${BASE_URL.replace('/api', '')}/storage/product_images/${
+          product.image
+        }`
+      : '';
+  };
 
   const fetchBranchInfo = async () => {
     try {
@@ -220,25 +230,35 @@ const BranchStock = ({route}) => {
                     {item.name}
                   </Text>
                   <View style={styles.itemDetailContainer}>
-                    <Text
-                      style={styles.itemBatch}
-                      numberOfLines={1}
-                      ellipsizeMode="tail">
-                      Batch: {item.batch}
-                    </Text>
-                    <View style={{alignItems: 'center'}}>
-                      <Text
-                        style={styles.itemDetails}
-                        numberOfLines={1}
-                        ellipsizeMode="tail">
-                        Quantity:
-                      </Text>
-                      <View style={styles.quantityValueContainer}>
-                        {wasChanged ? (
-                          <SlideInView
-                            direction="right"
-                            distance={30}
-                            style={{}}>
+                    <View style={styles.infoWrapper}>
+                      <View style={styles.infoContainer}>
+                        <Text
+                          style={styles.itemBatch}
+                          numberOfLines={1}
+                          ellipsizeMode="tail">
+                          Batch: {item.batch}
+                        </Text>
+                        <Text
+                          style={styles.itemDetails}
+                          numberOfLines={1}
+                          ellipsizeMode="tail">
+                          Quantity:
+                        </Text>
+                        <View style={styles.quantityValueContainer}>
+                          {wasChanged ? (
+                            <SlideInView
+                              direction="right"
+                              distance={30}
+                              style={{}}>
+                              <Text
+                                style={[
+                                  styles.detailsHighlighted,
+                                  wasChanged && styles.oldNumber,
+                                ]}>
+                                {item.quantity}
+                              </Text>
+                            </SlideInView>
+                          ) : (
                             <Text
                               style={[
                                 styles.detailsHighlighted,
@@ -246,44 +266,48 @@ const BranchStock = ({route}) => {
                               ]}>
                               {item.quantity}
                             </Text>
-                          </SlideInView>
-                        ) : (
-                          <Text
-                            style={[
-                              styles.detailsHighlighted,
-                              wasChanged && styles.oldNumber,
-                            ]}>
-                            {item.quantity}
-                          </Text>
-                        )}
+                          )}
 
-                        {wasChanged && (
-                          <>
-                            <SlideInView
-                              direction="left"
-                              distance={10}
-                              style={{}}>
-                              <IconFontAwesome
-                                name="arrow-right"
-                                size={20}
-                                style={{marginBottom: 5}}
-                              />
-                            </SlideInView>
-                            <SlideInView
-                              direction="left"
-                              distance={10}
-                              style={{}}>
-                              <Text
-                                style={[
-                                  styles.detailsHighlighted,
-                                  styles.newQuantityValue,
-                                ]}>
-                                {newQuantity}
-                              </Text>
-                            </SlideInView>
-                          </>
-                        )}
+                          {wasChanged && (
+                            <>
+                              <SlideInView
+                                direction="left"
+                                distance={10}
+                                style={{}}>
+                                <IconFontAwesome
+                                  name="arrow-right"
+                                  size={20}
+                                  style={{marginBottom: 5}}
+                                />
+                              </SlideInView>
+                              <SlideInView
+                                direction="left"
+                                distance={10}
+                                style={{}}>
+                                <Text
+                                  style={[
+                                    styles.detailsHighlighted,
+                                    styles.newQuantityValue,
+                                  ]}>
+                                  {newQuantity}
+                                </Text>
+                              </SlideInView>
+                            </>
+                          )}
+                        </View>
                       </View>
+                      <SlideInView direction="left" distance={10} style={{}}>
+                        <View
+                          style={[
+                            styles.imageContainer,
+                            {alignItems: editable ? 'center' : 'flex-end'},
+                          ]}>
+                          <Image
+                            source={{uri: getImageByProductId(item.id)}}
+                            style={styles.imageStyle}
+                          />
+                        </View>
+                      </SlideInView>
                     </View>
                   </View>
                 </TouchableOpacity>
@@ -300,7 +324,7 @@ const BranchStock = ({route}) => {
                         {borderTopRightRadius: 10},
                         {borderBottomWidth: 1},
                       ]}>
-                      <IconFontAwesome name="plus" size={40} />
+                      <IconFontAwesome name="plus" size={25} />
                     </TouchableOpacity>
                     <TouchableOpacity
                       onPress={() => {
@@ -310,7 +334,7 @@ const BranchStock = ({route}) => {
                         editable && styles.buttonAdjust,
                         {borderBottomRightRadius: 10},
                       ]}>
-                      <IconFontAwesome name="minus" size={40} />
+                      <IconFontAwesome name="minus" size={25} />
                     </TouchableOpacity>
                   </>
                 </View>
@@ -397,6 +421,7 @@ const styles = StyleSheet.create({
   itemBatch: {
     fontFamily: 'Poppins-Medium',
     fontSize: 16,
+    alignSelf: 'flex-start',
   },
   itemDetails: {
     marginTop: 10,
@@ -442,5 +467,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
     elevation: 5,
+  },
+  infoWrapper: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  infoContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  imageContainer: {
+    flex: 1,
+  },
+  imageStyle: {
+    height: 120,
+    width: 120,
+    borderRadius: 12,
   },
 });
