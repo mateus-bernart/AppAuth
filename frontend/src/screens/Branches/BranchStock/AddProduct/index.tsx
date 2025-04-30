@@ -300,7 +300,13 @@ const AddProduct = () => {
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Price</Text>
               <CustomInput
-                rules={{required: product ? false : 'Price is required'}}
+                rules={{
+                  required: product ? false : 'Price is required',
+                  maxLength: {
+                    value: 9,
+                    message: 'Price max digits is 9',
+                  },
+                }}
                 control={control}
                 name="price"
                 placeholder={
@@ -310,7 +316,7 @@ const AddProduct = () => {
                 }
                 iconLeft="money-check-alt"
                 keyboardType="decimal-pad"
-                maxLength={10}
+                maxLength={9}
                 defaultValue={product?.price}
               />
             </View>
