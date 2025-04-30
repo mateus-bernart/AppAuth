@@ -10,7 +10,9 @@ const Stack = createNativeStackNavigator();
 
 const BranchStack = () => {
   return (
-    <Stack.Navigator screenOptions={{headerShown: false}}>
+    <Stack.Navigator
+      screenOptions={{headerShown: false}}
+      initialRouteName="Branches">
       <Stack.Screen name="Branches" component={Branches} />
       <Stack.Screen name="BranchStock" component={BranchStock} />
       <Stack.Screen

@@ -67,7 +67,7 @@ const PrivateRouteTabs = () => {
         }}
       />
       <Tab.Screen
-        name="Manage"
+        name="Manage Users"
         component={UserStack}
         options={{
           tabBarIcon: ({color}) => (

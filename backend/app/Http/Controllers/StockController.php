@@ -8,6 +8,17 @@ use Illuminate\Http\Request;
 
 class StockController extends Controller
 {
+
+    public function getStock($productId)
+    {
+        $stock = Stock::where('product_id', $productId)->first();
+        if (!$stock) {
+            return response()->json('Stock not found with this product', 404);
+        } else {
+            return response()->json(['stock' => $stock]);
+        }
+    }
+
     public function getBranchStock($branchId)
     {
         $stock = Stock::where('branch_id', $branchId)->get();

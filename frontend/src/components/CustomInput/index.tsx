@@ -9,6 +9,7 @@ import {
 import React, {Ref, useState} from 'react';
 import {Controller} from 'react-hook-form';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
+import {format} from 'react-number-format/types/numeric_format';
 
 interface CustomInputProps {
   control: any;
@@ -19,12 +20,12 @@ interface CustomInputProps {
   keyboardType?: KeyboardTypeOptions;
   iconLeft?: string;
   iconRight?: boolean;
-  defaultValue?: string;
   editable?: boolean;
   ref?: Ref<TextInput> | undefined;
   textStyle?: boolean;
   formStyle?: boolean;
   maxLength?: number;
+  defaultValue?: any;
 }
 
 const CustomInput: React.FC<CustomInputProps> = ({
@@ -36,32 +37,24 @@ const CustomInput: React.FC<CustomInputProps> = ({
   keyboardType,
   iconLeft,
   iconRight,
-  defaultValue,
   editable = true,
-  ref,
   textStyle,
   formStyle = true,
   maxLength,
+  defaultValue, // ou algum valor adequado como 0, null, etc.
 }) => {
   const [eyeToggle, setEyeToggle] = useState(false);
 
   const handleShowPassword = () => {
-    if (eyeToggle) {
-      setEyeToggle(false);
-    } else {
-      setEyeToggle(true);
-    }
+    setEyeToggle(prev => !prev);
   };
-
-  if (textStyle) {
-    formStyle = false;
-  }
 
   return (
     <Controller
       control={control}
       name={name}
       rules={rules}
+      defaultValue={defaultValue ?? ''}
       render={({field: {value, onChange, onBlur}, fieldState: {error}}) => (
         <>
           <View
@@ -79,32 +72,36 @@ const CustomInput: React.FC<CustomInputProps> = ({
             )}
             <TextInput
               style={[formStyle ? styles.formInput : styles.textInputStyle]}
-              value={value}
+              value={String(value)} // Controlled by react-hook-form
               onChangeText={text => {
                 let formatted = text;
+
                 if (name === 'price') {
-                  formatted = text.replace(',', '.');
-                  formatted = formatted.replace(/[^0-9.]/g, '');
+                  formatted = text.replace(',', '.').replace(/[^0-9.]/g, '');
                 } else if (keyboardType === 'number-pad') {
                   formatted = text.replace(/[^0-9]/g, '');
                 }
-                onChange(formatted);
+
+                const parsedValue =
+                  keyboardType === 'number-pad' ? Number(formatted) : formatted;
+
+                onChange(parsedValue);
               }}
               onBlur={onBlur}
               placeholder={placeholder}
               secureTextEntry={!eyeToggle && secureTextEntry}
               keyboardType={keyboardType}
-              defaultValue={defaultValue}
               editable={editable}
-              ref={ref}
               maxLength={maxLength}
             />
             {iconRight && (
               <TouchableOpacity
                 style={{padding: 10}}
-                onPress={() => handleShowPassword()}>
-                {eyeToggle && <IconFontAwesome name="eye" size={20} />}
-                {!eyeToggle && <IconFontAwesome name="eye-slash" size={20} />}
+                onPress={handleShowPassword}>
+                <IconFontAwesome
+                  name={eyeToggle ? 'eye' : 'eye-slash'}
+                  size={20}
+                />
               </TouchableOpacity>
             )}
           </View>

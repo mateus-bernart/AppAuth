@@ -9,29 +9,52 @@ import {
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import {useNavigation, useRoute} from '@react-navigation/native';
+import {
+  RouteProp,
+  useFocusEffect,
+  useNavigation,
+  useRoute,
+} from '@react-navigation/native';
 import {Product} from '..';
 import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
-import {AppNavigationProp} from '../../../../types/navigationTypes';
+import {
+  AppNavigationProp,
+  RootStackParamList,
+} from '../../../../types/navigationTypes';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcon from 'react-native-vector-icons/MaterialCommunityIcons';
 import Header from '../../../../components/Header';
 import {BASE_URL} from '../../../../services/config';
 import {Asset, launchImageLibrary} from 'react-native-image-picker';
+import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+type ProductDetailRouteParams = {
+  product: Product;
+  branchId: number;
+};
 
 const BranchStockProductDetails = () => {
   const toast = useToast();
+  const route =
+    useRoute<
+      RouteProp<
+        {BranchStockProductDetails: ProductDetailRouteParams},
+        'BranchStockProductDetails'
+      >
+    >();
+  const {product, branchId} = route.params as {
+    product: Product;
+    branchId: number;
+  };
 
-  const route = useRoute();
-  const {product} = route.params as {product: Product};
   const navigation = useNavigation<AppNavigationProp>();
-  const [image, setImage] = useState<Asset | undefined>(undefined);
+  const [image, setImage] = useState<string | undefined>(undefined);
+  const [productData, setProductData] = useState(product);
 
-  const imageUrl = `${BASE_URL.replace(
-    '/api',
-    '',
-  )}/storage/product_images/${image}`;
+  const handleNavigation = (screen: keyof RootStackParamList, values) => {
+    navigation.navigate(screen, values);
+  };
 
   const confirmDeleteAlert = () =>
     Alert.alert('Delete Product?', 'Are you sure?', [
@@ -62,14 +85,28 @@ const BranchStockProductDetails = () => {
       });
   };
 
+  useFocusEffect(
+    useCallback(() => {
+      if (route.params?.product) {
+        setProductData(route.params.product);
+      }
+    }, [route.params?.product]),
+  );
+
   useEffect(() => {
-    fetchProductInfo();
-  }, [image]);
+    if (product?.image) {
+      const imageUrl = `${BASE_URL.replace(
+        '/api',
+        '',
+      )}/storage/product_images/${product.image}`;
+      setImage(imageUrl);
+    }
+  }, [product?.image]);
 
   const fetchProductInfo = async () => {
     try {
       const response = await axiosInstance.get(`/product/${product.id}`);
-      setImage(response.data.product.image);
+      setProductData({...product, ...response.data.product});
     } catch (error) {
       toast.show('Failed getting product data, check internet connection', {
         type: 'danger',
@@ -162,8 +199,11 @@ const BranchStockProductDetails = () => {
         type: 'success',
         placement: 'top',
       });
-      setImage(response.data.product.image);
-      fetchProductInfo();
+      const imageUrl = `${BASE_URL.replace(
+        '/api',
+        '',
+      )}/storage/product_images/${response.data.product.image}`;
+      setImage(imageUrl);
     } catch (error) {
       toast.show('Error uploading the image, check internet connection.', {
         type: 'danger',
@@ -175,13 +215,11 @@ const BranchStockProductDetails = () => {
 
   return (
     <SafeAreaView style={{flex: 1, marginBottom: 100}}>
-      <Header title="PRODUCT DETAILS" />
-
-      <TouchableOpacity
-        onPress={() => confirmDeleteAlert()}
-        style={styles.iconLogout}>
-        <IconFontAwesome name="trash" size={30} color="red" />
-      </TouchableOpacity>
+      <Header
+        title="PRODUCT DETAILS"
+        backToScreen="BranchStock"
+        routeParamsData={{branchId}}
+      />
 
       <ScrollView>
         <View style={styles.container}>
@@ -190,6 +228,18 @@ const BranchStockProductDetails = () => {
             <Text style={[styles.productNameText, styles.productCodeText]}>
               # {product?.code}
             </Text>
+            <TouchableOpacity
+              onPress={() =>
+                handleNavigation('AddProduct', {product: productData, branchId})
+              }
+              style={styles.iconEdit}>
+              <IconMaterialIcons name={'create'} size={35} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => confirmDeleteAlert()}
+              style={styles.iconDelete}>
+              <IconFontAwesome name="trash" size={30} color="red" />
+            </TouchableOpacity>
           </View>
           <View style={styles.productDetailWrapper}>
             <View style={styles.produtDetailContainer}>
@@ -202,7 +252,7 @@ const BranchStockProductDetails = () => {
               </View>
               <View style={styles.productInfoValueContainer}>
                 <Text style={styles.productInfoValueText}>
-                  {product?.price}
+                  ${product?.price}
                 </Text>
               </View>
             </View>
@@ -265,7 +315,7 @@ const BranchStockProductDetails = () => {
                 <View style={styles.imageContainer}>
                   <Text style={styles.imageText}>Product image</Text>
                   <TouchableOpacity onPress={() => handleRemoveImage()}>
-                    <Image source={{uri: imageUrl}} style={styles.imageStyle} />
+                    <Image source={{uri: image}} style={styles.imageStyle} />
                   </TouchableOpacity>
                 </View>
               </>
@@ -298,7 +348,6 @@ const styles = StyleSheet.create({
   },
   container: {
     flex: 1,
-    marginTop: 25,
     marginHorizontal: 20,
   },
   addImageContainer: {
@@ -320,6 +369,7 @@ const styles = StyleSheet.create({
     color: '#003000',
   },
   productNameContainer: {
+    position: 'relative',
     backgroundColor: '#118f00',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
@@ -327,10 +377,10 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     alignItems: 'center',
   },
-  iconLogout: {
+  iconDelete: {
     position: 'absolute',
-    right: 30,
-    top: 50,
+    right: 10,
+    top: 10,
     color: 'red',
     backgroundColor: 'pink',
     padding: 10,
@@ -406,5 +456,13 @@ const styles = StyleSheet.create({
   imageText: {
     fontSize: 20,
     fontFamily: 'Poppins-Medium',
+  },
+  iconEdit: {
+    position: 'absolute',
+    left: 10,
+    top: 10,
+    padding: 10,
+    backgroundColor: '#47b64c',
+    borderRadius: 10,
   },
 });

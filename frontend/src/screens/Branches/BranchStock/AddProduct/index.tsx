@@ -1,15 +1,14 @@
 import {
-  Animated,
+  Image,
   KeyboardAvoidingView,
   Platform,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import Header from '../../../../components/Header';
 import CustomInput from '../../../../components/CustomInput';
@@ -17,7 +16,7 @@ import {useForm} from 'react-hook-form';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
-import {useNavigation} from '@react-navigation/native';
+import {useNavigation, useRoute} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import {
   checkCodeAvailable,
@@ -27,10 +26,17 @@ import {useDatabase} from '../../../../providers/DatabaseProvider';
 import {isOnline} from '../../../../helpers/networkHelper';
 import SubmitButton from '../../../../components/SubmitButton';
 import {Asset, launchImageLibrary, MediaType} from 'react-native-image-picker';
-import {BASE_URL} from '../../../../services/config';
+import {Product} from '..';
 
-const AddProduct = ({route}) => {
-  const branchId = route?.params?.branchId;
+const AddProduct = () => {
+  const route = useRoute();
+  const {product, branchId} = route.params as {
+    product?: Product;
+    branchId?: number;
+  };
+
+  console.log(route.params);
+
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
   const db = useDatabase();
@@ -41,7 +47,44 @@ const AddProduct = ({route}) => {
     handleSubmit,
     setError,
     formState: {errors},
-  } = useForm();
+    reset,
+  } = useForm<Product>({
+    defaultValues: {
+      quantity: product?.quantity,
+      name: product?.name,
+      batch: product?.batch,
+      description: product?.description,
+      code: product?.code,
+      price: product?.price,
+    },
+  });
+
+  const fetchStockDetails = async productId => {
+    const response = await axiosInstance.get(`/stock/${productId}`);
+    console.log(response.data.stock);
+    return response.data.stock;
+  };
+
+  useEffect(() => {
+    if (product) {
+      const fetchStockInfo = async () => {
+        const stockInfo = await fetchStockDetails(product.id);
+        reset({
+          name: product?.name,
+          price: product?.price,
+          description: product?.description,
+          batch: stockInfo?.batch.toString() ?? '',
+          code: product?.code,
+          quantity: stockInfo?.quantity.toString() ?? '',
+        });
+      };
+      fetchStockInfo();
+    }
+  }, [product]);
+
+  const handleNavigation = (screen, value) => {
+    navigation.navigate(screen, value);
+  };
 
   const pickImage = async () => {
     const result = await launchImageLibrary({
@@ -75,16 +118,18 @@ const AddProduct = ({route}) => {
   const handleAddProduct = async data => {
     const online = await isOnline();
 
-    const result = await checkCodeAvailable(db, data.code);
-    if (result.exists) {
-      setError('code', {
-        type: 'manual',
-        message:
-          result.source === 'local'
-            ? 'This product code is already in your device.'
-            : 'This code is already in the database.',
-      });
-      return;
+    if (!product) {
+      const result = await checkCodeAvailable(db, data.code);
+      if (result.exists) {
+        setError('code', {
+          type: 'manual',
+          message:
+            result.source === 'local'
+              ? 'This product code is already in your device.'
+              : 'This code is already in the database.',
+        });
+        return;
+      }
     }
 
     const formData = new FormData();
@@ -106,22 +151,39 @@ const AddProduct = ({route}) => {
       await saveProductOffline(db, offlineProduct, branchId);
     } else {
       try {
-        const response = await axiosInstance.post(
-          `/branch/${branchId}/product/create/`,
-          formData,
-          {headers: {'Content-Type': 'multipart/form-data'}},
-        );
+        const response = await axiosInstance({
+          url: product
+            ? `/branch/${branchId}/product/createOrUpdate/${product.id}`
+            : `/branch/${branchId}/product/createOrUpdate/`,
+          method: 'post',
+          data: formData,
+          headers: {'Content-Type': 'multipart/form-data'},
+        });
 
         console.log('Product response: ', response);
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
+        handleNavigation('BranchStockProductDetails', {
+          product: response.data.product,
+          branchId: branchId,
+        });
       } catch (e) {
         if (e.response && e.response.data && e.response.data.errors) {
           Object.keys(e.response.data.errors).map(key => {
-            setError(key, {message: e.response.data.errors[key][0]});
+            setError(key as keyof Product, {
+              message: e.response.data.errors[key][0],
+            });
           });
-          toast.show("Coudn't add the product", {
-            type: 'danger',
-            placement: 'top',
-          });
+          toast.show(
+            product
+              ? "Couldn't update the product"
+              : "Couldn't add the product",
+            {
+              type: 'danger',
+              placement: 'top',
+            },
+          );
           console.log(e.response);
         } else {
           console.log('Unexpected error structure:', e.response);
@@ -133,44 +195,48 @@ const AddProduct = ({route}) => {
       type: 'success',
       placement: 'top',
     });
-
-    navigation.goBack();
   };
 
   return (
     <>
       <SafeAreaView style={styles.body}>
-        <Header title="ADD PRODUCT" />
+        <Header title={!product ? 'ADD PRODUCT' : 'UPDATE PRODUCT'} />
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Product Name</Text>
               <CustomInput
-                rules={{required: 'Name is required'}}
                 control={control}
                 name="name"
-                placeholder="Enter product name"
+                placeholder={
+                  product
+                    ? `Last value: "${product.name}"`
+                    : 'Enter product name'
+                }
                 iconLeft="user"
                 keyboardType="default"
+                rules={{required: 'Name is required'}}
+                defaultValue={product?.name}
               />
             </View>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Description</Text>
               <CustomInput
-                rules={{required: 'Description is required'}}
+                rules={{required: product ? false : 'Description is required'}}
                 control={control}
                 name="description"
                 placeholder="Enter product Description"
                 iconLeft="file-alt"
                 keyboardType="default"
+                defaultValue={product?.description}
               />
             </View>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Code</Text>
               <CustomInput
                 rules={{
-                  required: 'Code is required',
+                  required: product ? false : 'Code is required',
                   maxLength: {
                     value: 6,
                     message: 'Code must contain exactly 6 digits',
@@ -186,67 +252,99 @@ const AddProduct = ({route}) => {
                 }}
                 control={control}
                 name="code"
-                placeholder="Enter product Code"
+                placeholder={
+                  product
+                    ? `Last value: "${product.code}"`
+                    : 'Enter product code'
+                }
                 iconLeft="hashtag"
                 keyboardType="number-pad"
                 maxLength={6}
+                defaultValue={product?.code}
               />
             </View>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Quantity</Text>
               <CustomInput
-                rules={{required: 'Quantity is required'}}
+                rules={{required: product ? false : 'Quantity is required'}}
                 control={control}
                 name="quantity"
-                placeholder="Enter product Quantity"
+                placeholder={
+                  product
+                    ? `Last value: "${product.quantity}"`
+                    : 'Enter product quantity'
+                }
                 iconLeft="boxes"
                 keyboardType="number-pad"
                 maxLength={10}
+                defaultValue={product?.quantity}
               />
             </View>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Batch</Text>
               <CustomInput
-                rules={{required: 'Batch is required'}}
+                rules={{required: product ? false : 'Batch is required'}}
                 control={control}
                 name="batch"
-                placeholder="Enter product Batch"
+                placeholder={
+                  product
+                    ? `Last value: "${product.batch}"`
+                    : 'Enter product batch'
+                }
                 iconLeft="truck-moving"
                 keyboardType="number-pad"
                 maxLength={10}
+                defaultValue={product?.batch}
               />
             </View>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Price</Text>
               <CustomInput
-                rules={{required: 'Price is required'}}
+                rules={{required: product ? false : 'Price is required'}}
                 control={control}
                 name="price"
-                placeholder="Enter product Price"
+                placeholder={
+                  product
+                    ? `Last value: "${product.price}"`
+                    : 'Enter product price'
+                }
                 iconLeft="money-check-alt"
                 keyboardType="decimal-pad"
                 maxLength={10}
+                defaultValue={product?.price}
               />
             </View>
             <View style={styles.containerInfo}>
-              <Text style={styles.formTitle}>Image</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  pickImage();
-                }}>
-                <View style={styles.imageContainer}>
-                  <IconFontAwesome name="image" size={25} />
-                  {image ? (
-                    <Text style={styles.imageTextPlaceholder}>
-                      {image.fileName}
-                    </Text>
-                  ) : (
-                    <Text style={styles.imageTextPlaceholder}>
-                      Click to insert image
-                    </Text>
-                  )}
-                </View>
-              </TouchableOpacity>
+              {!product?.image && (
+                <>
+                  <Text style={styles.formTitle}>Image</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      pickImage();
+                    }}>
+                    <View style={styles.imageContainer}>
+                      {image ? (
+                        <>
+                          <Text style={styles.imageTextPlaceholder}>
+                            {image.fileName}
+                          </Text>
+                          <Image
+                            source={{uri: image.uri}}
+                            style={{height: 200, width: 300, borderRadius: 10}}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <IconFontAwesome name="image" size={25} />
+                          <Text style={styles.imageTextPlaceholder}>
+                            Click to insert image
+                          </Text>
+                        </>
+                      )}
+                    </View>
+                  </TouchableOpacity>
+                </>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
@@ -311,14 +409,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
   },
   imageContainer: {
-    flexDirection: 'row',
-    gap: 20,
+    gap: 10,
     backgroundColor: 'lightgray',
     borderRadius: 8,
     padding: 15,
+    alignItems: 'center',
+  },
+  imageContainerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 20,
+  },
+  imageField: {
+    alignItems: 'center',
   },
   imageTextPlaceholder: {
     fontFamily: 'Poppins-Medium',
-    fontSize: 12,
+    fontSize: 14,
+    color: 'gray',
   },
 });

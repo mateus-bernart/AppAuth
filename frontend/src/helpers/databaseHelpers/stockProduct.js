@@ -216,7 +216,8 @@ export const syncProducts = db => {
           }
 
           const response = await axiosInstance.post(
-            `/branch/${branchId}/product/create`,
+            //TODO: check this
+            `/branch/${branchId}/product/createOrUpdate`,
             formData,
             {headers: {'Content-Type': 'multipart/form-data'}},
           );

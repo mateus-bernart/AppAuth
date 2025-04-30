@@ -9,20 +9,31 @@ import {
 import React from 'react';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {useNavigation} from '@react-navigation/native';
-import {AppNavigationProp} from '../../types/navigationTypes';
+import {
+  AppNavigationProp,
+  RootStackParamList,
+} from '../../types/navigationTypes';
 
 type HeaderProps = {
   title: string;
   iconLeft?: boolean;
   iconRightName?: string;
+  backToScreen?: keyof RootStackParamList;
+  routeParamsData?: any;
 };
 
 const Header: React.FC<HeaderProps> = ({
   title,
   iconLeft = true,
   iconRightName,
+  backToScreen,
+  routeParamsData,
 }) => {
   const navigation = useNavigation<AppNavigationProp>();
+
+  const handleNavigation = (screen: keyof RootStackParamList, params) => {
+    navigation.navigate(screen, params);
+  };
 
   return (
     <View style={styles.container}>
@@ -30,7 +41,11 @@ const Header: React.FC<HeaderProps> = ({
         {iconLeft && (
           <TouchableOpacity
             onPress={() => {
-              navigation.goBack();
+              if (!backToScreen) {
+                navigation.goBack();
+              } else {
+                handleNavigation(backToScreen, routeParamsData);
+              }
             }}>
             <IconFontAwesome5 name="chevron-left" size={30} />
           </TouchableOpacity>

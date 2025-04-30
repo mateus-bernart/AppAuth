@@ -66,6 +66,8 @@ const BranchStock = ({route}) => {
   const fetchBranchInfo = async () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
+      console.log(branchId);
+
       const response = await axiosInstance.get(
         `/branch/${branchId}/stocks${query}`,
       );
@@ -218,6 +220,7 @@ const BranchStock = ({route}) => {
                   onPress={() => {
                     handleNavigation('BranchStockProductDetails', {
                       product: item,
+                      branchId: branchId,
                     });
                   }}>
                   <Text
@@ -303,10 +306,12 @@ const BranchStock = ({route}) => {
                               styles.imageContainer,
                               {alignItems: editable ? 'center' : 'flex-end'},
                             ]}>
-                            <Image
-                              source={{uri: getImageByProductId(item.id)}}
-                              style={styles.imageStyle}
-                            />
+                            {!editable && (
+                              <Image
+                                source={{uri: getImageByProductId(item.id)}}
+                                style={styles.imageStyle}
+                              />
+                            )}
                           </View>
                         </SlideInView>
                       )}
