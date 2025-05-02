@@ -246,8 +246,6 @@ const UserDetails = ({route}) => {
     },
   });
 
-  const userName = watch('name');
-
   return (
     <SafeAreaView style={{flex: 1}}>
       <KeyboardAvoidingView
@@ -257,22 +255,24 @@ const UserDetails = ({route}) => {
         <Header title="USER DETAILS" iconLeft={!isMyProfile} />
 
         {isMyProfile && (
-          <TouchableOpacity
-            onPress={handleSubmit(handleEdit)}
-            style={styles.iconEdit}>
-            <IconMaterialIcons
-              name={editable ? 'check' : 'create'}
-              size={35}
-              color="white"
-            />
-          </TouchableOpacity>
-        )}
+          <>
+            <TouchableOpacity
+              onPress={handleSubmit(handleEdit)}
+              style={styles.iconEdit}>
+              <IconMaterialIcons
+                name={editable ? 'check' : 'create'}
+                size={35}
+                color="white"
+              />
+            </TouchableOpacity>
 
-        <TouchableOpacity
-          onPress={() => handleLogout()}
-          style={styles.iconLogout}>
-          <IconMaterialIcons name="logout" size={35} color="red" />
-        </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => handleLogout()}
+              style={styles.iconLogout}>
+              <IconMaterialIcons name="logout" size={35} color="red" />
+            </TouchableOpacity>
+          </>
+        )}
 
         {/* ================ MODAL ============= */}
         <Modal
@@ -315,113 +315,109 @@ const UserDetails = ({route}) => {
         {/* ================ BODY ============= */}
 
         <ScrollView showsVerticalScrollIndicator={false} style={styles.body}>
-          <View>
-            <View style={styles.userHeaderContainer}>
-              {selectedImage ? (
-                <Image
-                  source={{uri: selectedImage}}
-                  style={styles.profileImage}
-                />
-              ) : (
-                <IconFontAwesome
-                  name="user"
-                  size={150}
-                  style={styles.userIcon}
-                />
-              )}
-              <View style={styles.containerName}>
+          <View style={styles.userHeaderContainer}>
+            {selectedImage ? (
+              <Image
+                source={{uri: selectedImage}}
+                style={styles.profileImage}
+              />
+            ) : (
+              <IconFontAwesome name="user" size={150} style={styles.userIcon} />
+            )}
+            <TouchableOpacity
+              onPress={() => setModalCameraVisible(true)}
+              style={styles.iconContainer}>
+              <MaterialCommunityIcons
+                name="image-plus"
+                style={styles.iconAddPhoto}
+                size={30}
+              />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.userInfoContainer}>
+            <View style={styles.containerHeader}>
+              <IconFontAwesome5 name="user-alt" size={25} />
+              <Text style={styles.headerInfo}>Contact Info</Text>
+            </View>
+            <View style={styles.infoWrapper}>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Name:</Text>
                 <CustomInput
                   rules={{required: 'Name is required'}}
                   control={control}
                   name="name"
+                  placeholder="Michael Scott (example)"
+                  keyboardType="default"
+                  iconLeft="font"
                   editable={editable}
                   ref={inputForm}
-                  textStyle
                 />
               </View>
-              <TouchableOpacity
-                onPress={() => setModalCameraVisible(true)}
-                style={styles.iconContainer}>
-                <MaterialCommunityIcons
-                  name="image-plus"
-                  style={styles.iconAddPhoto}
-                  size={30}
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Email:</Text>
+                <CustomInput
+                  rules={{required: 'Email is required'}}
+                  control={control}
+                  name="email"
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  iconLeft="envelope"
+                  editable={editable}
                 />
-              </TouchableOpacity>
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Phone:</Text>
+                <CustomInput
+                  rules={{
+                    minLength: {
+                      value: 11,
+                      message: 'Phone number should be minimum 11 characters',
+                    },
+                  }}
+                  control={control}
+                  name="phone_number"
+                  placeholder="Not set yet"
+                  keyboardType="number-pad"
+                  iconLeft="phone-alt"
+                  editable={editable}
+                />
+              </View>
             </View>
-            <View style={styles.userInfoContainer}>
+            <View>
               <View style={styles.containerHeader}>
-                <IconFontAwesome5 name="user-alt" size={25} />
-                <Text style={styles.headerInfo}>Contact Info</Text>
+                <IconFontAwesome5 name="map-marker-alt" size={25} />
+                <Text style={styles.headerInfo}>Address</Text>
               </View>
               <View style={styles.infoWrapper}>
                 <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Email:</Text>
+                  <Text style={styles.infoTitle}>Street:</Text>
                   <CustomInput
-                    rules={{required: 'Email is required'}}
                     control={control}
-                    name="email"
-                    placeholder="you@example.com"
-                    keyboardType="email-address"
-                    iconLeft="envelope"
+                    name="street"
+                    placeholder="Not set yet"
+                    iconLeft="map-signs"
                     editable={editable}
-                    ref={inputForm}
                   />
                 </View>
                 <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Phone:</Text>
+                  <Text style={styles.infoTitle}>Neighborhood:</Text>
                   <CustomInput
-                    rules={{
-                      minLength: {
-                        value: 11,
-                        message: 'Phone number should be minimum 11 characters',
-                      },
-                    }}
                     control={control}
-                    name="phone_number"
+                    name="neighborhood"
                     placeholder="Not set yet"
-                    keyboardType="number-pad"
-                    iconLeft="phone-alt"
+                    iconLeft="map"
                     editable={editable}
                   />
                 </View>
-              </View>
-              <View>
-                <View style={styles.containerHeader}>
-                  <IconFontAwesome5 name="map-marker-alt" size={25} />
-                  <Text style={styles.headerInfo}>Address</Text>
-                </View>
-                <View style={styles.infoWrapper}>
-                  <View style={styles.infoContainer}>
-                    <Text style={styles.infoTitle}>Street:</Text>
-                    <CustomInput
-                      control={control}
-                      name="street"
-                      placeholder="Not set yet"
-                      iconLeft="map-signs"
-                      editable={editable}
-                    />
-                  </View>
-                  <View style={styles.infoContainer}>
-                    <Text style={styles.infoTitle}>Neighborhood:</Text>
-                    <CustomInput
-                      control={control}
-                      name="neighborhood"
-                      placeholder="Not set yet"
-                      iconLeft="map"
-                      editable={editable}
-                    />
-                  </View>
-                  <View style={styles.infoContainer}>
-                    <Text style={styles.infoTitle}>Number:</Text>
-                    <CustomInput
-                      control={control}
-                      name="street_number"
-                      placeholder="Not set yet"
-                      iconLeft="home"
-                      editable={editable}
-                    />
-                  </View>
+                <View style={styles.infoContainer}>
+                  <Text style={styles.infoTitle}>Number:</Text>
+                  <CustomInput
+                    control={control}
+                    name="street_number"
+                    placeholder="Not set yet"
+                    iconLeft="home"
+                    editable={editable}
+                  />
                 </View>
               </View>
             </View>
@@ -452,7 +448,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
   },
   containerName: {
-    flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
   },
@@ -497,22 +492,21 @@ const styles = StyleSheet.create({
   },
   iconLogout: {
     position: 'absolute',
-    right: 30,
-    top: 5,
+    left: 30,
+    top: 10,
     color: 'red',
   },
   iconEdit: {
     position: 'absolute',
     padding: 10,
     backgroundColor: '#47b64c',
-    left: 30,
+    right: 30,
     borderRadius: 10,
   },
   profileImage: {
-    height: 150,
-    width: 150,
-    borderRadius: 80,
-    marginTop: 15,
+    height: 180,
+    width: 180,
+    borderRadius: 90,
   },
   header: {
     alignItems: 'center',
@@ -528,25 +522,22 @@ const styles = StyleSheet.create({
   },
   body: {
     flex: 1,
-    marginBottom: 50,
+    marginBottom: 60,
   },
   userHeaderContainer: {
-    height: 200,
-    backgroundColor: 'lightgray',
-    marginTop: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   iconAddPhoto: {
     color: 'white',
     padding: 10,
-    backgroundColor: '#005be4',
+    backgroundColor: '#60b565',
     borderRadius: 12,
   },
   iconContainer: {
     position: 'absolute',
-    right: 130,
-    bottom: 50,
+    right: 120,
+    bottom: 0,
   },
   userImageContainer: {
     alignItems: 'center',
@@ -579,10 +570,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     gap: 10,
-    backgroundColor: 'lightgray',
+    borderBottomWidth: 2,
+    borderBottomColor: '#579b6a',
     padding: 10,
     marginBottom: 12,
-    paddingLeft: 15,
+    paddingLeft: 10,
   },
   headerInfo: {
     fontFamily: 'Poppins-Medium',
@@ -600,8 +592,8 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   infoTitle: {
-    fontFamily: 'Poppins-Medium',
-    fontSize: 18,
+    fontFamily: 'Poppins-Bold',
+    fontSize: 17,
   },
   infoValue: {
     fontFamily: 'Poppins-Regular',

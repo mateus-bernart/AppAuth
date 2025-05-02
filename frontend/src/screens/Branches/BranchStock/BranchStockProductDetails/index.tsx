@@ -220,6 +220,13 @@ const BranchStockProductDetails = () => {
         backToScreen="BranchStock"
         routeParamsData={{branchId}}
       />
+      <TouchableOpacity
+        onPress={() =>
+          handleNavigation('AddProduct', {product: productData, branchId})
+        }
+        style={styles.iconEdit}>
+        <IconMaterialIcons name={'create'} size={35} color="white" />
+      </TouchableOpacity>
 
       <ScrollView>
         <View style={styles.container}>
@@ -228,18 +235,6 @@ const BranchStockProductDetails = () => {
             <Text style={[styles.productNameText, styles.productCodeText]}>
               # {product?.code}
             </Text>
-            <TouchableOpacity
-              onPress={() =>
-                handleNavigation('AddProduct', {product: productData, branchId})
-              }
-              style={styles.iconEdit}>
-              <IconMaterialIcons name={'create'} size={35} color="white" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => confirmDeleteAlert()}
-              style={styles.iconDelete}>
-              <IconFontAwesome name="trash" size={30} color="red" />
-            </TouchableOpacity>
           </View>
           <View style={styles.productDetailWrapper}>
             <View style={styles.produtDetailContainer}>
@@ -330,6 +325,16 @@ const BranchStockProductDetails = () => {
               </View>
             )}
           </View>
+          <TouchableOpacity onPress={() => confirmDeleteAlert()}>
+            <View style={styles.deleteProductContainer}>
+              <IconFontAwesome
+                name="trash"
+                size={20}
+                style={styles.iconDelete}
+              />
+              <Text style={styles.deleteText}>Delete product</Text>
+            </View>
+          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -370,7 +375,7 @@ const styles = StyleSheet.create({
   },
   productNameContainer: {
     position: 'relative',
-    backgroundColor: '#118f00',
+    backgroundColor: '#297c2f',
     borderTopLeftRadius: 10,
     borderTopRightRadius: 10,
     padding: 20,
@@ -378,13 +383,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   iconDelete: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
     color: 'red',
-    backgroundColor: 'pink',
+  },
+  deleteProductContainer: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 10,
-    borderRadius: 8,
+    backgroundColor: '#f6b2b6',
+    borderRadius: 10,
+  },
+  deleteText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 17,
   },
   produtDetailContainer: {
     margin: 20,
@@ -406,7 +419,6 @@ const styles = StyleSheet.create({
   productDetailWrapper: {
     flex: 1,
     backgroundColor: 'lightgray',
-    paddingBottom: 20,
     borderBottomLeftRadius: 12,
     borderBottomRightRadius: 12,
   },
@@ -459,10 +471,10 @@ const styles = StyleSheet.create({
   },
   iconEdit: {
     position: 'absolute',
-    left: 10,
-    top: 10,
+    right: 30,
+    top: 50,
     padding: 10,
-    backgroundColor: '#47b64c',
+    backgroundColor: '#60b565',
     borderRadius: 10,
   },
 });

@@ -35,8 +35,6 @@ const AddProduct = () => {
     branchId?: number;
   };
 
-  console.log(route.params);
-
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
   const db = useDatabase();
@@ -60,9 +58,19 @@ const AddProduct = () => {
   });
 
   const fetchStockDetails = async productId => {
-    const response = await axiosInstance.get(`/stock/${productId}`);
-    console.log(response.data.stock);
-    return response.data.stock;
+    try {
+      const response = await axiosInstance.get(`/stock/${productId}`);
+      return response.data.stock;
+    } catch (error) {
+      toast.show(
+        "Couldn't fetch data. Check your Wi-Fi or internet connection.",
+        {
+          type: 'danger',
+          placement: 'top',
+        },
+      );
+      console.error('Error fetching stock details:', error);
+    }
   };
 
   useEffect(() => {

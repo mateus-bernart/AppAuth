@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
     color: 'white',
   },
   iconAddUser: {
-    backgroundColor: '#1aa325',
+    backgroundColor: '#60b565',
     padding: 10,
     borderRadius: 10,
     color: 'white',

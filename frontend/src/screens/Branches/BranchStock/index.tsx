@@ -20,6 +20,7 @@ import Header from '../../../components/Header';
 import SearchBar from '../../../components/SearchBar';
 import SlideInView from '../../../components/SlideView';
 import {BASE_URL} from '../../../services/config';
+import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 
 export type Product = {
   id: number;
@@ -66,7 +67,6 @@ const BranchStock = ({route}) => {
   const fetchBranchInfo = async () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
-      console.log(branchId);
 
       const response = await axiosInstance.get(
         `/branch/${branchId}/stocks${query}`,
@@ -127,7 +127,17 @@ const BranchStock = ({route}) => {
           onPress: () => console.log('Cancel Pressed'),
           style: 'cancel',
         },
-        {text: 'YES', onPress: () => setEditable(true)},
+        {
+          text: 'YES',
+          onPress: () => {
+            toast.show('Tap the button again to confirm and save changes.', {
+              type: 'info',
+              placement: 'top',
+            });
+            setEditable(state => !state);
+            return;
+          },
+        },
       ]);
     } else {
       Alert.alert('Confirm Changes?', 'Are you sure?', [
@@ -188,14 +198,15 @@ const BranchStock = ({route}) => {
   return (
     <SafeAreaView style={styles.body}>
       <Header title={`${branchInfo?.description}`} />
+
       <TouchableOpacity
-        style={styles.editStockButton}
-        onPress={() => handleConfirmEdit()}>
-        {!editable ? (
-          <Text style={styles.editStockText}>Modify</Text>
-        ) : (
-          <Text style={styles.editStockText}>Confirm</Text>
-        )}
+        onPress={() => handleConfirmEdit()}
+        style={styles.iconEdit}>
+        <IconMaterialIcons
+          name={editable ? 'check' : 'create'}
+          size={35}
+          color="white"
+        />
       </TouchableOpacity>
       <SearchBar control={control} />
 
@@ -203,7 +214,7 @@ const BranchStock = ({route}) => {
         <TouchableOpacity
           onPress={() => handleNavigation('AddProduct', {branchId: branchId})}>
           <View style={styles.addProductButtonContainer}>
-            <Text style={styles.addProductButtonText}>Add new Product</Text>
+            <Text style={styles.addProductButtonText}>Add new product</Text>
           </View>
         </TouchableOpacity>
       )}
@@ -239,7 +250,7 @@ const BranchStock = ({route}) => {
                           style={styles.itemBatch}
                           numberOfLines={1}
                           ellipsizeMode="tail">
-                          Batch: {item.batch}
+                          Batch {item.batch}
                         </Text>
                         <Text
                           style={styles.itemDetails}
@@ -368,8 +379,16 @@ const styles = StyleSheet.create({
     top: 55,
     right: 20,
     borderRadius: 8,
-    backgroundColor: 'green',
+    backgroundColor: '#60b565',
     color: 'green',
+  },
+  iconEdit: {
+    position: 'absolute',
+    padding: 10,
+    backgroundColor: '#47b64c',
+    right: 30,
+    top: 50,
+    borderRadius: 10,
   },
   editStockText: {
     fontFamily: 'Poppins-Bold',
@@ -380,7 +399,7 @@ const styles = StyleSheet.create({
     padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#4b55ec',
+    backgroundColor: '#60b565',
     marginHorizontal: 20,
     borderRadius: 8,
   },
@@ -388,20 +407,6 @@ const styles = StyleSheet.create({
     color: 'white',
     fontFamily: 'Poppins-Bold',
     fontSize: 20,
-  },
-  header: {
-    marginHorizontal: 30,
-    marginVertical: 10,
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  searchBranchContainer: {
-    padding: 10,
-    backgroundColor: 'green',
-  },
-  searchBranch: {
-    marginHorizontal: 10,
   },
   itemDetailWrapper: {
     flex: 3,
@@ -419,7 +424,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     color: 'white',
     borderTopLeftRadius: 10,
-    backgroundColor: 'green',
+    backgroundColor: '#297c2f',
     padding: 10,
   },
   itemDetailContainer: {
@@ -443,7 +448,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   detailsHighlighted: {
-    color: '#005c0c',
+    color: '#579b6a',
     fontFamily: 'Poppins-Bold',
     fontSize: 30,
   },

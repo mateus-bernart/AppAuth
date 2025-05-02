@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     marginBottom: 100,
   },
   itemBand: {
-    backgroundColor: 'green',
+    backgroundColor: '#60b565',
     borderTopLeftRadius: 10,
     borderBottomLeftRadius: 10,
     flex: 1,

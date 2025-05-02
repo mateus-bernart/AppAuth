@@ -37,8 +37,12 @@ const Sync = () => {
 
   const handleDeleteData = async () => {
     try {
-      await deleteData(db);
-      toast.show('Data Deleted', {type: 'success', placement: 'top'});
+      const result = await deleteData(db);
+      if (result.rowsAffected === 0) {
+        toast.show('No data to delete', {type: 'info', placement: 'top'});
+      } else {
+        toast.show('Data Deleted', {type: 'success', placement: 'top'});
+      }
     } catch (error) {
       console.log(error);
       toast.show('Error', {type: 'danger', placement: 'top'});
@@ -48,10 +52,11 @@ const Sync = () => {
   const handleShowData = async () => {
     try {
       const result = await showData(db);
+      console.log(result);
+
       if (result.length === 0) {
         toast.show('No items', {type: 'info', placement: 'top'});
       }
-      console.log(result);
     } catch (error) {
       console.log(error);
     }
@@ -92,7 +97,7 @@ const styles = StyleSheet.create({
   buttonStyle: {
     padding: 10,
     paddingHorizontal: 30,
-    backgroundColor: 'green',
+    backgroundColor: '#60b565',
     borderRadius: 10,
     shadowColor: '#000000',
     shadowOffset: {
@@ -104,15 +109,15 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   buttonDeleteData: {
-    backgroundColor: 'red',
+    backgroundColor: '#ea4f3d',
   },
   buttonShowData: {
-    backgroundColor: 'blue',
+    backgroundColor: '#a4d8e7',
   },
   textButton: {
     fontFamily: 'Poppins-Bold',
     fontSize: 20,
-    color: 'white',
+    color: 'black',
   },
   buttonTextSyncronized: {
     fontFamily: 'Poppins-Medium',

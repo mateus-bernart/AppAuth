@@ -21,8 +21,9 @@ const PrivateRouteTabs = () => {
       screenOptions={{
         tabBarActiveTintColor: 'white',
         tabBarInactiveTintColor: 'white',
-        tabBarActiveBackgroundColor: '#035e00',
+        tabBarActiveBackgroundColor: '#307244',
         animation: 'shift',
+        tabBarHideOnKeyboard: true,
         tabBarShowLabel: false,
         headerShown: false,
         tabBarStyle: {
@@ -30,7 +31,7 @@ const PrivateRouteTabs = () => {
           bottom: 60,
           marginHorizontal: 10,
           elevation: 8,
-          backgroundColor: '#0e7a00',
+          backgroundColor: '#1b3f26',
           borderRadius: 10,
           height: 80,
         },
@@ -48,7 +49,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="user-alt" size={30} color={color} />
+              <IconFontAwesome name="user-alt" size={25} color={color} />
               <Text style={styles.textContainer}>Profile</Text>
             </View>
           ),
@@ -60,7 +61,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="home" size={30} color={color} />
+              <IconFontAwesome name="home" size={25} color={color} />
               <Text style={styles.textContainer}>Branches</Text>
             </View>
           ),
@@ -72,7 +73,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="file-alt" size={30} color={color} />
+              <IconFontAwesome name="file-alt" size={25} color={color} />
               <Text style={styles.textContainer}>Users</Text>
             </View>
           ),
@@ -84,7 +85,7 @@ const PrivateRouteTabs = () => {
         options={{
           tabBarIcon: ({color}) => (
             <View style={styles.container}>
-              <IconFontAwesome name="sync" size={30} color={color} />
+              <IconFontAwesome name="sync" size={25} color={color} />
               <Text style={styles.textContainer}>Sync</Text>
             </View>
           ),
