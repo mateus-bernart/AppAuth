@@ -169,13 +169,15 @@ const UserDetails = ({route}) => {
   const fetchUserInfo = async () => {
     try {
       await axiosInstance.get(endpoint).then(response => {
+        console.log(response);
+        const data = response.data;
         reset({
-          name: response.data.name,
-          email: response.data.email,
-          neighborhood: response.data.neighborhood,
-          phone_number: response.data.phone_number,
-          street: response.data.street,
-          street_number: response.data.street_number,
+          name: data.name || '',
+          email: data.email || '',
+          neighborhood: data.neighborhood || '',
+          phone_number: data.phone_number || '',
+          street: data.street || '',
+          street_number: data.street_number || '',
         });
 
         if (response.data.image) {
@@ -193,14 +195,12 @@ const UserDetails = ({route}) => {
   };
 
   const handleEdit = async data => {
-    if (!isMyProfile) return;
-
     if (!editable) {
-      toast.show('Click on the button again to save.', {
+      setEditable(true);
+      toast.show('Edit mode enabled. Click again to save.', {
         type: 'info',
         placement: 'top',
       });
-      setEditable(state => !state);
       return;
     }
 
@@ -210,13 +210,14 @@ const UserDetails = ({route}) => {
         placement: 'top',
         type: 'success',
       });
-      setEditable(state => !state);
     } catch (error) {
       toast.show('Could not update user', {
         type: 'danger',
         placement: 'top',
       });
       console.log(error.response);
+    } finally {
+      setEditable(false);
     }
   };
 
@@ -234,7 +235,7 @@ const UserDetails = ({route}) => {
     }, []),
   );
 
-  const {control, reset, handleSubmit, setValue, watch} = useForm({
+  const {control, reset, handleSubmit, setValue} = useForm({
     defaultValues: {
       name: '',
       email: '',
@@ -351,6 +352,7 @@ const UserDetails = ({route}) => {
                   iconLeft="font"
                   editable={editable}
                   ref={inputForm}
+                  maxLength={255}
                 />
               </View>
               <View style={styles.infoContainer}>
@@ -363,23 +365,27 @@ const UserDetails = ({route}) => {
                   keyboardType="email-address"
                   iconLeft="envelope"
                   editable={editable}
+                  maxLength={255}
                 />
               </View>
               <View style={styles.infoContainer}>
                 <Text style={styles.infoTitle}>Phone:</Text>
                 <CustomInput
                   rules={{
-                    minLength: {
-                      value: 11,
-                      message: 'Phone number should be minimum 11 characters',
-                    },
+                    validate: value =>
+                      !editable ||
+                      !value ||
+                      value.length === 11 ||
+                      /^\(\d{3}\)\s\d{4}-\d{4}$/.test(value) ||
+                      'Phone number should be 11 characters',
                   }}
                   control={control}
                   name="phone_number"
-                  placeholder="Not set yet"
+                  placeholder="(000) 0000-0000"
                   keyboardType="number-pad"
                   iconLeft="phone-alt"
                   editable={editable}
+                  maxLength={11}
                 />
               </View>
             </View>
@@ -397,6 +403,7 @@ const UserDetails = ({route}) => {
                     placeholder="Not set yet"
                     iconLeft="map-signs"
                     editable={editable}
+                    maxLength={255}
                   />
                 </View>
                 <View style={styles.infoContainer}>
@@ -407,6 +414,7 @@ const UserDetails = ({route}) => {
                     placeholder="Not set yet"
                     iconLeft="map"
                     editable={editable}
+                    maxLength={255}
                   />
                 </View>
                 <View style={styles.infoContainer}>
@@ -417,6 +425,8 @@ const UserDetails = ({route}) => {
                     placeholder="Not set yet"
                     iconLeft="home"
                     editable={editable}
+                    keyboardType="number-pad"
+                    maxLength={10}
                   />
                 </View>
               </View>

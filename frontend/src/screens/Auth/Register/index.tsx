@@ -111,6 +111,8 @@ const Register = () => {
               placement: 'top',
             });
             setEmailToVerify(data.email);
+          } else {
+            navigation.navigate('UserManagement');
           }
         } else {
           toast.show('Fail to register user, please check Wi-fi connection.', {
@@ -144,9 +146,6 @@ const Register = () => {
               <View style={styles.formFooter}>
                 <TouchableOpacity
                   onPress={() => {
-                    if (isAuthenticated) {
-                      navigation.navigate('Home');
-                    }
                     navigation.navigate('Login');
                   }}>
                   <Text style={styles.createAccountText}>
