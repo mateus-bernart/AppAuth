@@ -26,7 +26,6 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/user/delete/{id}', [UserController::class, 'deleteUser']);
 
   // ============ BRANCH ===========
-  Route::get('/branches', [BranchController::class, 'getAllBranches']);
   Route::get('/branch/{branchId}/stocks', [BranchController::class, 'getBranchWithStock']);
 
   // ============ PRODUCT ===========
@@ -51,3 +50,4 @@ Route::post('/email/verify-otp', [EmailVerificationController::class, 'verifyOtp
 Route::post('/user/send-recover-password', [EmailVerificationController::class, 'sendRecoverPassword']);
 Route::post('/user/confirm-recover-password', [EmailVerificationController::class, 'confirmRecoverPassword']);
 Route::post('/user/check-otp-timeout', [EmailVerificationController::class, 'checkOtpTimeout']);
+Route::get('/branches', [BranchController::class, 'getAllBranches']);

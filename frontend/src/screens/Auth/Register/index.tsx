@@ -22,6 +22,7 @@ import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import Header from '../../../components/Header';
 import SubmitButton from '../../../components/SubmitButton';
+import SelectPicker from '../../../components/SelectPicker';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -29,38 +30,7 @@ const Register = () => {
   const {isAuthenticated} = useAuth();
   const [iconDirection, setIconDirection] = useState(false);
   const [emailToVerify, setEmailToVerify] = useState(false);
-  const translateX = useRef(new Animated.Value(0)).current;
-  const translateY = useRef(new Animated.Value(0)).current;
-
-  const handlePressIn = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: -5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 5,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
-
-  const handlePressOut = () => {
-    Animated.parallel([
-      Animated.timing(translateX, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-      Animated.timing(translateY, {
-        toValue: 0,
-        duration: 100,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  };
+  const [userType, setUserType] = useState('');
 
   const onDropdownClick = () => {
     if (iconDirection) {
@@ -74,6 +44,7 @@ const Register = () => {
     control,
     handleSubmit,
     formState: {errors},
+    setValue,
     watch,
     setError,
   } = useForm();
@@ -261,6 +232,18 @@ const Register = () => {
                     iconLeft="lock"
                   />
                 </View>
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Branch</Text>
+                <SelectPicker
+                  control={control}
+                  name="branch_id"
+                  endpoint={'/branches'}
+                  labelField={'description'}
+                  valueField={'code'}
+                  rules={{required: 'Branch is required'}}
+                  placeholder="Select a Branch"
+                />
               </View>
               <View style={styles.divisor}></View>
 
