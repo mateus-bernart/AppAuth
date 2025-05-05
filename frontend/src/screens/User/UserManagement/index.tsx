@@ -96,7 +96,7 @@ const UserManagement = () => {
                   style={styles.profilePicture}
                 />
               ) : (
-                <IconFontAwesome name="user-alt" size={50} />
+                <IconFontAwesome name="user-alt" size={70} />
               )}
               <View style={styles.itemDetailsContainer}>
                 <View

@@ -10,10 +10,13 @@ import Branches from '../screens/Branches';
 import BranchStack from './navigation/branches';
 import UserStack from './navigation/users';
 import Sync from '../screens/Sync';
+import {useAuth} from '../providers/AuthProvider';
 
 const Tab = createBottomTabNavigator();
 
 const PrivateRouteTabs = () => {
+  const {session} = useAuth();
+
   return (
     <Tab.Navigator
       initialRouteName="BranchStack"
@@ -67,18 +70,25 @@ const PrivateRouteTabs = () => {
           ),
         }}
       />
-      <Tab.Screen
-        name="Manage Users"
-        component={UserStack}
-        options={{
-          tabBarIcon: ({color}) => (
-            <View style={styles.container}>
-              <IconFontAwesome name="file-alt" size={25} color={color} />
-              <Text style={styles.textContainer}>Users</Text>
-            </View>
-          ),
-        }}
-      />
+
+      {session?.userType === 'manager' ||
+      session?.userType === 'regional_manager' ? (
+        <Tab.Screen
+          name="Manage Users"
+          component={UserStack}
+          options={{
+            tabBarIcon: ({color}) => (
+              <View style={styles.container}>
+                <IconFontAwesome name="file-alt" size={25} color={color} />
+                <Text style={styles.textContainer}>Users</Text>
+              </View>
+            ),
+          }}
+        />
+      ) : (
+        <></>
+      )}
+
       <Tab.Screen
         name="Sync"
         component={Sync}

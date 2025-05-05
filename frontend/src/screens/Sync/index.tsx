@@ -8,10 +8,12 @@ import {
 } from '../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../providers/DatabaseProvider';
 import {useToast} from 'react-native-toast-notifications';
+import {useAuth} from '../../providers/AuthProvider';
 
 const Sync = () => {
   const db = useDatabase();
   const toast = useToast();
+  const {session} = useAuth();
 
   const handleSync = async () => {
     try {
@@ -70,16 +72,23 @@ const Sync = () => {
           onPress={() => handleSync()}>
           <Text style={styles.textButton}>Synchronize</Text>
         </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.buttonStyle, styles.buttonDeleteData]}
-          onPress={() => handleDeleteData()}>
-          <Text style={styles.textButton}>Delete Products</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.buttonStyle, styles.buttonShowData]}
-          onPress={() => handleShowData()}>
-          <Text style={styles.textButton}>Show Products</Text>
-        </TouchableOpacity>
+        {session?.userType === 'regional_manager' ||
+        session?.userType === 'manager' ? (
+          <>
+            <TouchableOpacity
+              style={[styles.buttonStyle, styles.buttonDeleteData]}
+              onPress={() => handleDeleteData()}>
+              <Text style={styles.textButton}>Delete Products</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.buttonStyle, styles.buttonShowData]}
+              onPress={() => handleShowData()}>
+              <Text style={styles.textButton}>Show Products</Text>
+            </TouchableOpacity>
+          </>
+        ) : (
+          <></>
+        )}
       </View>
     </SafeAreaView>
   );

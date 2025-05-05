@@ -202,6 +202,8 @@ const UserDetails = ({route}) => {
         return 'Regional Manager';
       case 'employee':
         return 'Employee';
+      case 'manager':
+        return 'Manager';
       default:
         return userType;
     }
@@ -441,7 +443,7 @@ const UserDetails = ({route}) => {
             </View>
             <View style={styles.containerHeader}>
               <IconFontAwesome5 name="id-card-alt" size={25} />
-              <Text style={styles.headerInfo}>Additional Info</Text>
+              <Text style={styles.headerInfo}>Job info</Text>
             </View>
             <View style={styles.infoWrapper}>
               <View style={styles.infoContainer}>
@@ -450,10 +452,9 @@ const UserDetails = ({route}) => {
                   rules={{required: 'Branch is required'}}
                   control={control}
                   name="user_branch"
-                  placeholder="MATRIZ (example)"
                   keyboardType="default"
                   iconLeft="home"
-                  editable={editable}
+                  editable={false}
                   maxLength={255}
                 />
               </View>
@@ -463,10 +464,9 @@ const UserDetails = ({route}) => {
                   rules={{required: 'Name is required'}}
                   control={control}
                   name="user_type"
-                  placeholder="Employee/Regional Manager (example)..."
                   keyboardType="default"
                   iconLeft="briefcase"
-                  editable={editable}
+                  editable={false}
                   maxLength={255}
                 />
               </View>
@@ -507,7 +507,7 @@ const UserDetails = ({route}) => {
                   iconLeft="home"
                   editable={editable}
                   keyboardType="number-pad"
-                  maxLength={10}
+                  maxLength={5}
                 />
               </View>
             </View>

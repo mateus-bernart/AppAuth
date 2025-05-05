@@ -8,10 +8,13 @@ import React, {
 } from 'react';
 import {storageDelete, storageGet, storageSet} from '../services/storage';
 
+type UserType = 'employee' | 'manager' | 'regional_manager';
+
 type Session = {
   userId: number;
   userName: string;
   userImage?: string;
+  userType: UserType;
   isLogged: boolean;
 };
 
@@ -44,6 +47,7 @@ const AuthProvider = ({children}) => {
 
       setSession(data);
     } catch (error) {
+      console.log(error.respone);
       endSession();
     } finally {
       setIsLoading(false);
@@ -60,6 +64,7 @@ const AuthProvider = ({children}) => {
     const loadSession = async () => {
       const token = await storageGet('AcessToken');
       const user = await storageGet('UserData');
+      console.log(user);
 
       if (token && user) {
         await startSession(JSON.parse(user), token);

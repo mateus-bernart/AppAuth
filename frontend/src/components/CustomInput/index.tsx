@@ -71,7 +71,10 @@ const CustomInput: React.FC<CustomInputProps> = ({
               />
             )}
             <TextInput
-              style={[formStyle ? styles.formInput : styles.textInputStyle]}
+              style={[
+                formStyle ? styles.formInput : styles.textInputStyle,
+                {color: !editable ? '#696969' : 'black'},
+              ]}
               value={String(value)} // Controlled by react-hook-form
               onChangeText={text => {
                 let formatted = text;

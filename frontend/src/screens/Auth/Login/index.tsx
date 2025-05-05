@@ -61,6 +61,7 @@ const Login = () => {
           userId: response.data.user.id,
           userName: response.data.user.name,
           isLogged: true,
+          userType: response.data.user.user_type,
         },
         response.data.token,
       );
