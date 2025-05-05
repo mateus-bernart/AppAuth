@@ -17,7 +17,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'teste@teste',
             'password' => '123',
             'email_verified' => '1',
-            'user_type' => 'manager'
+            'user_type' => 'manager',
+            'user_branch' => 'MATRIZ'
         ]);
 
         $this->call([

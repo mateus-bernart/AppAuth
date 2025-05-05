@@ -1,27 +1,49 @@
 import {ActivityIndicatorComponent, StyleSheet, Text, View} from 'react-native';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
+import axiosInstance from '../../services/api';
 import {Controller} from 'react-hook-form';
 import DropDownPicker from 'react-native-dropdown-picker';
 
-type SelectPickerProps = {
+type CustomSelectProps = {
   control: any;
   name: string;
   rules?: object;
   placeholder?: string;
+  endpoint: string;
+  labelField: string;
+  valueField: string;
 };
-
-const SelectPicker: React.FC<SelectPickerProps> = ({
+const SearchSelectPicker: React.FC<CustomSelectProps> = ({
   control,
   name,
   rules = {},
   placeholder = 'Select...',
+  endpoint,
+  labelField,
+  valueField,
 }) => {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState([
-    {label: 'Manager', value: 'manager'},
-    {label: 'Regional Manager', value: 'regional_manager'},
-    {label: 'Employee', value: 'employee'},
-  ]);
+  const [items, setItems] = useState<{label: string; value: number}[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const response = await axiosInstance.get(endpoint);
+        const formatted = response.data.map(item => ({
+          label: item[valueField],
+          value: item[valueField],
+        }));
+
+        setItems(formatted);
+      } catch (error) {
+        console.log('Error fetching branches:', error.response);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBranches();
+  }, []);
 
   return (
     <Controller
@@ -41,9 +63,10 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
               onChange(newValue);
             }}
             setItems={setItems}
-            placeholder={placeholder}
-            zIndex={3000}
-            zIndexInverse={1000}
+            placeholder={loading ? 'Loading...' : placeholder}
+            searchable={true}
+            zIndex={2000}
+            zIndexInverse={2000}
             style={{
               elevation: 5,
               borderColor: error ? 'red' : '#ccc',
@@ -75,6 +98,19 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
             dropDownDirection="TOP"
             listMode="MODAL"
             searchPlaceholder="Search branches..."
+            ListEmptyComponent={() => (
+              <View>
+                {loading ? (
+                  <ActivityIndicatorComponent size={30} color="green" />
+                ) : (
+                  <View style={styles.containerRenderFailMessage}>
+                    <Text style={styles.renderFailText}>
+                      Couldn't render items. Check internet.
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
           />
           {error && (
             <Text style={styles.errorMessage}>
@@ -86,8 +122,6 @@ const SelectPicker: React.FC<SelectPickerProps> = ({
     />
   );
 };
-
-export default SelectPicker;
 
 export const styles = StyleSheet.create({
   errorMessage: {
@@ -107,3 +141,5 @@ export const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
   },
 });
+
+export default SearchSelectPicker;

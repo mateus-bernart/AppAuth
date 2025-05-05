@@ -1,4 +1,5 @@
 import {
+  Alert,
   Image,
   KeyboardAvoidingView,
   Modal,
@@ -15,7 +16,11 @@ import React, {useCallback, useEffect, useRef, useState} from 'react';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import IconFontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import {useFocusEffect, useIsFocused} from '@react-navigation/native';
+import {
+  useFocusEffect,
+  useIsFocused,
+  useNavigation,
+} from '@react-navigation/native';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useToast} from 'react-native-toast-notifications';
 import {
@@ -29,6 +34,7 @@ import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import CustomInput from '../../../components/CustomInput';
 import Header from '../../../components/Header';
+import {AppNavigationProp} from '../../../types/navigationTypes';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -37,6 +43,7 @@ const UserDetails = ({route}) => {
   const toast = useToast();
   const [modalCameraVisible, setModalCameraVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<any>(null);
+  const navigation = useNavigation<AppNavigationProp>();
 
   const userId = route?.params?.userId ?? session?.userId;
   const isMyProfile = !route?.params?.userId;
@@ -166,10 +173,43 @@ const UserDetails = ({route}) => {
     });
   };
 
+  const deleteUser = async () => {
+    try {
+      const response = await axiosInstance.delete(`/user/delete/${userId}`);
+      toast.show(response.data.message, {type: 'success', placement: 'top'});
+      navigation.navigate('UserManagement');
+    } catch (e) {
+      toast.show(e.message || 'An error occurred', {
+        type: 'danger',
+        placement: 'top',
+      });
+    }
+  };
+
+  const confirmDeleteAlert = () =>
+    Alert.alert('Delete user?', 'Are you sure?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {text: 'DELETE', onPress: () => deleteUser()},
+    ]);
+
+  const transformUserType = (userType: string) => {
+    switch (userType) {
+      case 'regional_manager':
+        return 'Regional Manager';
+      case 'employee':
+        return 'Employee';
+      default:
+        return userType;
+    }
+  };
+
   const fetchUserInfo = async () => {
     try {
       await axiosInstance.get(endpoint).then(response => {
-        console.log(response);
         const data = response.data;
         reset({
           name: data.name || '',
@@ -178,6 +218,8 @@ const UserDetails = ({route}) => {
           phone_number: data.phone_number || '',
           street: data.street || '',
           street_number: data.street_number || '',
+          user_branch: data.user_branch || '',
+          user_type: transformUserType(data.user_type) || '',
         });
 
         if (response.data.image) {
@@ -244,6 +286,8 @@ const UserDetails = ({route}) => {
       neighborhood: '',
       street_number: '',
       img: '',
+      user_branch: '',
+      user_type: '',
     },
   });
 
@@ -255,7 +299,7 @@ const UserDetails = ({route}) => {
         {/* ================ HEADER ============= */}
         <Header title="USER DETAILS" iconLeft={!isMyProfile} />
 
-        {isMyProfile && (
+        {isMyProfile ? (
           <>
             <TouchableOpacity
               onPress={handleSubmit(handleEdit)}
@@ -273,6 +317,12 @@ const UserDetails = ({route}) => {
               <IconMaterialIcons name="logout" size={35} color="red" />
             </TouchableOpacity>
           </>
+        ) : (
+          <TouchableOpacity
+            onPress={() => confirmDeleteAlert()}
+            style={styles.iconDeleteContainer}>
+            <IconFontAwesome name="trash" style={styles.iconDelete} size={35} />
+          </TouchableOpacity>
         )}
 
         {/* ================ MODAL ============= */}
@@ -389,46 +439,76 @@ const UserDetails = ({route}) => {
                 />
               </View>
             </View>
-            <View>
-              <View style={styles.containerHeader}>
-                <IconFontAwesome5 name="map-marker-alt" size={25} />
-                <Text style={styles.headerInfo}>Address</Text>
+            <View style={styles.containerHeader}>
+              <IconFontAwesome5 name="id-card-alt" size={25} />
+              <Text style={styles.headerInfo}>Additional Info</Text>
+            </View>
+            <View style={styles.infoWrapper}>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Branch</Text>
+                <CustomInput
+                  rules={{required: 'Branch is required'}}
+                  control={control}
+                  name="user_branch"
+                  placeholder="MATRIZ (example)"
+                  keyboardType="default"
+                  iconLeft="home"
+                  editable={editable}
+                  maxLength={255}
+                />
               </View>
-              <View style={styles.infoWrapper}>
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Street:</Text>
-                  <CustomInput
-                    control={control}
-                    name="street"
-                    placeholder="Not set yet"
-                    iconLeft="map-signs"
-                    editable={editable}
-                    maxLength={255}
-                  />
-                </View>
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Neighborhood:</Text>
-                  <CustomInput
-                    control={control}
-                    name="neighborhood"
-                    placeholder="Not set yet"
-                    iconLeft="map"
-                    editable={editable}
-                    maxLength={255}
-                  />
-                </View>
-                <View style={styles.infoContainer}>
-                  <Text style={styles.infoTitle}>Number:</Text>
-                  <CustomInput
-                    control={control}
-                    name="street_number"
-                    placeholder="Not set yet"
-                    iconLeft="home"
-                    editable={editable}
-                    keyboardType="number-pad"
-                    maxLength={10}
-                  />
-                </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Role</Text>
+                <CustomInput
+                  rules={{required: 'Name is required'}}
+                  control={control}
+                  name="user_type"
+                  placeholder="Employee/Regional Manager (example)..."
+                  keyboardType="default"
+                  iconLeft="briefcase"
+                  editable={editable}
+                  maxLength={255}
+                />
+              </View>
+            </View>
+            <View style={styles.containerHeader}>
+              <IconFontAwesome5 name="map-marker-alt" size={25} />
+              <Text style={styles.headerInfo}>Address</Text>
+            </View>
+            <View style={styles.infoWrapper}>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Street:</Text>
+                <CustomInput
+                  control={control}
+                  name="street"
+                  placeholder="Not set yet"
+                  iconLeft="map-signs"
+                  editable={editable}
+                  maxLength={255}
+                />
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Neighborhood:</Text>
+                <CustomInput
+                  control={control}
+                  name="neighborhood"
+                  placeholder="Not set yet"
+                  iconLeft="map"
+                  editable={editable}
+                  maxLength={255}
+                />
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.infoTitle}>Number:</Text>
+                <CustomInput
+                  control={control}
+                  name="street_number"
+                  placeholder="Not set yet"
+                  iconLeft="home"
+                  editable={editable}
+                  keyboardType="number-pad"
+                  maxLength={10}
+                />
               </View>
             </View>
           </View>
@@ -504,6 +584,16 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 30,
     top: 10,
+    color: 'red',
+  },
+  iconDeleteContainer: {
+    padding: 10,
+    backgroundColor: 'pink',
+    position: 'absolute',
+    right: 30,
+    borderRadius: 8,
+  },
+  iconDelete: {
     color: 'red',
   },
   iconEdit: {

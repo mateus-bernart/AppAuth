@@ -11,7 +11,6 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
-        //TODO: create 
         $fields = $request->validate([
             'street_number' => 'max:255',
             'name' => 'required|max:255',
@@ -20,7 +19,8 @@ class AuthController extends Controller
             'phone_number' => 'max:255|min:11|max:255|not_in:0',
             'street' => 'max:255|numeric|nullable',
             'neighborhood' => 'max:255',
-            'user_type' => '',
+            'user_type' => 'max:255|required',
+            'user_branch' => 'max:255|required',
             'city' => 'max:255'
         ]);
 

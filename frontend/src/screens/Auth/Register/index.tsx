@@ -22,6 +22,7 @@ import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import Header from '../../../components/Header';
 import SubmitButton from '../../../components/SubmitButton';
+import SearchSelectPicker from '../../../components/SearchSelectPicker';
 import SelectPicker from '../../../components/SelectPicker';
 
 const Register = () => {
@@ -30,7 +31,6 @@ const Register = () => {
   const {isAuthenticated} = useAuth();
   const [iconDirection, setIconDirection] = useState(false);
   const [emailToVerify, setEmailToVerify] = useState(false);
-  const [userType, setUserType] = useState('');
 
   const onDropdownClick = () => {
     if (iconDirection) {
@@ -67,6 +67,8 @@ const Register = () => {
   };
 
   const onRegisterPressed = async data => {
+    console.log(data);
+
     await axiosInstance
       .post('/register', data)
       .then(response => {
@@ -235,14 +237,23 @@ const Register = () => {
               </View>
               <View style={styles.containerInfo}>
                 <Text style={styles.formTitle}>Branch</Text>
-                <SelectPicker
+                <SearchSelectPicker
                   control={control}
-                  name="branch_id"
+                  name="user_branch"
                   endpoint={'/branches'}
-                  labelField={'description'}
-                  valueField={'code'}
+                  labelField={'code'}
+                  valueField={'description'}
                   rules={{required: 'Branch is required'}}
                   placeholder="Select a Branch"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>User type</Text>
+                <SelectPicker
+                  control={control}
+                  name="user_type"
+                  rules={{required: 'User type is required'}}
+                  placeholder="Select a user type"
                 />
               </View>
               <View style={styles.divisor}></View>
@@ -345,7 +356,6 @@ const Register = () => {
 export default Register;
 
 const styles = StyleSheet.create({
-  body: {},
   scrollView: {
     marginHorizontal: 20,
   },
@@ -354,7 +364,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-
   iconDropdown: {
     marginRight: 5,
   },

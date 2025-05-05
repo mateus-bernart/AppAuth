@@ -31,6 +31,8 @@ interface User {
   name: string;
   email: string;
   image: string;
+  user_type: 'manager' | 'regional_manager' | 'employee';
+  user_branch: string;
 }
 
 const UserManagement = () => {
@@ -51,6 +53,7 @@ const UserManagement = () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await axiosInstance.get<User[]>(`/users${query}`);
+
       setUserList(response.data);
     } catch (error) {
       console.log('Error fetching users:', error);
@@ -60,31 +63,6 @@ const UserManagement = () => {
       }
     }
   };
-
-  const deleteUser = id => {
-    axiosInstance
-      .delete(`/user/delete/${id}`)
-      .then(response => {
-        toast.show(response.data.message, {type: 'success', placement: 'top'});
-        fetchUsers();
-      })
-      .catch(e => {
-        toast.show(e, {
-          type: 'danger',
-          placement: 'top',
-        });
-      });
-  };
-
-  const confirmDeleteAlert = id =>
-    Alert.alert('Delete user?', 'Are you sure?', [
-      {
-        text: 'Cancel',
-        onPress: () => console.log('Cancel Pressed'),
-        style: 'cancel',
-      },
-      {text: 'DELETE', onPress: () => deleteUser(id)},
-    ]);
 
   useFocusEffect(
     useCallback(() => {
@@ -121,25 +99,67 @@ const UserManagement = () => {
                 <IconFontAwesome name="user-alt" size={50} />
               )}
               <View style={styles.itemDetailsContainer}>
-                <Text
-                  style={styles.itemName}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  {item.name}
-                </Text>
-                <Text
-                  style={styles.itemDetails}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  {item.email}
-                </Text>
-              </View>
-              <View style={styles.actionContainer}>
-                <TouchableOpacity
-                  style={styles.delete}
-                  onPress={() => confirmDeleteAlert(item.id)}>
-                  <IconFontAwesome name="trash" color="#ff0000" size={25} />
-                </TouchableOpacity>
+                <View
+                  style={[
+                    styles.itemDetailsInfoContainer,
+                    {alignItems: 'flex-start'},
+                  ]}>
+                  <Text
+                    style={styles.itemName}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    {item.name}
+                  </Text>
+                  <Text
+                    style={styles.itemDetails}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    {item.email}
+                  </Text>
+                </View>
+
+                <View style={[styles.itemDetailsInfoContainer]}>
+                  <Text
+                    style={[
+                      styles.itemName,
+                      {
+                        color:
+                          item.user_type === 'regional_manager'
+                            ? '#ffffff'
+                            : '#1b3f26',
+                      },
+                      {
+                        padding: 7,
+                        backgroundColor:
+                          item.user_type === 'regional_manager'
+                            ? '#ea4f3d'
+                            : '#29df5c',
+                        borderRadius: 10,
+                      },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    {item.user_type === 'regional_manager'
+                      ? 'Regional Manager'
+                      : 'Employee'}
+                  </Text>
+                  <Text
+                    style={[
+                      styles.itemName,
+                      {
+                        color: '#504100',
+                      },
+                      {
+                        padding: 10,
+                        backgroundColor: '#ffe282',
+                        borderRadius: 10,
+                      },
+                    ]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    {item.user_branch}
+                  </Text>
+                </View>
               </View>
             </TouchableOpacity>
           );
@@ -154,6 +174,7 @@ export default UserManagement;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
+    marginBottom: 100,
   },
   header: {
     marginHorizontal: 30,
@@ -171,9 +192,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   profilePicture: {
-    height: 50,
-    width: 50,
-    borderRadius: 12,
+    height: 80,
+    width: 70,
+    borderRadius: 10,
   },
   searchUserContainer: {
     backgroundColor: 'green',
@@ -189,9 +210,9 @@ const styles = StyleSheet.create({
   },
   itemContainer: {
     flexDirection: 'row',
-    gap: 20,
+    gap: 15,
     alignItems: 'center',
-    padding: 14,
+    padding: 10,
     marginVertical: 10,
     backgroundColor: 'white',
     marginHorizontal: 20,
@@ -212,17 +233,17 @@ const styles = StyleSheet.create({
     color: 'gray',
     fontFamily: 'Poppins-Regular',
   },
-  actionContainer: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-  },
-  delete: {
-    backgroundColor: '#ffcece',
-    padding: 10,
-    borderRadius: 10,
-  },
   itemDetailsContainer: {
     flex: 1,
+    gap: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  itemDetailsInfoContainer: {
+    flex: 1,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 5,
+    flexShrink: 1,
   },
 });

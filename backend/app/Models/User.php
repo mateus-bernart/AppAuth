@@ -32,6 +32,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'image',
         'email_verified',
         'user_type',
+        'user_branch',
         'otp'
     ];
 
