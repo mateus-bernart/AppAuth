@@ -1,3 +1,4 @@
+import {DatabaseProvider} from './providers/DatabaseProvider';
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {ToastProvider} from 'react-native-toast-notifications';
@@ -5,7 +6,6 @@ import IconEntypo from 'react-native-vector-icons/Entypo';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import AuthProvider from './providers/AuthProvider';
 import Routes from './routes/Routes';
-import {DatabaseProvider} from './providers/DatabaseProvider';
 
 const App = () => {
   return (

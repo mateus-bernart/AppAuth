@@ -2,6 +2,7 @@ import {createContext, useContext, useEffect, useState} from 'react';
 import SQLite from 'react-native-sqlite-storage';
 import {runMigrations} from '../database/migrations/runMigrations';
 import {saveBranchesOffline} from '../database/migrations/005_add_branches_to_branches_table';
+import {syncProducts} from '../helpers/databaseHelpers/stockProduct';
 
 SQLite.enablePromise(true);
 
@@ -34,12 +35,46 @@ export const DatabaseProvider = ({children}) => {
         const branches = Array.isArray(result) ? result : result.data || [];
         setBranches(branches);
         console.log('✅ Branches carregadas com sucesso');
+
+        //TODO: Load Users, Products, etc...
       } catch (error) {
         console.log('❌ Erro ao inicializar o banco de dados: ', error);
       }
     };
     initDatabase();
   }, []);
+
+  const hasUnsyncedProducts = async db => {
+    return new Promise(resolve => {
+      db.transaction(tx => {
+        tx.executeSql(
+          `
+            SELECT COUNT(*) AS total FROM stocks WHERE synced = 0
+          `,
+          [],
+          (_, {rows}) => {
+            const total = rows.item(0).total;
+            resolve(total > 0);
+          },
+        );
+      });
+    });
+  };
+
+  useEffect(() => {
+    if (!db) return;
+    const syncData = async () => {
+      try {
+        const shouldSync = await hasUnsyncedProducts(db);
+        if (!shouldSync) return;
+        await syncProducts(db);
+        console.log('Products syncronized successfully');
+      } catch (error) {
+        console.log('Error syncronizing the products');
+      }
+    };
+    syncData();
+  }, [db]);
 
   if (!db) return null;
 

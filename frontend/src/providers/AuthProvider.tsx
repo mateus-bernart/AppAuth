@@ -64,7 +64,6 @@ const AuthProvider = ({children}) => {
     const loadSession = async () => {
       const token = await storageGet('AcessToken');
       const user = await storageGet('UserData');
-      console.log(user);
 
       if (token && user) {
         await startSession(JSON.parse(user), token);

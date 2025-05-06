@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import axiosInstance from '../../services/api';
 import utc from 'dayjs/plugin/utc';
 import {isOnline} from '../networkHelper';
+import {getBranchesOffline} from './getBranchesOffline';
 dayjs.extend(utc);
 
 export const checkCodeAvailable = async (db, productCode) => {
@@ -171,31 +172,34 @@ export const showData = async db => {
   });
 };
 
-const syncBranches = async db => {
-  const response = await axiosInstance.get('/branches');
-  const branches = response.data;
-  try {
-    for (const branch of branches) {
-      db.executeSql(
-        `
-            INSERT OR REPLACE INTO
-              branches (id, code, description) 
-            VALUES (?,?,?)
-          `,
-        [branch.id, branch.name, branch.description],
-      );
-    }
-  } catch (error) {
-    console.log('❌ Error syncthing branches: ', error);
-  }
-};
+// const syncBranches = async db => {
+//   const response = await axiosInstance.get('/branches');
+//   const branches = response.data;
+//   try {
+//     for (const branch of branches) {
+//       db.executeSql(
+//         `
+//             INSERT OR REPLACE INTO
+//               branches (id, code, description)
+//             VALUES (?,?,?)
+//           `,
+//         [branch.id, branch.name, branch.description],
+//       );
+//     }
+//   } catch (error) {
+//     console.log('❌ Error syncthing branches: ', error);
+//   }
+// };
 
 export const fullSync = async db => {
   if (!(await isOnline())) return;
 
-  await syncBranches(db);
+  // await syncBranches(db);
+  await getBranchesOffline(db);
   //... other tables seeders
 };
+
+
 
 export const syncProducts = db => {
   return new Promise(async (resolve, reject) => {
@@ -263,26 +267,28 @@ export const syncProducts = db => {
                 quantity: product.quantity,
               });
 
-              db.transaction(tx => {
-                tx.executeSql(
-                  `UPDATE products SET synced = 1 WHERE id = ?;`,
-                  [product.id],
-                  () => {
-                    tx.executeSql(
-                      `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
-                      [product.id, branchId],
-                      resolve,
-                      (_, error) => {
-                        console.log('❌ Error updating stocks:', error);
-                        reject(error);
-                      },
-                    );
-                  },
-                  (_, error) => {
-                    console.log('❌ Error updating products:', error);
-                    reject(error);
-                  },
-                );
+              await new Promise((resolveTx, rejectTx) => {
+                db.transaction(tx => {
+                  tx.executeSql(
+                    `UPDATE products SET synced = 1 WHERE id = ?;`,
+                    [product.id],
+                    () => {
+                      tx.executeSql(
+                        `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
+                        [product.id, branchId],
+                        resolveTx,
+                        (_, error) => {
+                          console.log('❌ Error updating stocks:', error);
+                          reject(error);
+                        },
+                      );
+                    },
+                    (_, error) => {
+                      console.log('❌ Error updating products:', error);
+                      rejectTx(error);
+                    },
+                  );
+                });
               });
 
               console.log(`✅ Product ${product.name} synchronized`);
@@ -300,6 +306,17 @@ export const syncProducts = db => {
               for (const product of unsynced) {
                 await syncProduct(product);
               }
+
+              //Products to be deleted:
+              db.transaction(tx => {
+                tx.executeSql(
+                  `SELECT * FROM products WHERE synced = 1`,
+                  [],
+                  (_, res) => {
+                    console.log('🔍 Products to be deleted:', res.rows.raw());
+                  },
+                );
+              });
 
               db.transaction(tx => {
                 tx.executeSql(
