@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {use, useCallback, useEffect, useState} from 'react';
+import React, {use, useCallback, useContext, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useToast} from 'react-native-toast-notifications';
@@ -21,6 +21,8 @@ import axiosInstance from '../../services/api';
 import CustomInput from '../../components/CustomInput';
 import Header from '../../components/Header';
 import SearchBar from '../../components/SearchBar';
+import {useDatabase} from '../../providers/DatabaseProvider';
+import {isOnline} from '../../helpers/networkHelper';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -37,6 +39,7 @@ const Branches = () => {
   const [branchList, setBranchList] = useState<Branch[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
   const {endSession, session} = useAuth();
+  const {branches} = useDatabase();
 
   const {control, watch} = useForm();
 
@@ -46,7 +49,7 @@ const Branches = () => {
     navigation.navigate(screens, params);
   };
 
-  const fetchBranchs = async () => {
+  const fetchBranches = async () => {
     try {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
       const response = await axiosInstance.get<Branch[]>(`/branches${query}`);
@@ -62,8 +65,20 @@ const Branches = () => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchBranchs();
-    }, [searchTerm]),
+      const handleBranches = async () => {
+        try {
+          const online = await isOnline();
+          if (!online) {
+            setBranchList(branches);
+          } else {
+            fetchBranches();
+          }
+        } catch (error) {
+          console.log('Error in useFocusEffect: ', error);
+        }
+      };
+      handleBranches();
+    }, [searchTerm, branches, fetchBranches]),
   );
 
   return (

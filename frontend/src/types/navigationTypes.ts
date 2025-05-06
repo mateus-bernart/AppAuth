@@ -4,7 +4,7 @@ import {NavigationProp} from '@react-navigation/native';
 export type RootStackParamList = {
   Login: undefined;
   Register: undefined;
-  // Home: undefined;
+  Branches: undefined;
   UserDetails: undefined;
   VerifyEmail: undefined;
   SendRecoverPassword: undefined;

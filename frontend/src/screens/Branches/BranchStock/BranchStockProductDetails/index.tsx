@@ -358,6 +358,7 @@ const styles = StyleSheet.create({
   addImageContainer: {
     alignItems: 'center',
     marginTop: 20,
+    marginBottom: 10,
   },
   addImageButton: {
     backgroundColor: '#60b565',

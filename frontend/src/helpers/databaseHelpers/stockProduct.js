@@ -7,10 +7,20 @@ dayjs.extend(utc);
 export const checkCodeAvailable = async (db, productCode) => {
   const online = await isOnline();
 
-  const [verifyCode] = await db.executeSql(
-    'SELECT * FROM products WHERE code = ?',
-    [productCode],
-  );
+  const verifyCode = await new Promise((resolve, reject) => {
+    try {
+      db.transaction(tx => {
+        tx.executeSql(
+          'SELECT * FROM products WHERE code = ?',
+          [productCode],
+          (_, results) => resolve(results),
+          (_, error) => reject(error),
+        );
+      });
+    } catch (error) {
+      console.log(error.response);
+    }
+  });
 
   if (verifyCode.rows.length > 0) {
     return Promise.reject({exists: true, source: 'local'});
@@ -199,7 +209,7 @@ export const syncProducts = db => {
     db.transaction(tx => {
       tx.executeSql(
         `
-          SELECT p.*, s.quantity, s.batch, s.branch_id
+          SELECT p.*, s.quantity, s.batch, s.branch_id, p.synced as products_synced, s.synced as stocks_synced
           FROM products p
           INNER JOIN stocks s ON P.id = s.product_id
           WHERE s.synced = 0;
@@ -253,21 +263,25 @@ export const syncProducts = db => {
                 quantity: product.quantity,
               });
 
-              await new Promise((resolve, reject) => {
+              db.transaction(tx => {
                 tx.executeSql(
                   `UPDATE products SET synced = 1 WHERE id = ?;`,
                   [product.id],
-                  resolve,
-                  reject,
-                );
-              });
-
-              await new Promise((resolve, reject) => {
-                tx.executeSql(
-                  `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
-                  [product.id, branchId],
-                  resolve,
-                  reject,
+                  () => {
+                    tx.executeSql(
+                      `UPDATE stocks SET synced = 1 WHERE product_id = ? AND branch_id = ?;`,
+                      [product.id, branchId],
+                      resolve,
+                      (_, error) => {
+                        console.log('❌ Error updating stocks:', error);
+                        reject(error);
+                      },
+                    );
+                  },
+                  (_, error) => {
+                    console.log('❌ Error updating products:', error);
+                    reject(error);
+                  },
                 );
               });
 
@@ -287,20 +301,40 @@ export const syncProducts = db => {
                 await syncProduct(product);
               }
 
-              tx.executeSql(`DELETE FROM products WHERE synced = 1`, [], () => {
-                tx.executeSql(`DELETE FROM stocks WHERE synced = 1`, [], () => {
-                  console.log('✅ Synced products and stocks deleted locally');
-                });
+              db.transaction(tx => {
+                tx.executeSql(
+                  `DELETE FROM stocks WHERE synced = 1`,
+                  [],
+                  () => {
+                    tx.executeSql(
+                      `DELETE FROM products WHERE synced = 1`,
+                      [],
+                      () => {
+                        console.log(
+                          '✅ Synced products and stocks deleted locally',
+                        );
+                        resolve('synced');
+                      },
+                      (_, error) => {
+                        console.log(
+                          '❌ Error deleting synced products:',
+                          error,
+                        );
+                        reject(error);
+                      },
+                    );
+                  },
+                  (_, error) => {
+                    console.log('❌ Error deleting synced stocks:', error);
+                    reject(error);
+                  },
+                );
               });
-
-              resolve('synced');
             } catch (error) {
               console.log('❌ Error during synchronization:', error.message);
               reject(error.message);
             }
           })();
-
-          resolve('synced');
         },
       );
     });

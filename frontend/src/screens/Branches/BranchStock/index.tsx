@@ -21,6 +21,8 @@ import SearchBar from '../../../components/SearchBar';
 import SlideInView from '../../../components/SlideView';
 import {BASE_URL} from '../../../services/config';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {useDatabase} from '../../../providers/DatabaseProvider';
+import {isOnline} from '../../../helpers/networkHelper';
 
 export type Product = {
   id: number;
@@ -46,6 +48,7 @@ const BranchStock = ({route}) => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [branchInfo, setBranchInfo] = useState<Branch | null>(null);
+  const {branches} = useDatabase();
   const [editable, setEditable] = useState(false);
 
   const [updatedQuantities, setUpdatedQuantities] = useState<UpdatedQuantities>(
@@ -81,10 +84,11 @@ const BranchStock = ({route}) => {
       setProductList(products);
       setBranchInfo(response.data.branch);
     } catch (error) {
-      toast.show('Error to find products, check internet connection', {
-        type: 'danger',
-        placement: 'top',
-      });
+      //TODO: check if is necessary
+      // toast.show('Error to find products, check internet connection', {
+      //   type: 'danger',
+      //   placement: 'top',
+      // });
       console.log(error.response);
     }
   };
@@ -191,13 +195,29 @@ const BranchStock = ({route}) => {
 
   useFocusEffect(
     useCallback(() => {
-      fetchBranchInfo();
+      (async () => {
+        try {
+          const online = await isOnline();
+
+          if (!online) {
+            const branch = branches.find(b => b.id === branchId);
+            setBranchInfo(branch || null);
+          } else {
+            fetchBranchInfo();
+          }
+        } catch (error) {
+          console.log('Error in useFocuEffect: ', error);
+        }
+      })();
     }, [searchTerm]),
   );
 
   return (
     <SafeAreaView style={styles.body}>
-      <Header title={`${branchInfo?.description}`} />
+      <Header
+        title={branchInfo?.description || branches[branchId - 1].description}
+        backToScreen="Branches"
+      />
 
       <TouchableOpacity
         onPress={() => handleConfirmEdit()}

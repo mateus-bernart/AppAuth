@@ -37,7 +37,7 @@ const AddProduct = () => {
 
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
-  const db = useDatabase();
+  const {db} = useDatabase();
   const [image, setImage] = useState<Asset | undefined>(undefined);
 
   const {
@@ -128,6 +128,7 @@ const AddProduct = () => {
 
     if (!product) {
       const result = await checkCodeAvailable(db, data.code);
+
       if (result.exists) {
         setError('code', {
           type: 'manual',

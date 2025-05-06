@@ -11,7 +11,8 @@ import {useToast} from 'react-native-toast-notifications';
 import {useAuth} from '../../providers/AuthProvider';
 
 const Sync = () => {
-  const db = useDatabase();
+  const {db} = useDatabase();
+
   const toast = useToast();
   const {session} = useAuth();
 
@@ -30,8 +31,6 @@ const Sync = () => {
           placement: 'top',
         });
       }
-
-      console.log(result);
     } catch (error) {
       toast.show(error, {type: 'danger', placement: 'top'});
     }

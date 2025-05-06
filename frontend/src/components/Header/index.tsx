@@ -31,7 +31,7 @@ const Header: React.FC<HeaderProps> = ({
 }) => {
   const navigation = useNavigation<AppNavigationProp>();
 
-  const handleNavigation = (screen: keyof RootStackParamList, params) => {
+  const handleNavigation = (screen: keyof RootStackParamList, params?: any) => {
     navigation.navigate(screen, params);
   };
 
