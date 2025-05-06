@@ -25,20 +25,20 @@ export const DatabaseProvider = ({children}) => {
           location: 'default',
         });
 
-        console.log('✅ Banco de dados aberto com sucesso!');
+        console.log('✅ Database opened successfully!');
         setDb(database);
 
         await runMigrations(database);
-        console.log('✅ Tabela criada/verificada com sucesso');
+        console.log('✅ Tables created successfully');
 
         const result = await saveBranchesOffline(database);
         const branches = Array.isArray(result) ? result : result.data || [];
         setBranches(branches);
-        console.log('✅ Branches carregadas com sucesso');
+        console.log('✅ Branches loaded successfully');
 
         //TODO: Load Users, Products, etc...
       } catch (error) {
-        console.log('❌ Erro ao inicializar o banco de dados: ', error);
+        console.log('❌ Error initializing database: ', error);
       }
     };
     initDatabase();
@@ -68,9 +68,9 @@ export const DatabaseProvider = ({children}) => {
         const shouldSync = await hasUnsyncedProducts(db);
         if (!shouldSync) return;
         await syncProducts(db);
-        console.log('Products syncronized successfully');
+        console.log('✅ Products syncronized successfully');
       } catch (error) {
-        console.log('Error syncronizing the products');
+        console.log('❌ Error syncronizing the products');
       }
     };
     syncData();
