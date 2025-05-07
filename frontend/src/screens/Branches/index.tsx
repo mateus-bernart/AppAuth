@@ -23,10 +23,9 @@ import Header from '../../components/Header';
 import SearchBar from '../../components/SearchBar';
 import {useDatabase} from '../../providers/DatabaseProvider';
 import {isOnline} from '../../helpers/networkHelper';
+import BranchCard from '../../components/BranchCard';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
-
-const apiURL = `${BASE_URL}/api`;
 
 interface Branch {
   id: number;
@@ -37,17 +36,12 @@ interface Branch {
 const Branches = () => {
   const toast = useToast();
   const [branchList, setBranchList] = useState<Branch[]>([]);
-  const navigation = useNavigation<AppNavigationProp>();
   const {endSession, session} = useAuth();
   const {branches} = useDatabase();
 
   const {control, watch} = useForm();
 
   const searchTerm = watch('term');
-
-  const handleNavigation = (screens, params = {}) => {
-    navigation.navigate(screens, params);
-  };
 
   const fetchBranches = async () => {
     try {
@@ -87,31 +81,7 @@ const Branches = () => {
       <SearchBar control={control} />
       <FlatList
         data={branchList.filter(branch => branch.id)}
-        renderItem={({item}) => {
-          return (
-            <TouchableOpacity
-              style={styles.itemContainer}
-              onPress={() => {
-                handleNavigation('BranchStock', {branchId: item.id});
-              }}>
-              <View style={styles.itemBand} />
-              <View style={styles.itemDetailsContainer}>
-                <Text
-                  style={styles.itemName}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  {item.description}
-                </Text>
-                <Text
-                  style={styles.itemDetails}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  # {item.code}
-                </Text>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
+        renderItem={({item}) => <BranchCard item={item} />}
       />
     </SafeAreaView>
   );
@@ -124,12 +94,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginBottom: 100,
   },
-  itemBand: {
-    backgroundColor: '#60b565',
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
-    flex: 1,
-  },
+
   header: {
     marginHorizontal: 30,
     marginVertical: 10,
@@ -153,34 +118,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
     fontFamily: 'Poppins-Medium',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    marginVertical: 10,
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    borderRadius: 12,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  itemDetailsContainer: {
-    flex: 16,
-    padding: 14,
-  },
-  itemName: {
-    fontSize: 18,
-    fontFamily: 'Poppins-Bold',
-  },
-  itemDetails: {
-    fontSize: 16,
-    color: 'gray',
-    fontFamily: 'Poppins-Regular',
   },
   actionContainer: {
     flexDirection: 'row',

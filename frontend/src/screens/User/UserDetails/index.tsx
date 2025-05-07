@@ -35,6 +35,7 @@ import axiosInstance from '../../../services/api';
 import CustomInput from '../../../components/CustomInput';
 import Header from '../../../components/Header';
 import {AppNavigationProp} from '../../../types/navigationTypes';
+import EditButton from '../../../components/EditButton';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
@@ -303,15 +304,12 @@ const UserDetails = ({route}) => {
 
         {isMyProfile ? (
           <>
-            <TouchableOpacity
-              onPress={handleSubmit(handleEdit)}
-              style={styles.iconEdit}>
-              <IconMaterialIcons
-                name={editable ? 'check' : 'create'}
-                size={35}
-                color="white"
-              />
-            </TouchableOpacity>
+            <EditButton
+              onPress={handleEdit}
+              iconName={editable ? 'check' : 'create'}
+              size={35}
+              color="white"
+            />
 
             <TouchableOpacity
               onPress={() => handleLogout()}

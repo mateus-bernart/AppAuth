@@ -20,9 +20,10 @@ import Header from '../../../components/Header';
 import SearchBar from '../../../components/SearchBar';
 import SlideInView from '../../../components/SlideView';
 import {BASE_URL} from '../../../services/config';
-import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {useDatabase} from '../../../providers/DatabaseProvider';
 import {isOnline} from '../../../helpers/networkHelper';
+import ActionButton from '../../../components/EditButton';
+import ProductCard from '../../../components/ProductCard';
 
 export type Product = {
   id: number;
@@ -84,11 +85,10 @@ const BranchStock = ({route}) => {
       setProductList(products);
       setBranchInfo(response.data.branch);
     } catch (error) {
-      //TODO: check if is necessary
-      // toast.show('Error to find products, check internet connection', {
-      //   type: 'danger',
-      //   placement: 'top',
-      // });
+      toast.show('Error to find products, check internet connection', {
+        type: 'danger',
+        placement: 'bottom',
+      });
       console.log(error.response);
     }
   };
@@ -218,16 +218,13 @@ const BranchStock = ({route}) => {
         title={branchInfo?.description || branches[branchId - 1].description}
         backToScreen="Branches"
       />
-
-      <TouchableOpacity
-        onPress={() => handleConfirmEdit()}
-        style={styles.iconEdit}>
-        <IconMaterialIcons
-          name={editable ? 'check' : 'create'}
-          size={35}
-          color="white"
-        />
-      </TouchableOpacity>
+      <ActionButton
+        onPress={handleConfirmEdit}
+        iconName={editable ? 'check' : 'create'}
+        size={35}
+        color="white"
+        style={{top: 50}}
+      />
       <SearchBar control={control} />
 
       {editable && (
@@ -245,139 +242,25 @@ const BranchStock = ({route}) => {
           const wasChanged = updatedQuantities[item.id] !== undefined;
 
           return (
-            <View style={styles.itemContainer}>
-              <View style={styles.itemDetailWrapper}>
-                <TouchableOpacity
-                  onPress={() => {
-                    handleNavigation('BranchStockProductDetails', {
-                      product: item,
-                      branchId: branchId,
-                    });
-                  }}>
-                  <Text
-                    style={[
-                      styles.itemName,
-                      {borderTopRightRadius: !editable ? 10 : 0},
-                    ]}
-                    numberOfLines={1}
-                    ellipsizeMode="tail">
-                    {item.name}
-                  </Text>
-                  <View style={styles.itemDetailContainer}>
-                    <View style={styles.infoWrapper}>
-                      <View style={[styles.infoContainer]}>
-                        <Text
-                          style={styles.itemBatch}
-                          numberOfLines={1}
-                          ellipsizeMode="tail">
-                          Batch {item.batch}
-                        </Text>
-                        <Text
-                          style={styles.itemDetails}
-                          numberOfLines={1}
-                          ellipsizeMode="tail">
-                          Quantity:
-                        </Text>
-                        <View style={styles.quantityValueContainer}>
-                          {wasChanged ? (
-                            <SlideInView
-                              direction="right"
-                              distance={30}
-                              style={{}}>
-                              <Text
-                                style={[
-                                  styles.detailsHighlighted,
-                                  wasChanged && styles.oldNumber,
-                                ]}>
-                                {item.quantity}
-                              </Text>
-                            </SlideInView>
-                          ) : (
-                            <Text
-                              style={[
-                                styles.detailsHighlighted,
-                                wasChanged && styles.oldNumber,
-                              ]}>
-                              {item.quantity}
-                            </Text>
-                          )}
-
-                          {wasChanged && (
-                            <>
-                              <SlideInView
-                                direction="left"
-                                distance={10}
-                                style={{}}>
-                                <IconFontAwesome
-                                  name="arrow-right"
-                                  size={20}
-                                  style={{marginBottom: 5}}
-                                />
-                              </SlideInView>
-                              <SlideInView
-                                direction="left"
-                                distance={10}
-                                style={{}}>
-                                <Text
-                                  style={[
-                                    styles.detailsHighlighted,
-                                    styles.newQuantityValue,
-                                  ]}>
-                                  {newQuantity}
-                                </Text>
-                              </SlideInView>
-                            </>
-                          )}
-                        </View>
-                      </View>
-                      {item.image && (
-                        <SlideInView direction="left" distance={10} style={{}}>
-                          <View
-                            style={[
-                              styles.imageContainer,
-                              {alignItems: editable ? 'center' : 'flex-end'},
-                            ]}>
-                            {!editable && (
-                              <Image
-                                source={{uri: getImageByProductId(item.id)}}
-                                style={styles.imageStyle}
-                              />
-                            )}
-                          </View>
-                        </SlideInView>
-                      )}
-                    </View>
-                  </View>
-                </TouchableOpacity>
-              </View>
-              {editable && (
-                <View style={{...(editable && {flex: 1})}}>
-                  <>
-                    <TouchableOpacity
-                      onPress={() => {
-                        handleAdjustQuantity('increment', item.id);
-                      }}
-                      style={[
-                        editable && styles.buttonAdjust,
-                        {borderTopRightRadius: 10},
-                        {borderBottomWidth: 1},
-                      ]}>
-                      <IconFontAwesome name="plus" size={25} />
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      onPress={() => {
-                        handleAdjustQuantity('decrement', item.id);
-                      }}
-                      style={[
-                        editable && styles.buttonAdjust,
-                        {borderBottomRightRadius: 10},
-                      ]}>
-                      <IconFontAwesome name="minus" size={25} />
-                    </TouchableOpacity>
-                  </>
-                </View>
-              )}
-            </View>
+            <ProductCard
+              onPressCard={() =>
+                handleNavigation('BranchStockProductDetails', {
+                  product: item,
+                  branchId: branchId,
+                })
+              }
+              editable={editable}
+              item={item}
+              getImageByProductId={getImageByProductId(item.id)}
+              newQuantity={newQuantity}
+              wasChanged={wasChanged}
+              onPressAdjustQuantityIncrement={() =>
+                handleAdjustQuantity('increment', item.id)
+              }
+              onPressAdjustQuantityDecrement={() =>
+                handleAdjustQuantity('decrement', item.id)
+              }
+            />
           );
         }}
       />
@@ -402,14 +285,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#60b565',
     color: 'green',
   },
-  iconEdit: {
-    position: 'absolute',
-    padding: 10,
-    backgroundColor: '#47b64c',
-    right: 30,
-    top: 50,
-    borderRadius: 10,
-  },
   editStockText: {
     fontFamily: 'Poppins-Bold',
     fontSize: 18,
@@ -428,92 +303,9 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     fontSize: 20,
   },
-  itemDetailWrapper: {
-    flex: 3,
-  },
-  buttonAdjust: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-    height: '100%',
-    backgroundColor: '#d8d8d8',
-  },
-  itemName: {
-    fontSize: 20,
-    fontFamily: 'Poppins-Bold',
-    color: 'white',
-    borderTopLeftRadius: 10,
-    backgroundColor: '#297c2f',
-    padding: 10,
-  },
-  itemDetailContainer: {
-    padding: 10,
-  },
-  itemBatch: {
-    fontFamily: 'Poppins-Medium',
-    fontSize: 16,
-    alignSelf: 'flex-start',
-  },
-  itemDetails: {
-    marginTop: 10,
-    fontSize: 18,
-    color: 'gray',
-    fontFamily: 'Poppins-Regular',
-  },
-  quantityValueContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: 8,
-  },
-  detailsHighlighted: {
-    color: '#579b6a',
-    fontFamily: 'Poppins-Bold',
-    fontSize: 30,
-  },
-  newQuantityValue: {
-    fontSize: 32,
-  },
-  oldNumber: {
-    color: 'black',
-    fontSize: 22,
-    textDecorationLine: 'line-through',
-  },
   actionContainer: {
     flexDirection: 'row',
     gap: 10,
     alignItems: 'center',
-  },
-  itemContainer: {
-    flexDirection: 'row',
-    marginVertical: 10,
-    backgroundColor: 'white',
-    marginHorizontal: 20,
-    borderRadius: 12,
-    shadowColor: '#000000',
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5,
-  },
-  infoWrapper: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  infoContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  imageContainer: {
-    flex: 1,
-  },
-  imageStyle: {
-    height: 120,
-    width: 160,
-    borderRadius: 10,
   },
 });

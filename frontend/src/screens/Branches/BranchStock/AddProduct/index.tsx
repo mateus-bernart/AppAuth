@@ -211,7 +211,8 @@ const AddProduct = () => {
       <SafeAreaView style={styles.body}>
         <Header title={!product ? 'ADD PRODUCT' : 'UPDATE PRODUCT'} />
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{marginHorizontal: 20}}>
           <ScrollView showsVerticalScrollIndicator={false}>
             <View style={styles.containerInfo}>
               <Text style={styles.formTitle}>Product Name</Text>
@@ -381,7 +382,6 @@ export default AddProduct;
 const styles = StyleSheet.create({
   body: {
     flex: 1,
-    marginHorizontal: 20,
     marginBottom: 15,
   },
   containerInfo: {
