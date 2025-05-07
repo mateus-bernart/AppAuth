@@ -24,7 +24,7 @@ export const checkCodeAvailable = async (db, productCode) => {
   });
 
   if (verifyCode.rows.length > 0) {
-    return Promise.reject({exists: true, source: 'local'});
+    return {exists: true, source: 'local'};
   }
 
   if (online) {
@@ -172,25 +172,6 @@ export const showData = async db => {
   });
 };
 
-// const syncBranches = async db => {
-//   const response = await axiosInstance.get('/branches');
-//   const branches = response.data;
-//   try {
-//     for (const branch of branches) {
-//       db.executeSql(
-//         `
-//             INSERT OR REPLACE INTO
-//               branches (id, code, description)
-//             VALUES (?,?,?)
-//           `,
-//         [branch.id, branch.name, branch.description],
-//       );
-//     }
-//   } catch (error) {
-//     console.log('❌ Error syncthing branches: ', error);
-//   }
-// };
-
 export const fullSync = async db => {
   if (!(await isOnline())) return;
 
@@ -198,8 +179,6 @@ export const fullSync = async db => {
   await getBranchesOffline(db);
   //... other tables seeders
 };
-
-
 
 export const syncProducts = db => {
   return new Promise(async (resolve, reject) => {

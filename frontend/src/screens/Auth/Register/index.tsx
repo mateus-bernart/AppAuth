@@ -24,6 +24,7 @@ import Header from '../../../components/Header';
 import SubmitButton from '../../../components/SubmitButton';
 import SearchSelectPicker from '../../../components/SearchSelectPicker';
 import SelectPicker from '../../../components/SelectPicker';
+import {isOnline} from '../../../helpers/networkHelper';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
