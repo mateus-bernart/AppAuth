@@ -30,6 +30,7 @@ import {Asset, launchImageLibrary} from 'react-native-image-picker';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import {
   addImageOffline,
+  deleteProduct,
   getImageFromCacheAndSave,
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {isOnline} from '../../../../helpers/networkHelper';
@@ -71,26 +72,38 @@ const BranchStockProductDetails = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'DELETE', onPress: () => deleteProduct()},
+      {text: 'DELETE', onPress: () => handleDeleteProduct()},
     ]);
 
-  const deleteProduct = () => {
-    axiosInstance
-      .delete(`/product/delete/${product?.id}`)
-      .then(response => {
+  const handleDeleteProduct = async () => {
+    const online = await isOnline();
+
+    if (!online) {
+      try {
+        await deleteProduct(db, product.id);
+        toast.show('Product deleted', {type: 'success', placement: 'top'});
+        navigation.goBack();
+      } catch (error) {
+        console.log(error);
+      }
+    } else {
+      try {
+        const response = await axiosInstance.delete(
+          `/product/delete/${product?.id}`,
+        );
         toast.show(response.data, {
           type: 'success',
           placement: 'top',
         });
         navigation.goBack();
-      })
-      .catch(e => {
-        console.log(e.response);
-        toast.show(e.response, {
+      } catch (error) {
+        console.log(error.response);
+        toast.show(error.response, {
           type: 'danger',
           placement: 'top',
         });
-      });
+      }
+    }
   };
 
   useFocusEffect(
