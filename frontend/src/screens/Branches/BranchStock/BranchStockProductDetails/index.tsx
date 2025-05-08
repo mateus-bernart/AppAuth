@@ -28,6 +28,12 @@ import Header from '../../../../components/Header';
 import {BASE_URL} from '../../../../services/config';
 import {Asset, launchImageLibrary} from 'react-native-image-picker';
 import IconMaterialIcons from 'react-native-vector-icons/MaterialIcons';
+import {
+  addImageOffline,
+  getImageFromCacheAndSave,
+} from '../../../../helpers/databaseHelpers/stockProduct';
+import {isOnline} from '../../../../helpers/networkHelper';
+import {useDatabase} from '../../../../providers/DatabaseProvider';
 
 type ProductDetailRouteParams = {
   product: Product;
@@ -51,6 +57,8 @@ const BranchStockProductDetails = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const [image, setImage] = useState<string | undefined>(undefined);
   const [productData, setProductData] = useState(product);
+  const {db} = useDatabase();
+  const imagePath = product.image;
 
   const handleNavigation = (screen: keyof RootStackParamList, values) => {
     navigation.navigate(screen, values);
@@ -94,14 +102,19 @@ const BranchStockProductDetails = () => {
   );
 
   useEffect(() => {
-    if (product?.image) {
-      const imageUrl = `${BASE_URL.replace(
-        '/api',
-        '',
-      )}/storage/product_images/${product.image}`;
-      setImage(imageUrl);
+    if (imagePath) {
+      const isLocalImage =
+        imagePath.startsWith('/data') || imagePath.startsWith('file:/');
+
+      const imageUrl = isLocalImage
+        ? product.image
+        : `${BASE_URL.replace('/api', '')}/storage/product_images/${
+            product.image
+          }`;
+
+      setImage(imageUrl || undefined);
     }
-  }, [product?.image]);
+  }, [imagePath]);
 
   const fetchProductInfo = async () => {
     try {
@@ -186,30 +199,53 @@ const BranchStockProductDetails = () => {
       name: selectedImage.fileName,
     });
 
-    try {
-      const response = await axiosInstance.post(
-        `/product/${product.id}/add-image`,
-        formData,
-        {
-          headers: {'Content-Type': 'multipart/form-data'},
-        },
-      );
-      console.log('Image upload success: ', response);
-      toast.show('Image uploaded', {
-        type: 'success',
-        placement: 'top',
-      });
-      const imageUrl = `${BASE_URL.replace(
-        '/api',
-        '',
-      )}/storage/product_images/${response.data.product.image}`;
-      setImage(imageUrl);
-    } catch (error) {
-      toast.show('Error uploading the image, check internet connection.', {
-        type: 'danger',
-        placement: 'top',
-      });
-      console.log('Error uploading the image: ', error.response);
+    const online = await isOnline();
+
+    if (!online) {
+      try {
+        const imagePersistedUri = await getImageFromCacheAndSave(
+          selectedImage.uri,
+        );
+
+        await addImageOffline(db, product.id, imagePersistedUri);
+        setImage(selectedImage.uri);
+        toast.show('Image saved locally', {
+          type: 'success',
+          placement: 'top',
+        });
+      } catch (error) {
+        console.error('Error adding image offline:', error);
+        toast.show('Failed to save image offline', {
+          type: 'danger',
+          placement: 'top',
+        });
+      }
+    } else {
+      try {
+        const response = await axiosInstance.post(
+          `/product/${product.id}/add-image`,
+          formData,
+          {
+            headers: {'Content-Type': 'multipart/form-data'},
+          },
+        );
+        console.log('Image upload success: ', response);
+        toast.show('Image uploaded', {
+          type: 'success',
+          placement: 'top',
+        });
+        const imageUrl = `${BASE_URL.replace(
+          '/api',
+          '',
+        )}/storage/product_images/${response.data.product.image}`;
+        setImage(imageUrl);
+      } catch (error) {
+        toast.show('Error uploading the image', {
+          type: 'danger',
+          placement: 'top',
+        });
+        console.log('Error uploading the image: ', error);
+      }
     }
   };
 

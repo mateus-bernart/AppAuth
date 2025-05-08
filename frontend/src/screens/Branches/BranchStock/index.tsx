@@ -24,6 +24,7 @@ import {useDatabase} from '../../../providers/DatabaseProvider';
 import {isOnline} from '../../../helpers/networkHelper';
 import ActionButton from '../../../components/EditButton';
 import ProductCard from '../../../components/ProductCard';
+import {showBranchStockData} from '../../../helpers/databaseHelpers/stockProduct';
 
 export type Product = {
   id: number;
@@ -33,7 +34,7 @@ export type Product = {
   batch: string;
   quantity: string;
   price: number;
-  image: Image | null;
+  image: string | null;
 };
 
 type Branch = {
@@ -51,6 +52,7 @@ const BranchStock = ({route}) => {
   const [branchInfo, setBranchInfo] = useState<Branch | null>(null);
   const {branches} = useDatabase();
   const [editable, setEditable] = useState(false);
+  const {db} = useDatabase();
 
   const [updatedQuantities, setUpdatedQuantities] = useState<UpdatedQuantities>(
     {},
@@ -61,11 +63,29 @@ const BranchStock = ({route}) => {
 
   const getImageByProductId = (productId: number): string => {
     const product = productList.find(p => p.id === productId);
-    return product?.image
-      ? `${BASE_URL.replace('/api', '')}/storage/product_images/${
+    const imagePath = product?.image;
+
+    if (!imagePath || typeof imagePath !== 'string') return '';
+
+    const isLocalImage =
+      imagePath.startsWith('/data') || imagePath.startsWith('file:/');
+
+    return isLocalImage
+      ? imagePath
+      : `${BASE_URL.replace('/api', '')}/storage/product_images/${
           product.image
-        }`
-      : '';
+        }`;
+  };
+
+  const getSqliteBranchStock = async () => {
+    try {
+      const productResult = await showBranchStockData(db);
+      console.log(productResult);
+
+      setProductList(productResult);
+    } catch (error) {
+      console.log('Error fetching SQLite branch stock:', error);
+    }
   };
 
   const fetchBranchInfo = async () => {
@@ -202,6 +222,7 @@ const BranchStock = ({route}) => {
           if (!online) {
             const branch = branches.find(b => b.id === branchId);
             setBranchInfo(branch || null);
+            await getSqliteBranchStock();
           } else {
             fetchBranchInfo();
           }

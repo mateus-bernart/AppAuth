@@ -27,7 +27,7 @@ import BranchCard from '../../components/BranchCard';
 
 const BASE_URL = __DEV__ ? process.env.DEV_API_URL : process.env.PROD_API_URL;
 
-interface Branch {
+export interface Branch {
   id: number;
   code: string;
   description: string;

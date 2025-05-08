@@ -3,6 +3,8 @@ import axiosInstance from '../../services/api';
 import utc from 'dayjs/plugin/utc';
 import {isOnline} from '../networkHelper';
 import {getBranchesOffline} from './getBranchesOffline';
+import RNFS from 'react-native-fs';
+
 dayjs.extend(utc);
 
 export const checkCodeAvailable = async (db, productCode) => {
@@ -59,6 +61,82 @@ export const checkCodeAvailable = async (db, productCode) => {
       );
     });
   });
+};
+
+export const addImageOffline = async (db, productId, image) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `
+          UPDATE products SET image = ? WHERE id = ?
+        `,
+        [image, productId],
+        (_, result) => {
+          console.log('✅ Image updated successfully');
+          resolve(result);
+        },
+        (_, error) => {
+          console.log('❌ Error updating image:', error);
+          reject(error);
+        },
+      );
+    });
+  });
+};
+
+export const deleteProduct = async (db, productId) => {
+  return new Promise((resolve, reject) => {
+    try {
+      db.transaction(tx => {
+        tx.executeSql(
+          `
+            DELETE FROM products WHERE id = ?
+          `,
+          [productId],
+          (_, result) => {
+            if (result.rowsAffected != 0) {
+              console.log('✅ Product deleted');
+            }
+            resolve(result);
+          },
+          (_, error) => {
+            console.log('❌ Error deleting the product: ', error);
+            reject(error);
+          },
+        );
+      });
+    } catch (error) {
+      console.log('❌ Error deleting the product: ', error);
+    }
+  });
+};
+
+export const getImageFromCacheAndSave = async imageUri => {
+  try {
+    if (!imageUri || typeof imageUri !== 'string') {
+      console.warn('❗ imageUri is invalid:', imageUri);
+      return null;
+    }
+
+    const fileName = `image_${Date.now()}.jpg`;
+    const destPath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+    if (imageUri.startsWith('file://')) {
+      const exists = await RNFS.exists(imageUri);
+
+      if (exists) {
+        await RNFS.copyFile(imageUri, destPath);
+        console.log('Image saved to document folder:', destPath);
+      } else {
+        console.warn('❗ Source image does not exist:', imageUri);
+      }
+    }
+
+    return `file://${destPath}`;
+  } catch (error) {
+    console.error('Error saving image from cache:', error);
+    throw error;
+  }
 };
 
 export const saveProductOffline = async (db, product, branchId) => {
@@ -144,14 +222,14 @@ export const deleteData = async db => {
   });
 };
 
-export const showData = async db => {
+export const showBranchStockData = async db => {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {
       tx.executeSql(
         `
           SELECT *, p.synced as products_synced, s.synced as stocks_synced FROM products p 
           INNER JOIN stocks s ON p.id = s.product_id;
-          `,
+        `,
         [],
         (_, results) => {
           const rows = results.rows;
@@ -175,7 +253,6 @@ export const showData = async db => {
 export const fullSync = async db => {
   if (!(await isOnline())) return;
 
-  // await syncBranches(db);
   await getBranchesOffline(db);
   //... other tables seeders
 };
@@ -285,17 +362,6 @@ export const syncProducts = db => {
               for (const product of unsynced) {
                 await syncProduct(product);
               }
-
-              //Products to be deleted:
-              db.transaction(tx => {
-                tx.executeSql(
-                  `SELECT * FROM products WHERE synced = 1`,
-                  [],
-                  (_, res) => {
-                    console.log('🔍 Products to be deleted:', res.rows.raw());
-                  },
-                );
-              });
 
               db.transaction(tx => {
                 tx.executeSql(

@@ -20,6 +20,7 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import {
   checkCodeAvailable,
+  getImageFromCacheAndSave,
   saveProductOffline,
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
@@ -158,6 +159,12 @@ const AddProduct = () => {
     if (!online) {
       const offlineProduct = formDataToObject(formData);
       await saveProductOffline(db, offlineProduct, branchId);
+      console.log('Offline Product: ', offlineProduct);
+
+      handleNavigation('BranchStockProductDetails', {
+        product: offlineProduct,
+        branchId: branchId,
+      });
     } else {
       try {
         const response = await axiosInstance({

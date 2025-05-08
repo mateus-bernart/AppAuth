@@ -3,19 +3,21 @@ import SQLite from 'react-native-sqlite-storage';
 import {runMigrations} from '../database/migrations/runMigrations';
 import {saveBranchesOffline} from '../database/migrations/005_add_branches_to_branches_table';
 import {syncProducts} from '../helpers/databaseHelpers/stockProduct';
+import {Product} from '../screens/Branches/BranchStock';
+import {Branch} from '../screens/Branches';
 
 SQLite.enablePromise(true);
 
 type DatabaseContextType = {
   db: SQLite.SQliteDatabase;
-  branches: any[];
+  branches: Branch[];
 };
 
 const DatabaseContext = createContext<DatabaseContextType | null>(null);
 
 export const DatabaseProvider = ({children}) => {
   const [db, setDb] = useState(null);
-  const [branches, setBranches] = useState<any[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
 
   useEffect(() => {
     const initDatabase = async () => {
@@ -31,12 +33,13 @@ export const DatabaseProvider = ({children}) => {
         await runMigrations(database);
         console.log('✅ Tables created successfully');
 
-        const result = await saveBranchesOffline(database);
-        const branches = Array.isArray(result) ? result : result.data || [];
+        //Load Branches, Products... OFFLINE
+        const resultBranches = await saveBranchesOffline(database);
+        const branches = Array.isArray(resultBranches)
+          ? resultBranches
+          : resultBranches.data || [];
         setBranches(branches);
         console.log('✅ Branches loaded successfully');
-
-        //TODO: Load Users, Products, etc...
       } catch (error) {
         console.log('❌ Error initializing database: ', error);
       }
