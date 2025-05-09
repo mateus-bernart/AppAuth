@@ -4,6 +4,7 @@ import utc from 'dayjs/plugin/utc';
 import {isOnline} from '../networkHelper';
 import {getBranchesOffline} from './getBranchesOffline';
 import RNFS from 'react-native-fs';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 dayjs.extend(utc);
 
@@ -219,6 +220,124 @@ export const deleteData = async db => {
     } catch (error) {
       console.log('❌ Error deleting the product:', error.response);
     }
+  });
+};
+
+export const getStockProduct = async (db, productId) => {
+  return new Promise((resolve, reject) => {
+    try {
+      db.transaction(tx => {
+        tx.executeSql(
+          `
+            SELECT * FROM products WHERE id = ?
+          `,
+          [productId],
+          (_, result) => {
+            resolve(result);
+          },
+          (_, error) => {
+            console.log(' ❌ Error getting the product');
+            reject(error);
+          },
+        );
+      });
+    } catch (error) {
+      console.log('❌ Error getting the product', error.response);
+    }
+  });
+};
+
+export const adjustStockQuantity = async (
+  db,
+  productId,
+  newQuantity,
+  branchId,
+) => {
+  const userId = await AsyncStorage.getItem('userId');
+
+  const stockQuantity = await new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `
+          SELECT quantity FROM stocks WHERE product_id = ? AND branch_id = ?
+        `,
+        [productId, branchId],
+        (_, result) => {
+          if (result.rows.length > 0) {
+            resolve(result.rows.item(0).quantity);
+          } else {
+            resolve(null);
+          }
+        },
+        (_, error) => {
+          console.log('❌ Error fetching stock quantity:', error);
+          reject(error);
+        },
+      );
+    });
+  });
+
+  if (stockQuantity === null) {
+    console.log('❗ No stock found for the given product and branch');
+    throw new Error('Stock not found');
+  }
+
+  const quantityChange = newQuantity - stockQuantity;
+
+  return new Promise((resolve, reject) => {
+    db.transaction(
+      tx => {
+        tx.executeSql(
+          `
+          UPDATE stocks SET quantity = ? WHERE product_id = ? AND branch_id = ?
+        `,
+          [newQuantity, productId, branchId],
+          (_, result) => {
+            console.log('✅ Stock quantity updated successfully');
+            resolve(result);
+          },
+          (_, error) => {
+            console.log('❌ Error updating stock quantity:', error);
+            reject(error);
+          },
+        );
+
+        tx.executeSql(
+          `
+          INSERT INTO stock_logs (user_id, branch_id, product_id, old_quantity, new_quantity, quantity_change, action, created_at, updated_at)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+          [
+            userId,
+            branchId,
+            productId,
+            stockQuantity,
+            newQuantity,
+            quantityChange,
+            'manual_adjustment',
+            Date.now(),
+            Date.now(),
+          ],
+          (_, result) => {
+            console.log('✅ Stock log entry created successfully');
+          },
+          (_, error) => {
+            console.log('❌ Error creating stock log entry:', error);
+            reject(error); // Ensure the promise rejects on error
+          },
+        );
+      },
+      error => {
+        console.log(
+          '❌ Transaction error while creating stock log entry:',
+          error,
+        );
+        reject(error); // Handle transaction-level errors
+      },
+      () => {
+        resolve('Stock log entry created successfully'); // Resolve the promise on success
+      },
+    );
   });
 };
 

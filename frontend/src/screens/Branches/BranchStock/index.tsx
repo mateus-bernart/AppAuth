@@ -24,7 +24,10 @@ import {useDatabase} from '../../../providers/DatabaseProvider';
 import {isOnline} from '../../../helpers/networkHelper';
 import ActionButton from '../../../components/EditButton';
 import ProductCard from '../../../components/ProductCard';
-import {showBranchStockData} from '../../../helpers/databaseHelpers/stockProduct';
+import {
+  adjustStockQuantity,
+  showBranchStockData,
+} from '../../../helpers/databaseHelpers/stockProduct';
 
 export type Product = {
   id: number;
@@ -173,31 +176,45 @@ const BranchStock = ({route}) => {
         {
           text: 'YES',
           onPress: async () => {
+            const online = await isOnline();
             try {
-              await Promise.all(
-                Object.entries(updatedQuantities).map(
-                  async ([productId, newQuantity]) => {
-                    const response = await axiosInstance.post(
-                      `/stock/${productId}/log-adjustment`,
-                      {
-                        branch_id: branchId,
-                        new_quantity: newQuantity,
-                      },
-                    );
-                    console.log(response.data);
-                  },
-                ),
-              );
+              if (!online) {
+                const productId = Object.keys(updatedQuantities).map(id =>
+                  parseInt(id, 10),
+                );
+                const newQuantity = Object.values(updatedQuantities);
 
-              setEditable(false);
-              fetchBranchInfo();
-              setUpdatedQuantities({});
+                await adjustStockQuantity(db, productId, newQuantity, branchId);
+                setEditable(false);
+                setUpdatedQuantities({});
+                getSqliteBranchStock();
+              } else {
+                await Promise.all(
+                  Object.entries(updatedQuantities).map(
+                    async ([productId, newQuantity]) => {
+                      const response = await axiosInstance.post(
+                        `/stock/${productId}/log-adjustment`,
+                        {
+                          branch_id: branchId,
+                          new_quantity: newQuantity,
+                        },
+                      );
+                      console.log(response.data);
+                    },
+                  ),
+                );
+
+                setEditable(false);
+                fetchBranchInfo();
+                setUpdatedQuantities({});
+              }
 
               toast.show('Changes confirmed and stored', {
                 type: 'success',
                 placement: 'top',
               });
             } catch (error) {
+              console.log(error);
               toast.show('Failed to store changes', {
                 type: 'danger',
                 placement: 'top',

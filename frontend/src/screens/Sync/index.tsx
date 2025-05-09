@@ -124,6 +124,9 @@ const Sync = () => {
           <></>
         )}
       </View>
+      <View style={styles.titleContainer}>
+        <Text style={styles.titleText}>Pending products to syncronize:</Text>
+      </View>
       <View style={styles.tableHeaderContainer}>
         <View style={styles.cell}>
           <Text style={styles.tableHeaderText}>Code</Text>
@@ -189,6 +192,15 @@ const styles = StyleSheet.create({
   },
   flatList: {
     flex: 1,
+  },
+  titleContainer: {
+    padding: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  titleText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
   },
   localTableContainer: {
     flexDirection: 'row',

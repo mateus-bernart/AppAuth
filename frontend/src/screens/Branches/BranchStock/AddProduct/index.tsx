@@ -21,6 +21,7 @@ import {AppNavigationProp} from '../../../../types/navigationTypes';
 import {
   checkCodeAvailable,
   getImageFromCacheAndSave,
+  getStockProduct,
   saveProductOffline,
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
@@ -76,18 +77,26 @@ const AddProduct = () => {
 
   useEffect(() => {
     if (product) {
-      const fetchStockInfo = async () => {
-        const stockInfo = await fetchStockDetails(product.id);
+      const fetchAndSetStockInfo = async () => {
+        const online = await isOnline();
+
+        let stockInfo;
+        if (!online) {
+          stockInfo = await getStockProduct(db, product.id);
+        } else {
+          stockInfo = await fetchStockDetails(product.id);
+        }
         reset({
           name: product?.name,
           price: product?.price,
           description: product?.description,
-          batch: stockInfo?.batch.toString() ?? '',
+          batch: stockInfo?.batch?.toString() ?? '',
           code: product?.code,
-          quantity: stockInfo?.quantity.toString() ?? '',
+          quantity: stockInfo?.quantity?.toString() ?? '',
         });
       };
-      fetchStockInfo();
+
+      fetchAndSetStockInfo();
     }
   }, [product]);
 

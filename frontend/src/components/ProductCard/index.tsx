@@ -25,8 +25,6 @@ const ProductCard = ({
   onPressAdjustQuantityIncrement,
   onPressAdjustQuantityDecrement,
 }) => {
-  console.log('Product image: ', item.image);
-
   return (
     <View style={styles.itemContainer}>
       <View style={styles.itemDetailWrapper}>
