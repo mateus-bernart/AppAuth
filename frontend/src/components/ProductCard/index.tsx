@@ -29,15 +29,20 @@ const ProductCard = ({
     <View style={styles.itemContainer}>
       <View style={styles.itemDetailWrapper}>
         <TouchableOpacity onPress={onPressCard}>
-          <Text
+          <View
             style={[
-              styles.itemName,
+              styles.nameContainer,
               {borderTopRightRadius: !editable ? 10 : 0},
-            ]}
-            numberOfLines={1}
-            ellipsizeMode="tail">
-            {item.name}
-          </Text>
+            ]}>
+            <Text
+              style={styles.itemName}
+              numberOfLines={1}
+              ellipsizeMode="tail">
+              {item.name}
+            </Text>
+            <Text style={styles.itemCode}># {item.code}</Text>
+          </View>
+
           <View style={styles.itemDetailContainer}>
             <View style={styles.infoWrapper}>
               <View style={[styles.infoContainer]}>
@@ -189,9 +194,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontFamily: 'Poppins-Bold',
     color: 'white',
+  },
+  itemCode: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 20,
+    color: '#132c1b',
+  },
+  nameContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     borderTopLeftRadius: 10,
     backgroundColor: '#297c2f',
     padding: 10,
+    justifyContent: 'space-between',
   },
   itemBatch: {
     fontFamily: 'Poppins-Medium',

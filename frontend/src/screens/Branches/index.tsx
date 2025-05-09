@@ -78,7 +78,7 @@ const Branches = () => {
   return (
     <SafeAreaView style={styles.body}>
       <Header title="BRANCHES" iconLeft={false} />
-      <SearchBar control={control} />
+      <SearchBar control={control} placeholder="Search by the name/code" />
       <FlatList
         data={branchList.filter(branch => branch.id)}
         renderItem={({item}) => <BranchCard item={item} />}

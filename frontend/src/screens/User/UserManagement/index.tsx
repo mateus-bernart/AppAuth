@@ -69,7 +69,7 @@ const UserManagement = () => {
   return (
     <SafeAreaView style={styles.body}>
       <Header title="USER MANAGEMENT" iconLeft={false} />
-      <SearchBar control={control} />
+      <SearchBar control={control} placeholder="Search by the name/email" />
       <EditButton
         onPress={() => navigation.navigate('Register')}
         iconName="add"

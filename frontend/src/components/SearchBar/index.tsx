@@ -4,16 +4,18 @@ import CustomInput from '../CustomInput';
 
 type SearchBarProps = {
   control: any;
+  placeholder: string;
 };
 
-const SearchBar = ({control}) => {
+const SearchBar = ({control, placeholder}: SearchBarProps) => {
   return (
     <View style={styles.searchUserContainer}>
       <View style={styles.searchUser}>
         <CustomInput
           control={control}
           name="term"
-          placeholder="Search by the name / email."
+          // placeholder="Search by the name / email."
+          placeholder={placeholder}
           iconLeft="search"
         />
       </View>

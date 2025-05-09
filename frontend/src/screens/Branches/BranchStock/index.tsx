@@ -263,7 +263,7 @@ const BranchStock = ({route}) => {
         color="white"
         style={{top: 50}}
       />
-      <SearchBar control={control} />
+      <SearchBar control={control} placeholder="Search by the name/code" />
 
       {editable && (
         <TouchableOpacity
