@@ -8,29 +8,69 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 dayjs.extend(utc);
 
+export const changeProductCodeOffline = async (db, productId, productCode) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `
+          UPDATE products SET code = ? WHERE id = ?
+        `,
+        [productCode, productId],
+        (_, result) => {
+          console.log('✅ Success updating product code');
+          resolve(result);
+        },
+        (_, error) => {
+          console.log('❌ Error updating the product code:', error);
+          reject(error);
+        },
+      );
+
+      tx.executeSql(
+        `
+          UPDATE products SET sync_error = NULL, error_message = NULL WHERE id = ?
+        `,
+        [productId],
+        (_, result) => {
+          console.log('✅ Success updating sync_error and error_message');
+          resolve(result);
+        },
+        (_, error) => {
+          console.log(
+            '❌ Error updating the sync_error and error_message:',
+            error,
+          );
+          reject(error);
+        },
+      );
+    });
+  });
+};
+
 export const checkCodeAvailable = async (db, productCode) => {
   const online = await isOnline();
 
-  const verifyCode = await new Promise((resolve, reject) => {
-    try {
-      db.transaction(tx => {
-        tx.executeSql(
-          'SELECT * FROM products WHERE code = ?',
-          [productCode],
-          (_, results) => resolve(results),
-          (_, error) => reject(error),
-        );
-      });
-    } catch (error) {
-      console.log(error.response);
+  if (!online) {
+    const verifyCode = await new Promise((resolve, reject) => {
+      try {
+        db.transaction(tx => {
+          tx.executeSql(
+            'SELECT * FROM products WHERE code = ?',
+            [productCode],
+            (_, results) => resolve(results),
+            (_, error) => reject(error),
+          );
+        });
+      } catch (error) {
+        console.log(error);
+        reject(error);
+      }
+    });
+
+    if (verifyCode.rows.length > 0) {
+      return {exists: true, source: 'local'};
     }
-  });
-
-  if (verifyCode.rows.length > 0) {
-    return {exists: true, source: 'local'};
-  }
-
-  if (online) {
+  } else {
     try {
       const response = await axiosInstance.get(
         `/products/check-code/${productCode}`,
@@ -44,24 +84,7 @@ export const checkCodeAvailable = async (db, productCode) => {
     }
   }
 
-  return new Promise((resolve, reject) => {
-    db.transaction(tx => {
-      tx.executeSql(
-        `SELECT * FROM products WHERE code = ?`,
-        [productCode],
-        (_, results) => {
-          if (results.rows.length > 0) {
-            resolve({exists: true, source: 'local'});
-          } else {
-            resolve({exists: false});
-          }
-        },
-        (_, error) => {
-          reject(error);
-        },
-      );
-    });
-  });
+  return {exists: false};
 };
 
 export const addImageOffline = async (db, productId, image) => {
@@ -346,22 +369,16 @@ export const showBranchStockData = async db => {
     db.transaction(tx => {
       tx.executeSql(
         `
-          SELECT *, p.synced as products_synced, s.synced as stocks_synced FROM products p 
-          INNER JOIN stocks s ON p.id = s.product_id;
+          SELECT p.*, s.* FROM products p
+          LEFT JOIN stocks s ON p.id = s.product_id;
         `,
         [],
         (_, results) => {
-          const rows = results.rows;
-          const products = [];
-
-          for (let i = 0; i < rows.length; i++) {
-            products.push(rows.item(i));
-          }
-
-          resolve(products);
+          console.log('✅ Results:', results.rows.raw());
+          resolve(results.rows.raw());
         },
         (_, error) => {
-          console.log(error);
+          console.log('❌ SQL error:', error);
           reject(error);
         },
       );
@@ -407,6 +424,22 @@ export const syncProducts = db => {
           }
 
           const syncProduct = async product => {
+            const codeAvailability = await checkCodeAvailable(db, product.code);
+
+            if (
+              codeAvailability.exists ||
+              codeAvailability.source === 'server'
+            ) {
+              db.transaction(tx => {
+                tx.executeSql(
+                  `UPDATE products SET sync_error = 'duplicate_code', error_message = ? WHERE id = ?`,
+                  ['Product code already registered.', product.id],
+                );
+              });
+
+              throw new Error('Duplicated code');
+            }
+
             const branchId = product.branch_id;
 
             try {
@@ -472,6 +505,7 @@ export const syncProducts = db => {
                 '❌ Error syncthing the product:',
                 err.response || err.message,
               );
+
               throw new Error('Error syncthing, check Wi-fi connection');
             }
           };

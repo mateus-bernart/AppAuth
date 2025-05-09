@@ -138,6 +138,7 @@ const AddProduct = () => {
 
     if (!product) {
       const result = await checkCodeAvailable(db, data.code);
+      console.log(result);
 
       if (result.exists) {
         setError('code', {

@@ -1,14 +1,17 @@
 import {
   Alert,
   FlatList,
+  Modal,
   StyleSheet,
   Text,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   View,
 } from 'react-native';
 import React, {useCallback, useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {
+  changeProductCodeOffline,
   deleteData,
   deleteProduct,
   showBranchStockData,
@@ -17,15 +20,39 @@ import {
 import {useDatabase} from '../../providers/DatabaseProvider';
 import {useToast} from 'react-native-toast-notifications';
 import {useAuth} from '../../providers/AuthProvider';
-import {Product} from '../Branches/BranchStock';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useFocusEffect} from '@react-navigation/native';
+import CustomInput from '../../components/CustomInput';
+import {useForm} from 'react-hook-form';
+
+type StockWithProduct = {
+  stock_id: number;
+  product_id: number;
+  code: string;
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+  quantity: number;
+  batch: string;
+  branch_id: number;
+  error_message?: string;
+  sync_error?: string;
+  created_at: string;
+  updated_at: string;
+  products_synced: number;
+  stocks_synced: number;
+};
 
 const Sync = () => {
   const {db} = useDatabase();
-  const [localData, setLocalData] = useState<Product[]>([]);
+  const [localData, setLocalData] = useState<StockWithProduct[]>([]);
   const toast = useToast();
   const {session} = useAuth();
+  const [modalCameraVisible, setModalCameraVisible] = useState(false);
+  const [productId, setProductId] = useState<number>();
+  const [error, setError] = useState('');
+  const {control, handleSubmit} = useForm({});
 
   const handleSync = async () => {
     try {
@@ -65,11 +92,26 @@ const Sync = () => {
   const handleShowData = async () => {
     try {
       const result = await showBranchStockData(db);
-      console.log(result);
-
       setLocalData(result);
+      setError(result.error_message);
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const handleChangeProductCode = async data => {
+    try {
+      await changeProductCodeOffline(db, productId, data.code);
+      console.log('Product code saved:', data);
+      toast.show('Product code saved.', {
+        type: 'success',
+        placement: 'top',
+      });
+      setModalCameraVisible(false);
+      await handleShowData();
+    } catch (error) {
+      console.log(error);
+      toast.show('Error saving product', {type: 'danger', placement: 'top'});
     }
   };
 
@@ -86,6 +128,7 @@ const Sync = () => {
   const handleDeleteProduct = async productId => {
     try {
       await deleteProduct(db, productId);
+      await handleShowData();
       toast.show('Product deleted', {type: 'success', placement: 'top'});
     } catch (error) {
       console.log(error);
@@ -100,6 +143,48 @@ const Sync = () => {
 
   return (
     <SafeAreaView style={{flex: 1}}>
+      <Modal
+        transparent={true}
+        visible={modalCameraVisible}
+        onRequestClose={() => setModalCameraVisible(!modalCameraVisible)}>
+        <TouchableWithoutFeedback onPress={() => setModalCameraVisible(false)}>
+          <View style={styles.modalView}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.modalText}>Enter new code</Text>
+              <View style={styles.buttonModalContainer}>
+                <CustomInput
+                  control={control}
+                  name="code"
+                  placeholder="Ex: 123456"
+                  keyboardType="number-pad"
+                  maxLength={6}
+                  rules={{
+                    required: 'Code is required',
+                    maxLength: {
+                      value: 6,
+                      message: 'Code must contain exactly 6 digits',
+                    },
+                    minLength: {
+                      value: 6,
+                      message: 'Code must contain exactly 6 digits',
+                    },
+                    pattern: {
+                      value: /^\d{6}$/,
+                      message: 'Code must be a 6-digit number',
+                    },
+                  }}
+                />
+                <TouchableOpacity
+                  style={styles.button}
+                  onPress={handleSubmit(handleChangeProductCode)}>
+                  <Text style={styles.textButtonModal}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       <View style={styles.container}>
         <TouchableOpacity
           style={styles.buttonStyle}
@@ -127,6 +212,9 @@ const Sync = () => {
       <View style={styles.titleContainer}>
         <Text style={styles.titleText}>Pending products to syncronize:</Text>
       </View>
+      {error && (
+        <Text style={{color: 'red', textAlign: 'center'}}>{error}</Text>
+      )}
       <View style={styles.tableHeaderContainer}>
         <View style={styles.cell}>
           <Text style={styles.tableHeaderText}>Code</Text>
@@ -150,29 +238,56 @@ const Sync = () => {
         data={localData}
         renderItem={({item}) => {
           return (
-            <View style={styles.localTableContainer}>
-              <View style={styles.cell}>
-                <Text style={styles.valueText}>{item.code}</Text>
-              </View>
-              <View style={styles.cell}>
-                <Text style={styles.valueText}>{item.name}</Text>
-              </View>
-              <View style={styles.cell}>
-                <Text style={styles.valueText}>{item.batch}</Text>
-              </View>
-              <View style={styles.cell}>
-                <Text style={styles.valueText}>{item.price}</Text>
-              </View>
-              <View style={styles.cell}>
-                <Text style={styles.valueText}>{item.quantity}</Text>
-              </View>
-              <View style={[styles.cell, {flex: 0.4}]}>
+            <View style={[styles.localTableContainer]}>
+              {item.sync_error ? (
                 <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => confirmDeleteAlert(item.id)}>
-                  <IconFontAwesome name="trash" size={25} color="red" />
+                  onPress={() => {
+                    setModalCameraVisible(true);
+                    setProductId(item.product_id);
+                  }}
+                  style={[
+                    styles.cell,
+                    {
+                      backgroundColor: item.sync_error ? '#fff06d' : '',
+                      flexDirection: 'row',
+                      gap: 5,
+                    },
+                  ]}>
+                  <IconFontAwesome name="exclamation" size={25} color="red" />
+                  <Text style={styles.valueText}>{item.code}</Text>
                 </TouchableOpacity>
+              ) : (
+                <View style={styles.cell}>
+                  <Text style={styles.valueText} ellipsizeMode="tail">
+                    {item.code}
+                  </Text>
+                </View>
+              )}
+              <View style={styles.cell}>
+                <Text style={styles.valueText} ellipsizeMode="tail">
+                  {item.name}
+                </Text>
               </View>
+              <View style={styles.cell}>
+                <Text style={styles.valueText} ellipsizeMode="tail">
+                  {item.batch}
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.valueText} ellipsizeMode="tail">
+                  {item.price}
+                </Text>
+              </View>
+              <View style={styles.cell}>
+                <Text style={styles.valueText} ellipsizeMode="tail">
+                  {item.quantity}
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[styles.cell, styles.deleteButton]}
+                onPress={() => confirmDeleteAlert(item.product_id)}>
+                <IconFontAwesome name="trash" size={25} color="red" />
+              </TouchableOpacity>
             </View>
           );
         }}
@@ -193,6 +308,43 @@ const styles = StyleSheet.create({
   flatList: {
     flex: 1,
   },
+  modalView: {
+    marginHorizontal: 20,
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modalContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'lightgray',
+    borderRadius: 16,
+    padding: 25,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+
+  modalText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 18,
+  },
+  buttonModalContainer: {
+    marginTop: 10,
+  },
+  button: {
+    color: 'green',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    backgroundColor: 'green',
+    marginTop: 10,
+  },
   titleContainer: {
     padding: 10,
     alignItems: 'center',
@@ -204,8 +356,6 @@ const styles = StyleSheet.create({
   },
   localTableContainer: {
     flexDirection: 'row',
-    marginHorizontal: 5,
-    marginVertical: 5,
   },
   actionsContainer: {
     alignItems: 'center',
@@ -222,13 +372,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tableHeaderContainer: {
-    paddingVertical: 8,
     flexDirection: 'row',
     backgroundColor: 'lightgray',
     alignItems: 'center',
   },
   cell: {
     flex: 1,
+    paddingVertical: 15,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -256,6 +406,11 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     fontSize: 20,
     color: 'black',
+  },
+  textButtonModal: {
+    fontFamily: 'Poppins-Bold',
+    fontSize: 20,
+    color: 'white',
   },
   deleteButton: {
     backgroundColor: 'pink',

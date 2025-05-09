@@ -9,7 +9,9 @@ export const createProductsTable = async db => {
     created_at TEXT,
     updated_at TEXT,
     synced INTEGER DEFAULT 0,
-    image TEXT
+    image TEXT,
+    sync_error TEXT,
+    error_message TEXT
   );
 `);
 };

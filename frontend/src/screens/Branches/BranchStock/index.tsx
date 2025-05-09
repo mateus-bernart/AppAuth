@@ -38,6 +38,8 @@ export type Product = {
   quantity: string;
   price: number;
   image: string | null;
+  sync_error: string;
+  error_message: string;
 };
 
 type Branch = {
