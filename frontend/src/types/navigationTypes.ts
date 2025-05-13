@@ -10,9 +10,9 @@ export type RootStackParamList = {
   SendRecoverPassword: undefined;
   VerifyRecoverPassword: undefined;
   UserManagement: undefined;
-  BranchStockProductDetails: undefined;
-  BranchStock: undefined;
-  AddProduct: undefined;
+  ProductDetails: undefined;
+  Stock: undefined;
+  AddOrUpdateProduct: undefined;
 };
 
 export type AppNavigationProp = NavigationProp<RootStackParamList>;

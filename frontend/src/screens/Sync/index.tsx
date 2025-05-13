@@ -20,10 +20,11 @@ import {
 import {useDatabase} from '../../providers/DatabaseProvider';
 import {useToast} from 'react-native-toast-notifications';
 import {useAuth} from '../../providers/AuthProvider';
-import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {useFocusEffect} from '@react-navigation/native';
 import CustomInput from '../../components/CustomInput';
 import {useForm} from 'react-hook-form';
+import {isOnline} from '../../helpers/networkHelper';
 
 type StockWithProduct = {
   stock_id: number;
@@ -51,27 +52,55 @@ const Sync = () => {
   const {session} = useAuth();
   const [modalCameraVisible, setModalCameraVisible] = useState(false);
   const [productId, setProductId] = useState<number>();
-  const [error, setError] = useState('');
-  const {control, handleSubmit} = useForm({});
+  const [error, setError] = useState<any[]>([]);
+  const {control, handleSubmit, reset} = useForm({
+    defaultValues: {
+      code: '',
+    },
+  });
 
   const handleSync = async () => {
-    try {
-      const result = await syncProducts(db);
+    const online = await isOnline();
 
-      if (result === 'no_changes') {
-        toast.show('Nothing to synchronize', {
-          type: 'info',
-          placement: 'top',
-        });
-      } else {
-        toast.show('Syncronized successfully', {
-          type: 'success',
-          placement: 'top',
-        });
+    if (!online) {
+      toast.show("Couldn't connect with internet, check wi-fi.", {
+        type: 'warning',
+        placement: 'top',
+      });
+    } else {
+      try {
+        const result = await syncProducts(db);
+
+        if (result === 'no_changes') {
+          toast.show('Nothing to synchronize', {
+            type: 'info',
+            placement: 'top',
+          });
+        } else if (Array.isArray(result)) {
+          console.log('sync result: ', result);
+
+          const errorMessage = result
+            .map(item => item.error_message)
+            .filter(Boolean);
+          setError(errorMessage);
+
+          toast.show('Synchronized with errors', {
+            type: 'warning',
+            placement: 'top',
+          });
+        } else {
+          toast.show('Synchronized successfully', {
+            type: 'success',
+            placement: 'top',
+          });
+          setError([]);
+        }
+
+        await handleShowData();
+      } catch (error) {
+        console.log('❌ Sync failed:', error);
+        toast.show(error, {type: 'danger', placement: 'top'});
       }
-      await handleShowData();
-    } catch (error) {
-      toast.show(error, {type: 'danger', placement: 'top'});
     }
   };
 
@@ -93,7 +122,6 @@ const Sync = () => {
     try {
       const result = await showBranchStockData(db);
       setLocalData(result);
-      setError(result.error_message);
     } catch (error) {
       console.log(error);
     }
@@ -209,12 +237,18 @@ const Sync = () => {
           <></>
         )}
       </View>
-      <View style={styles.titleContainer}>
-        <Text style={styles.titleText}>Pending products to syncronize:</Text>
-      </View>
-      {error && (
-        <Text style={{color: 'red', textAlign: 'center'}}>{error}</Text>
+      {error.length > 0 && (
+        <View style={styles.errorMessageContainer}>
+          {error.map((msg, i) => (
+            <Text key={i} style={styles.errorMessage}>
+              {msg}
+            </Text>
+          ))}
+        </View>
       )}
+      <View style={styles.titleContainer}>
+        <Text style={styles.titleText}>Pending products to synchronize</Text>
+      </View>
       <View style={styles.tableHeaderContainer}>
         <View style={styles.cell}>
           <Text style={styles.tableHeaderText}>Code</Text>
@@ -229,32 +263,39 @@ const Sync = () => {
           <Text style={styles.tableHeaderText}>Price</Text>
         </View>
         <View style={styles.cell}>
-          <Text style={styles.tableHeaderText}>Quantity</Text>
+          <Text style={styles.tableHeaderText}>Qty</Text>
         </View>
-        <View style={[styles.cell, {flex: 0.4}]}></View>
+        <View style={[styles.cell, {flex: 1}]}>
+          <Text style={styles.tableHeaderText}>Actions</Text>
+        </View>
       </View>
       <FlatList
         style={styles.flatList}
         data={localData}
+        scrollEnabled
         renderItem={({item}) => {
           return (
             <View style={[styles.localTableContainer]}>
               {item.sync_error ? (
                 <TouchableOpacity
                   onPress={() => {
+                    reset({code: item.code});
                     setModalCameraVisible(true);
                     setProductId(item.product_id);
                   }}
                   style={[
                     styles.cell,
                     {
-                      backgroundColor: item.sync_error ? '#fff06d' : '',
+                      backgroundColor: item.sync_error ? '#fff388' : '',
                       flexDirection: 'row',
                       gap: 5,
                     },
                   ]}>
-                  <IconFontAwesome name="exclamation" size={25} color="red" />
-                  <Text style={styles.valueText}>{item.code}</Text>
+                  <IconFontAwesome name="exclamation" size={20} color="red" />
+                  <Text
+                    style={[styles.valueText, {fontFamily: 'Poppins-Bold'}]}>
+                    {item.code}
+                  </Text>
                 </TouchableOpacity>
               ) : (
                 <View style={styles.cell}>
@@ -284,9 +325,9 @@ const Sync = () => {
                 </Text>
               </View>
               <TouchableOpacity
-                style={[styles.cell, styles.deleteButton]}
+                style={styles.cell}
                 onPress={() => confirmDeleteAlert(item.product_id)}>
-                <IconFontAwesome name="trash" size={25} color="red" />
+                <IconFontAwesome name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>
           );
@@ -307,6 +348,19 @@ const styles = StyleSheet.create({
   },
   flatList: {
     flex: 1,
+    marginBottom: 100,
+  },
+  errorMessage: {
+    color: 'black',
+    textAlign: 'center',
+    fontSize: 16,
+    fontFamily: 'Poppins-Medium',
+  },
+  errorMessageContainer: {
+    margin: 20,
+    padding: 10,
+    borderRadius: 12,
+    backgroundColor: 'pink',
   },
   modalView: {
     marginHorizontal: 20,
@@ -331,7 +385,7 @@ const styles = StyleSheet.create({
   },
 
   modalText: {
-    fontFamily: 'Poppins-Medium',
+    fontFamily: 'Poppins-Bold',
     fontSize: 18,
   },
   buttonModalContainer: {
@@ -346,7 +400,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   titleContainer: {
-    padding: 10,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -411,9 +464,5 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Bold',
     fontSize: 20,
     color: 'white',
-  },
-  deleteButton: {
-    backgroundColor: 'pink',
-    borderRadius: 8,
   },
 });

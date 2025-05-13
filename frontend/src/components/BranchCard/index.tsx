@@ -22,7 +22,7 @@ const BranchCard = ({item}: BranchCardProps) => {
     <TouchableOpacity
       style={styles.itemContainer}
       onPress={() => {
-        handleNavigation('BranchStock', {branchId: item?.id});
+        handleNavigation('Stock', {branchId: item?.id});
       }}>
       <View style={styles.itemBand} />
       <View style={styles.itemDetailsContainer}>

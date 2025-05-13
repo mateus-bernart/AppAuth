@@ -28,20 +28,30 @@ export const changeProductCodeOffline = async (db, productId, productCode) => {
 
       tx.executeSql(
         `
-          UPDATE products SET sync_error = NULL, error_message = NULL WHERE id = ?
+          UPDATE products SET sync_error = NULL, error_codes = NULL WHERE id = ?
         `,
         [productId],
         (_, result) => {
-          console.log('✅ Success updating sync_error and error_message');
+          console.log('✅ Success updating sync_error and codes');
           resolve(result);
         },
         (_, error) => {
-          console.log(
-            '❌ Error updating the sync_error and error_message:',
-            error,
-          );
+          console.log('❌ Error updating the sync_error and codes:', error);
           reject(error);
         },
+      );
+    });
+  });
+};
+
+const checkLocalCode = (db, productCode) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        'SELECT * FROM products WHERE code = ?',
+        [productCode],
+        (_, results) => resolve(results),
+        (_, error) => reject(error),
       );
     });
   });
@@ -51,22 +61,7 @@ export const checkCodeAvailable = async (db, productCode) => {
   const online = await isOnline();
 
   if (!online) {
-    const verifyCode = await new Promise((resolve, reject) => {
-      try {
-        db.transaction(tx => {
-          tx.executeSql(
-            'SELECT * FROM products WHERE code = ?',
-            [productCode],
-            (_, results) => resolve(results),
-            (_, error) => reject(error),
-          );
-        });
-      } catch (error) {
-        console.log(error);
-        reject(error);
-      }
-    });
-
+    const verifyCode = await checkLocalCode(db, productCode);
     if (verifyCode.rows.length > 0) {
       return {exists: true, source: 'local'};
     }
@@ -164,53 +159,146 @@ export const getImageFromCacheAndSave = async imageUri => {
 };
 
 export const saveProductOffline = async (db, product, branchId) => {
-  return new Promise((resolve, reject) => {
-    const now = dayjs().format('YYYY-MM-DDTHH:mm:ss');
+  const now = dayjs().format('YYYY-MM-DDTHH:mm:ss');
 
+  console.log('Product to save offline: ', product);
+
+  return new Promise(async (resolve, reject) => {
     try {
-      db.transaction(tx => {
-        tx.executeSql(
-          `INSERT INTO
-          products (code, name, description, created_at, updated_at, price, synced, image) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            product.code,
-            product.name,
-            product.description,
-            now,
-            now,
-            product.price,
-            0,
-            product.image,
-          ],
-          (_, createdProduct) => {
-            const productId = createdProduct.insertId;
+      const currentProductId = product.product_id ?? product.id;
+      const isEditing = typeof currentProductId === 'number';
 
-            tx.executeSql(
-              `INSERT INTO 
-              stocks (product_id, branch_id, batch, quantity, created_at, updated_at, synced) 
-              VALUES (?, ?, ?, ?, ?, ?, ?)`,
-              [
-                productId,
-                branchId,
-                product.batch,
-                product.quantity,
-                now,
-                now,
-                0,
-              ],
-              () => resolve('Product created and saved locally'),
-              (_, error) => {
-                console.log('❌ Error saving stock: ', error);
-                reject(error);
-              },
-            );
-          },
-          (_, error) => {
-            console.log('❌ Error saving product: ', error);
-            reject(error);
+      const verifyCode = await checkLocalCode(db, product.code);
+
+      if (!isEditing) {
+        console.log('its creating new product');
+
+        if (verifyCode.rows.length > 0) {
+          console.log('❌ Duplicate product code detected:', product.code);
+          return reject(
+            new Error(`Product code "${product.code}" already exists locally`),
+          );
+        }
+      } else {
+        console.log('is editing product');
+
+        const isDuplicate = Array.from({length: verifyCode.rows.length}).some(
+          (_, i) => {
+            const row = verifyCode.rows.item(i);
+            const rowProductId = row.product_id ?? row.id;
+            const currentProductId = product.product_id ?? product.id;
+            const isSameCodeDifferentProduct =
+              rowProductId !== currentProductId;
+
+            return isSameCodeDifferentProduct;
           },
         );
+
+        if (isDuplicate) {
+          console.log(
+            '❌ Duplicate code detected in another product:',
+            product.code,
+          );
+          return reject(
+            new Error(
+              `Product code "${product.code}" already exists for another product`,
+            ),
+          );
+        }
+      }
+
+      db.transaction(tx => {
+        if (isEditing) {
+          tx.executeSql(
+            `UPDATE products 
+            SET code = ?, name = ?, description = ?, updated_at = ?, price = ?, image = ? 
+            WHERE id = ?`,
+            [
+              product.code,
+              product.name,
+              product.description,
+              now,
+              product.price,
+              product.image,
+              product.product_id,
+            ],
+            (_, updatedProduct) => {
+              tx.executeSql(
+                `UPDATE stocks 
+              SET batch = ?, quantity = ?, updated_at = ? 
+              WHERE product_id = ? AND branch_id = ?`,
+                [
+                  product.batch,
+                  product.quantity,
+                  now,
+                  product.product_id,
+                  branchId,
+                ],
+                (_, result) => {
+                  console.log(
+                    'Product updated and saved locally',
+                    product.product_id,
+                  );
+                  resolve(product.product_id);
+                },
+                (_, error) => {
+                  console.log('❌ Error updating stock: ', error);
+                  reject(error);
+                },
+              );
+            },
+            (_, error) => {
+              console.log('❌ Error updating product: ', error);
+              reject(error);
+            },
+          );
+        } else {
+          tx.executeSql(
+            `INSERT INTO
+          products (code, name, description, created_at, updated_at, price, synced, image) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+              product.code,
+              product.name,
+              product.description,
+              now,
+              now,
+              product.price,
+              0,
+              product.image,
+            ],
+            (_, createdProduct) => {
+              const productId = createdProduct.insertId;
+
+              tx.executeSql(
+                `INSERT INTO 
+              stocks (product_id, branch_id, batch, quantity, created_at, updated_at, synced) 
+              VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                  productId,
+                  branchId,
+                  product.batch,
+                  product.quantity,
+                  now,
+                  now,
+                  0,
+                ],
+                (_, result) => {
+                  console.log('Product created and saved locally', productId);
+                  resolve(productId);
+                },
+                (_, error) => {
+                  console.log('❌ Error saving stock: ', error);
+                  reject(error);
+                },
+              );
+            },
+            (_, error) => {
+              console.log('❌ Error saving product: ', error);
+              reject(error);
+            },
+          );
+        }
       });
     } catch (error) {
       console.log('❌ Error saving the product: ', error);
@@ -299,11 +387,6 @@ export const adjustStockQuantity = async (
       );
     });
   });
-
-  if (stockQuantity === null) {
-    console.log('❗ No stock found for the given product and branch');
-    throw new Error('Stock not found');
-  }
 
   const quantityChange = newQuantity - stockQuantity;
 
@@ -407,7 +490,7 @@ export const syncProducts = db => {
         `
           SELECT p.*, s.quantity, s.batch, s.branch_id, p.synced as products_synced, s.synced as stocks_synced
           FROM products p
-          INNER JOIN stocks s ON P.id = s.product_id
+          INNER JOIN stocks s ON p.id = s.product_id
           WHERE s.synced = 0;
         `,
         [],
@@ -423,6 +506,8 @@ export const syncProducts = db => {
             unsynced.push(rows.item(i));
           }
 
+          const errors = [];
+
           const syncProduct = async product => {
             const codeAvailability = await checkCodeAvailable(db, product.code);
 
@@ -430,21 +515,28 @@ export const syncProducts = db => {
               codeAvailability.exists ||
               codeAvailability.source === 'server'
             ) {
+              // Marca o erro localmente
               db.transaction(tx => {
                 tx.executeSql(
-                  `UPDATE products SET sync_error = 'duplicate_code', error_message = ? WHERE id = ?`,
-                  ['Product code already registered.', product.id],
+                  `UPDATE products SET sync_error = 'duplicate_code' WHERE id = ?`,
+                  [product.id],
                 );
               });
 
-              throw new Error('Duplicated code');
+              // Armazena o erro para retornar depois
+              errors.push({
+                id: product.id,
+                code: product.code,
+                name: product.name,
+                error_message: `Duplicated code: ${product.code}`,
+              });
+              return;
             }
 
             const branchId = product.branch_id;
 
             try {
               const formData = new FormData();
-
               formData.append('name', product.name);
               formData.append('description', product.description);
               formData.append('code', String(product.code));
@@ -467,7 +559,6 @@ export const syncProducts = db => {
                 {headers: {'Content-Type': 'multipart/form-data'}},
               );
 
-              //Log stock
               const backendProductId = response.data.product.id;
 
               await axiosInstance.post(`/stock/${backendProductId}/log-add`, {
@@ -487,7 +578,7 @@ export const syncProducts = db => {
                         resolveTx,
                         (_, error) => {
                           console.log('❌ Error updating stocks:', error);
-                          reject(error);
+                          rejectTx(error);
                         },
                       );
                     },
@@ -502,11 +593,16 @@ export const syncProducts = db => {
               console.log(`✅ Product ${product.name} synchronized`);
             } catch (err) {
               console.log(
-                '❌ Error syncthing the product:',
+                '❌ Error syncing the product:',
                 err.response || err.message,
               );
 
-              throw new Error('Error syncthing, check Wi-fi connection');
+              errors.push({
+                id: product.id,
+                code: product.code,
+                name: product.name,
+                error_message: `Sync error for ${product.name}`,
+              });
             }
           };
 
@@ -528,19 +624,21 @@ export const syncProducts = db => {
                         console.log(
                           '✅ Synced products and stocks deleted locally',
                         );
-                        resolve('synced');
+
+                        if (errors.length > 0) {
+                          resolve(errors); // retorna lista de erros
+                        } else {
+                          resolve('synced'); // sucesso sem erros
+                        }
                       },
                       (_, error) => {
-                        console.log(
-                          '❌ Error deleting synced products:',
-                          error,
-                        );
+                        console.log('❌ Error deleting products:', error);
                         reject(error);
                       },
                     );
                   },
                   (_, error) => {
-                    console.log('❌ Error deleting synced stocks:', error);
+                    console.log('❌ Error deleting stocks:', error);
                     reject(error);
                   },
                 );
@@ -550,6 +648,10 @@ export const syncProducts = db => {
               reject(error.message);
             }
           })();
+        },
+        (_, error) => {
+          console.log('❌ SQL select error:', error);
+          reject(error);
         },
       );
     });

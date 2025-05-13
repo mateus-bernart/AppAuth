@@ -1,8 +1,8 @@
 import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
-import {Product} from '../../screens/Branches/BranchStock';
 import SlideInView from '../SlideView';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
+import {Product} from '../../screens/Branches/Stock';
 
 type ProductCard = {
   onPressCard: () => void;

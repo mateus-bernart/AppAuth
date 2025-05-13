@@ -15,7 +15,6 @@ import {
   useNavigation,
   useRoute,
 } from '@react-navigation/native';
-import {Product} from '..';
 import axiosInstance from '../../../../services/api';
 import {useToast} from 'react-native-toast-notifications';
 import {
@@ -36,20 +35,29 @@ import {
 import {isOnline} from '../../../../helpers/networkHelper';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
 
+type Product = {
+  id: number;
+  name: string;
+  description: string;
+  code: string;
+  price: number;
+  image: string | null;
+  sync_error: string;
+  error_message: string;
+};
+
 type ProductDetailRouteParams = {
   product: Product;
   branchId: number;
 };
 
-const BranchStockProductDetails = () => {
+const ProductDetails = () => {
   const toast = useToast();
   const route =
     useRoute<
-      RouteProp<
-        {BranchStockProductDetails: ProductDetailRouteParams},
-        'BranchStockProductDetails'
-      >
+      RouteProp<{ProductDetails: ProductDetailRouteParams}, 'ProductDetails'>
     >();
+
   const {product, branchId} = route.params as {
     product: Product;
     branchId: number;
@@ -82,7 +90,7 @@ const BranchStockProductDetails = () => {
       try {
         await deleteProduct(db, product.id);
         toast.show('Product deleted', {type: 'success', placement: 'top'});
-        navigation.goBack();
+        navigation.navigate('Stock');
       } catch (error) {
         console.log(error);
       }
@@ -266,12 +274,15 @@ const BranchStockProductDetails = () => {
     <SafeAreaView style={{flex: 1, marginBottom: 100}}>
       <Header
         title="PRODUCT DETAILS"
-        backToScreen="BranchStock"
+        backToScreen="Stock"
         routeParamsData={{branchId}}
       />
       <TouchableOpacity
         onPress={() =>
-          handleNavigation('AddProduct', {product: productData, branchId})
+          handleNavigation('AddOrUpdateProduct', {
+            product: productData,
+            branchId,
+          })
         }
         style={styles.iconEdit}>
         <IconMaterialIcons name={'create'} size={35} color="white" />
@@ -390,7 +401,7 @@ const BranchStockProductDetails = () => {
   );
 };
 
-export default BranchStockProductDetails;
+export default ProductDetails;
 
 const styles = StyleSheet.create({
   header: {

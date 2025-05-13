@@ -49,7 +49,7 @@ type Branch = {
 
 type UpdatedQuantities = Record<number, number>;
 
-const BranchStock = ({route}) => {
+const Stock = ({route}) => {
   const branchId = route.params?.branchId;
   const [productList, setProductList] = useState<Product[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
@@ -85,7 +85,6 @@ const BranchStock = ({route}) => {
   const getSqliteBranchStock = async () => {
     try {
       const productResult = await showBranchStockData(db);
-      console.log(productResult);
 
       setProductList(productResult);
     } catch (error) {
@@ -252,6 +251,11 @@ const BranchStock = ({route}) => {
     }, [searchTerm]),
   );
 
+  const normalizeApiProduct = (item: any): Product => ({
+    ...item,
+    id: item.product_id ?? item.id,
+  });
+
   return (
     <SafeAreaView style={styles.body}>
       <Header
@@ -269,7 +273,9 @@ const BranchStock = ({route}) => {
 
       {editable && (
         <TouchableOpacity
-          onPress={() => handleNavigation('AddProduct', {branchId: branchId})}>
+          onPress={() =>
+            handleNavigation('AddOrUpdateProduct', {branchId: branchId})
+          }>
           <View style={styles.addProductButtonContainer}>
             <Text style={styles.addProductButtonText}>Add new product</Text>
           </View>
@@ -284,8 +290,8 @@ const BranchStock = ({route}) => {
           return (
             <ProductCard
               onPressCard={() =>
-                handleNavigation('BranchStockProductDetails', {
-                  product: item,
+                handleNavigation('ProductDetails', {
+                  product: normalizeApiProduct(item),
                   branchId: branchId,
                 })
               }
@@ -308,7 +314,7 @@ const BranchStock = ({route}) => {
   );
 };
 
-export default BranchStock;
+export default Stock;
 
 const styles = StyleSheet.create({
   body: {

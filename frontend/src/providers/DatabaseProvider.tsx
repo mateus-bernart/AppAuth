@@ -2,8 +2,6 @@ import {createContext, useContext, useEffect, useState} from 'react';
 import SQLite from 'react-native-sqlite-storage';
 import {runMigrations} from '../database/migrations/runMigrations';
 import {saveBranchesOffline} from '../database/migrations/005_add_branches_to_branches_table';
-import {syncProducts} from '../helpers/databaseHelpers/stockProduct';
-import {Product} from '../screens/Branches/BranchStock';
 import {Branch} from '../screens/Branches';
 
 SQLite.enablePromise(true);
@@ -70,7 +68,7 @@ export const DatabaseProvider = ({children}) => {
       try {
         const shouldSync = await hasUnsyncedProducts(db);
         if (!shouldSync) return;
-        await syncProducts(db);
+        // await syncProducts(db);
         console.log('✅ Products syncronized successfully');
       } catch (error) {
         console.log('❌ Error syncronizing the products');

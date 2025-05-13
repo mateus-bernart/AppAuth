@@ -20,7 +20,6 @@ import {useNavigation, useRoute} from '@react-navigation/native';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import {
   checkCodeAvailable,
-  getImageFromCacheAndSave,
   getStockProduct,
   saveProductOffline,
 } from '../../../../helpers/databaseHelpers/stockProduct';
@@ -28,19 +27,34 @@ import {useDatabase} from '../../../../providers/DatabaseProvider';
 import {isOnline} from '../../../../helpers/networkHelper';
 import SubmitButton from '../../../../components/SubmitButton';
 import {Asset, launchImageLibrary, MediaType} from 'react-native-image-picker';
-import {Product} from '..';
 
-const AddProduct = () => {
+type ProductFormData = {
+  id?: number;
+  product_id: number;
+  name: string;
+  description: string;
+  code: string;
+  price: number;
+  batch: string;
+  quantity: string;
+  image: string | null;
+  sync_error: string;
+  error_message: string;
+};
+
+const AddOrUpdateProduct = () => {
   const route = useRoute();
   const {product, branchId} = route.params as {
-    product?: Product;
+    product?: ProductFormData;
     branchId?: number;
+    productId?: number;
   };
 
   const toast = useToast();
   const navigation = useNavigation<AppNavigationProp>();
   const {db} = useDatabase();
   const [image, setImage] = useState<Asset | undefined>(undefined);
+  const [offlineProductId, setOfflineProductId] = useState();
 
   const {
     control,
@@ -48,7 +62,7 @@ const AddProduct = () => {
     setError,
     formState: {errors},
     reset,
-  } = useForm<Product>({
+  } = useForm<ProductFormData>({
     defaultValues: {
       quantity: product?.quantity,
       name: product?.name,
@@ -82,17 +96,18 @@ const AddProduct = () => {
 
         let stockInfo;
         if (!online) {
-          stockInfo = await getStockProduct(db, product.id);
+          stockInfo = await getStockProduct(db, offlineProductId);
         } else {
           stockInfo = await fetchStockDetails(product.id);
         }
+
         reset({
           name: product?.name,
           price: product?.price,
           description: product?.description,
-          batch: stockInfo?.batch?.toString() ?? '',
+          batch: stockInfo?.batch.toString() ?? '',
           code: product?.code,
-          quantity: stockInfo?.quantity?.toString() ?? '',
+          quantity: stockInfo?.quantity.toString() ?? '',
         });
       };
 
@@ -133,13 +148,11 @@ const AddProduct = () => {
     return obj;
   };
 
-  const handleAddProduct = async data => {
+  const handleAddOrUpdateProduct = async data => {
     const online = await isOnline();
 
     if (!product) {
       const result = await checkCodeAvailable(db, data.code);
-      console.log(result);
-
       if (result.exists) {
         setError('code', {
           type: 'manual',
@@ -168,11 +181,22 @@ const AddProduct = () => {
 
     if (!online) {
       const offlineProduct = formDataToObject(formData);
-      await saveProductOffline(db, offlineProduct, branchId);
-      console.log('Offline Product: ', offlineProduct);
+      console.log('OfflineProduct:', offlineProduct);
 
-      handleNavigation('BranchStockProductDetails', {
-        product: offlineProduct,
+      const isEditing = product?.id != null;
+      if (isEditing) {
+        offlineProduct.product_id = product.product_id ?? product.id;
+        offlineProduct.id = product.id;
+      }
+
+      const productId = await saveProductOffline(db, offlineProduct, branchId);
+      console.log(productId);
+
+      offlineProduct.id = productId;
+
+      setOfflineProductId(productId);
+      handleNavigation('ProductDetails', {
+        product: {...offlineProduct, id: productId},
         branchId: branchId,
       });
     } else {
@@ -190,14 +214,14 @@ const AddProduct = () => {
 
         await new Promise(resolve => setTimeout(resolve, 500));
 
-        handleNavigation('BranchStockProductDetails', {
+        handleNavigation('ProductDetails', {
           product: response.data.product,
           branchId: branchId,
         });
       } catch (e) {
         if (e.response && e.response.data && e.response.data.errors) {
           Object.keys(e.response.data.errors).map(key => {
-            setError(key as keyof Product, {
+            setError(key as keyof ProductFormData, {
               message: e.response.data.errors[key][0],
             });
           });
@@ -217,7 +241,7 @@ const AddProduct = () => {
       }
     }
 
-    toast.show('Product added', {
+    toast.show(product ? 'Product updated' : 'Product added', {
       type: 'success',
       placement: 'top',
     });
@@ -303,7 +327,7 @@ const AddProduct = () => {
                 }
                 iconLeft="boxes"
                 keyboardType="number-pad"
-                maxLength={10}
+                maxLength={6}
                 defaultValue={product?.quantity}
               />
             </View>
@@ -320,7 +344,7 @@ const AddProduct = () => {
                 }
                 iconLeft="truck-moving"
                 keyboardType="number-pad"
-                maxLength={10}
+                maxLength={6}
                 defaultValue={product?.batch}
               />
             </View>
@@ -330,8 +354,8 @@ const AddProduct = () => {
                 rules={{
                   required: product ? false : 'Price is required',
                   maxLength: {
-                    value: 9,
-                    message: 'Price max digits is 9',
+                    value: 6,
+                    message: 'Price max digits is 6',
                   },
                 }}
                 control={control}
@@ -343,7 +367,7 @@ const AddProduct = () => {
                 }
                 iconLeft="money-check-alt"
                 keyboardType="decimal-pad"
-                maxLength={9}
+                maxLength={6}
                 defaultValue={product?.price}
               />
             </View>
@@ -387,14 +411,14 @@ const AddProduct = () => {
           text={'Save'}
           height={25}
           textSize={20}
-          onButtonPressed={handleSubmit(handleAddProduct)}
+          onButtonPressed={handleSubmit(handleAddOrUpdateProduct)}
         />
       </View>
     </>
   );
 };
 
-export default AddProduct;
+export default AddOrUpdateProduct;
 
 const styles = StyleSheet.create({
   body: {
