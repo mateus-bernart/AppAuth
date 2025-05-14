@@ -27,6 +27,7 @@ import {useDatabase} from '../../../../providers/DatabaseProvider';
 import {isOnline} from '../../../../helpers/networkHelper';
 import SubmitButton from '../../../../components/SubmitButton';
 import {Asset, launchImageLibrary, MediaType} from 'react-native-image-picker';
+import {useStock} from '../../../../providers/StockProvider';
 
 type ProductFormData = {
   id?: number;
@@ -55,7 +56,7 @@ const AddOrUpdateProduct = () => {
   const {db} = useDatabase();
   const [image, setImage] = useState<Asset | undefined>(undefined);
   const [offlineProductId, setOfflineProductId] = useState();
-
+  const {refreshStockCount} = useStock();
   const {
     control,
     handleSubmit,
@@ -181,7 +182,6 @@ const AddOrUpdateProduct = () => {
 
     if (!online) {
       const offlineProduct = formDataToObject(formData);
-      console.log('OfflineProduct:', offlineProduct);
 
       const isEditing = product?.id != null;
       if (isEditing) {
@@ -190,11 +190,11 @@ const AddOrUpdateProduct = () => {
       }
 
       const productId = await saveProductOffline(db, offlineProduct, branchId);
-      console.log(productId);
 
       offlineProduct.id = productId;
 
       setOfflineProductId(productId);
+      refreshStockCount();
       handleNavigation('ProductDetails', {
         product: {...offlineProduct, id: productId},
         branchId: branchId,
@@ -288,17 +288,11 @@ const AddOrUpdateProduct = () => {
               <CustomInput
                 rules={{
                   required: product ? false : 'Code is required',
-                  maxLength: {
-                    value: 6,
-                    message: 'Code must contain exactly 6 digits',
-                  },
-                  minLength: {
-                    value: 6,
-                    message: 'Code must contain exactly 6 digits',
-                  },
-                  pattern: {
-                    value: /^\d{6}$/,
-                    message: 'Code must be a 6-digit number',
+                  validate: (value: string) => {
+                    if (!/^\d{6}$/.test(value)) {
+                      return 'Code must be a 6-digit number';
+                    }
+                    return true;
                   },
                 }}
                 control={control}

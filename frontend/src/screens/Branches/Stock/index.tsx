@@ -85,7 +85,6 @@ const Stock = ({route}) => {
   const getSqliteBranchStock = async () => {
     try {
       const productResult = await showBranchStockData(db);
-
       setProductList(productResult);
     } catch (error) {
       console.log('Error fetching SQLite branch stock:', error);

@@ -1,21 +1,25 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import Register from '../screens/Auth/Register';
 import UserDetails from '../screens/User/UserDetails';
 import UserManagement from '../screens/User/UserManagement';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
-import {Image, StyleSheet, View} from 'react-native';
+import {Animated, Image, StyleSheet, View} from 'react-native';
 import {Text} from 'react-native-gesture-handler';
 import Branches from '../screens/Branches';
 import BranchStack from './navigation/branches';
 import UserStack from './navigation/users';
 import Sync from '../screens/Sync';
 import {useAuth} from '../providers/AuthProvider';
+import {useDatabase} from '../providers/DatabaseProvider';
+import {useStock} from '../providers/StockProvider';
+import Badge from '../components/Badge';
 
 const Tab = createBottomTabNavigator();
 
 const PrivateRouteTabs = () => {
   const {session} = useAuth();
+  const {unsyncedCount} = useStock();
 
   return (
     <Tab.Navigator
@@ -97,6 +101,7 @@ const PrivateRouteTabs = () => {
             <View style={styles.container}>
               <IconFontAwesome name="sync" size={25} color={color} />
               <Text style={styles.textContainer}>Sync</Text>
+              {unsyncedCount > 0 && <Badge count={unsyncedCount} />}
             </View>
           ),
         }}
@@ -107,6 +112,7 @@ const PrivateRouteTabs = () => {
 
 export const styles = StyleSheet.create({
   container: {
+    position: 'relative',
     alignItems: 'center',
     justifyContent: 'center',
     width: '100%',

@@ -7,6 +7,7 @@ import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import AuthProvider from './providers/AuthProvider';
 import Routes from './routes/Routes';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {StockProvider} from './providers/StockProvider';
 
 const App = () => {
   return (
@@ -23,7 +24,9 @@ const App = () => {
           }>
           <NavigationContainer>
             <DatabaseProvider>
-              <Routes />
+              <StockProvider>
+                <Routes />
+              </StockProvider>
             </DatabaseProvider>
           </NavigationContainer>
         </ToastProvider>

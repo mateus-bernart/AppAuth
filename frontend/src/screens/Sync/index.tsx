@@ -25,6 +25,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import CustomInput from '../../components/CustomInput';
 import {useForm} from 'react-hook-form';
 import {isOnline} from '../../helpers/networkHelper';
+import {useStock} from '../../providers/StockProvider';
 
 type StockWithProduct = {
   stock_id: number;
@@ -58,6 +59,7 @@ const Sync = () => {
       code: '',
     },
   });
+  const {refreshStockCount} = useStock();
 
   const handleSync = async () => {
     const online = await isOnline();
@@ -112,6 +114,7 @@ const Sync = () => {
       } else {
         toast.show('Data Deleted', {type: 'success', placement: 'top'});
       }
+      await handleShowData();
     } catch (error) {
       console.log(error);
       toast.show('Error', {type: 'danger', placement: 'top'});
@@ -121,7 +124,10 @@ const Sync = () => {
   const handleShowData = async () => {
     try {
       const result = await showBranchStockData(db);
+      console.log('Stock product: ', result);
+
       setLocalData(result);
+      await refreshStockCount();
     } catch (error) {
       console.log(error);
     }
@@ -150,13 +156,18 @@ const Sync = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'DELETE', onPress: () => handleDeleteProduct(productId)},
+      {
+        text: 'DELETE',
+        onPress: () => {
+          handleDeleteProduct(productId);
+          handleShowData();
+        },
+      },
     ]);
 
   const handleDeleteProduct = async productId => {
     try {
       await deleteProduct(db, productId);
-      await handleShowData();
       toast.show('Product deleted', {type: 'success', placement: 'top'});
     } catch (error) {
       console.log(error);
@@ -238,12 +249,19 @@ const Sync = () => {
         )}
       </View>
       {error.length > 0 && (
-        <View style={styles.errorMessageContainer}>
-          {error.map((msg, i) => (
-            <Text key={i} style={styles.errorMessage}>
-              {msg}
+        <View style={styles.errorContainer}>
+          <View style={styles.errorMessageContainer}>
+            {error.map((msg, i) => (
+              <Text key={i} style={styles.errorMessage}>
+                {msg}
+              </Text>
+            ))}
+          </View>
+          <View style={styles.recomendationContainer}>
+            <Text style={styles.recomendationText}>
+              Click on the code to edit
             </Text>
-          ))}
+          </View>
         </View>
       )}
       <View style={styles.titleContainer}>
@@ -299,28 +317,43 @@ const Sync = () => {
                 </TouchableOpacity>
               ) : (
                 <View style={styles.cell}>
-                  <Text style={styles.valueText} ellipsizeMode="tail">
+                  <Text
+                    style={styles.valueText}
+                    ellipsizeMode="tail"
+                    numberOfLines={1}>
                     {item.code}
                   </Text>
                 </View>
               )}
               <View style={styles.cell}>
-                <Text style={styles.valueText} ellipsizeMode="tail">
+                <Text
+                  style={styles.valueText}
+                  ellipsizeMode="tail"
+                  numberOfLines={1}>
                   {item.name}
                 </Text>
               </View>
               <View style={styles.cell}>
-                <Text style={styles.valueText} ellipsizeMode="tail">
+                <Text
+                  style={styles.valueText}
+                  ellipsizeMode="tail"
+                  numberOfLines={1}>
                   {item.batch}
                 </Text>
               </View>
               <View style={styles.cell}>
-                <Text style={styles.valueText} ellipsizeMode="tail">
+                <Text
+                  style={styles.valueText}
+                  ellipsizeMode="tail"
+                  numberOfLines={1}>
                   {item.price}
                 </Text>
               </View>
               <View style={styles.cell}>
-                <Text style={styles.valueText} ellipsizeMode="tail">
+                <Text
+                  style={styles.valueText}
+                  ellipsizeMode="tail"
+                  numberOfLines={1}>
                   {item.quantity}
                 </Text>
               </View>
@@ -357,10 +390,23 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Medium',
   },
   errorMessageContainer: {
-    margin: 20,
     padding: 10,
     borderRadius: 12,
     backgroundColor: 'pink',
+  },
+  recomendationContainer: {
+    marginTop: 10,
+  },
+  recomendationText: {
+    textAlign: 'center',
+    fontFamily: 'Poppins-Bold',
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: '#ffe987',
+    borderRadius: 10,
+  },
+  errorContainer: {
+    margin: 20,
   },
   modalView: {
     marginHorizontal: 20,
