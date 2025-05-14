@@ -524,7 +524,7 @@ export const showBranchStockData = db => {
       tx.executeSql(
         `
           SELECT
-            p.id as product_id,
+            p.id,
             p.code,
             p.name,
             p.description,

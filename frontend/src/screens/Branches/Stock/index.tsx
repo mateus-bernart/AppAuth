@@ -85,6 +85,8 @@ const Stock = ({route}) => {
   const getSqliteBranchStock = async () => {
     try {
       const productResult = await showBranchStockData(db);
+      console.log('Offline received stock: ', productResult);
+
       setProductList(productResult);
     } catch (error) {
       console.log('Error fetching SQLite branch stock:', error);

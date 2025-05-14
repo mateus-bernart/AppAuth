@@ -40,18 +40,33 @@ const ProductCard = ({
               ellipsizeMode="tail">
               {item.name}
             </Text>
+            {item.product_synced === 0 && (
+              <View style={styles.unsyncedContainer}>
+                <Text
+                  style={styles.unsyncedText}
+                  numberOfLines={1}
+                  ellipsizeMode="tail">
+                  Unsynced
+                </Text>
+              </View>
+            )}
             <Text style={styles.itemCode}># {item.code}</Text>
           </View>
 
           <View style={styles.itemDetailContainer}>
             <View style={styles.infoWrapper}>
               <View style={[styles.infoContainer]}>
-                <Text
-                  style={styles.itemBatch}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  Batch {item.batch}
-                </Text>
+                <View
+                  style={{
+                    flexDirection: 'row',
+                  }}>
+                  <Text
+                    style={styles.itemBatch}
+                    numberOfLines={1}
+                    ellipsizeMode="tail">
+                    Batch {item.batch}
+                  </Text>
+                </View>
                 <Text
                   style={styles.itemDetails}
                   numberOfLines={1}
@@ -179,7 +194,6 @@ const styles = StyleSheet.create({
   itemDetailContainer: {
     padding: 10,
   },
-
   itemDetails: {
     marginTop: 10,
     fontSize: 18,
@@ -197,21 +211,34 @@ const styles = StyleSheet.create({
   },
   itemCode: {
     fontFamily: 'Poppins-Bold',
-    fontSize: 20,
-    color: '#132c1b',
+    fontSize: 24,
+    color: '#0f2416',
   },
   nameContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     borderTopLeftRadius: 10,
     backgroundColor: '#297c2f',
-    padding: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     justifyContent: 'space-between',
   },
   itemBatch: {
+    flex: 1,
     fontFamily: 'Poppins-Medium',
     fontSize: 16,
-    alignSelf: 'flex-start',
+  },
+  unsyncedText: {
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    backgroundColor: '#ffe260',
+    fontSize: 20,
+    borderRadius: 10,
+    fontFamily: 'Poppins-Bold',
+    color: '#ac5e00',
+  },
+  unsyncedContainer: {
+    justifyContent: 'flex-end',
   },
   quantityValueContainer: {
     flexDirection: 'row',

@@ -106,21 +106,6 @@ const Sync = () => {
     }
   };
 
-  const handleDeleteData = async () => {
-    try {
-      const result = await deleteData(db);
-      if (result.rowsAffected === 0) {
-        toast.show('No data to delete', {type: 'info', placement: 'top'});
-      } else {
-        toast.show('Data Deleted', {type: 'success', placement: 'top'});
-      }
-      await handleShowData();
-    } catch (error) {
-      console.log(error);
-      toast.show('Error', {type: 'danger', placement: 'top'});
-    }
-  };
-
   const handleShowData = async () => {
     try {
       const result = await showBranchStockData(db);
@@ -149,7 +134,7 @@ const Sync = () => {
     }
   };
 
-  const confirmDeleteAlert = productId =>
+  const confirmDeleteProductAlert = productId =>
     Alert.alert('Delete user?', 'Are you sure?', [
       {
         text: 'Cancel',
@@ -171,6 +156,37 @@ const Sync = () => {
       toast.show('Product deleted', {type: 'success', placement: 'top'});
     } catch (error) {
       console.log(error);
+    }
+  };
+
+  const confirmDeleteStockAlert = () =>
+    Alert.alert('Delete all non synchronized stock?', 'Are you sure?', [
+      {
+        text: 'Cancel',
+        onPress: () => console.log('Cancel Pressed'),
+        style: 'cancel',
+      },
+      {
+        text: 'DELETE',
+        onPress: () => {
+          handleDeleteData();
+          handleShowData();
+        },
+      },
+    ]);
+
+  const handleDeleteData = async () => {
+    try {
+      const result = await deleteData(db);
+      if (result.rowsAffected === 0) {
+        toast.show('No data to delete', {type: 'info', placement: 'top'});
+      } else {
+        toast.show('Data Deleted', {type: 'success', placement: 'top'});
+      }
+      await handleShowData();
+    } catch (error) {
+      console.log(error);
+      toast.show('Error', {type: 'danger', placement: 'top'});
     }
   };
 
@@ -235,13 +251,8 @@ const Sync = () => {
           <>
             <TouchableOpacity
               style={[styles.buttonStyle, styles.buttonDeleteData]}
-              onPress={() => handleDeleteData()}>
-              <Text style={styles.textButton}>Delete Products</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.buttonStyle, styles.buttonShowData]}
-              onPress={() => handleShowData()}>
-              <Text style={styles.textButton}>Show Products</Text>
+              onPress={() => confirmDeleteStockAlert()}>
+              <Text style={styles.textButton}>Delete Stock</Text>
             </TouchableOpacity>
           </>
         ) : (
@@ -359,7 +370,7 @@ const Sync = () => {
               </View>
               <TouchableOpacity
                 style={styles.cell}
-                onPress={() => confirmDeleteAlert(item.product_id)}>
+                onPress={() => confirmDeleteProductAlert(item.product_id)}>
                 <IconFontAwesome name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>
