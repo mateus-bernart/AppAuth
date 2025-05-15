@@ -26,6 +26,7 @@ import SearchSelectPicker from '../../../components/SearchSelectPicker';
 import SelectPicker from '../../../components/SelectPicker';
 import {isOnline} from '../../../helpers/networkHelper';
 import {checkConnection} from '../../../helpers/checkConnection';
+import {sendOtp} from '../../../helpers/sendOtp';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -57,17 +58,6 @@ const Register = () => {
 
   const passwordVerification = watch('password');
 
-  const sendOtp = async email => {
-    try {
-      const response = await axiosInstance.post('/email/send-otp', {
-        email,
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.log(error.response.data);
-    }
-  };
-
   useEffect(() => {
     checkConnection(toast);
   }, []);
@@ -83,7 +73,7 @@ const Register = () => {
             placement: 'top',
           });
           if (!isAuthenticated) {
-            sendOtp(data.email);
+            sendOtp(data.email, toast);
             toast.show('Please verify your email', {
               type: 'info',
               placement: 'top',

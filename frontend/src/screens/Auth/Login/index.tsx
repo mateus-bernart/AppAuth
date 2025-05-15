@@ -18,14 +18,13 @@ import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import SubmitButton from '../../../components/SubmitButton';
-import {isOnline} from '../../../helpers/networkHelper';
 import {checkConnection} from '../../../helpers/checkConnection';
+import {sendOtp} from '../../../helpers/sendOtp';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [emailToVerify, setEmailToVerify] = useState('');
-  // const [emailIsVerified, setEmailIsVerified] = useState(false);
   const handleNavigation = (screen, values) => {
     navigation.navigate(screen, values);
   };
@@ -37,17 +36,6 @@ const Login = () => {
   } = useForm();
 
   const {startSession} = useAuth();
-
-  const sendOtp = async email => {
-    try {
-      const response = await axiosInstance.post('/email/send-otp', {
-        email,
-      });
-      console.log(response.data);
-    } catch (error) {
-      console.log(error.response.data);
-    }
-  };
 
   const onLoginPressed = async data => {
     await checkConnection(toast);
@@ -117,7 +105,7 @@ const Login = () => {
                 handleNavigation('VerifyEmail', {
                   userEmail: emailToVerify,
                 });
-                sendOtp(emailToVerify);
+                sendOtp(emailToVerify, toast);
               }}>
               {emailToVerify && (
                 <View style={{flexDirection: 'row', gap: 10}}>
