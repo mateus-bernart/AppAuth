@@ -34,6 +34,7 @@ import {
 } from '../../../../helpers/databaseHelpers/stockProduct';
 import {isOnline} from '../../../../helpers/networkHelper';
 import {useDatabase} from '../../../../providers/DatabaseProvider';
+import {useStock} from '../../../../providers/StockProvider';
 
 type Product = {
   id: number;
@@ -68,6 +69,7 @@ const ProductDetails = () => {
   const [productData, setProductData] = useState(product);
   const {db} = useDatabase();
   const imagePath = product.image;
+  const {refreshStockCount} = useStock();
 
   const handleNavigation = (screen: keyof RootStackParamList, values) => {
     navigation.navigate(screen, values);
@@ -80,7 +82,7 @@ const ProductDetails = () => {
         onPress: () => console.log('Cancel Pressed'),
         style: 'cancel',
       },
-      {text: 'DELETE', onPress: () => handleDeleteProduct()},
+      {text: 'DELETE', onPress: async () => await handleDeleteProduct()},
     ]);
 
   const handleDeleteProduct = async () => {
@@ -89,8 +91,9 @@ const ProductDetails = () => {
     if (!online) {
       try {
         await deleteProduct(db, product.id);
+        navigation.goBack();
+        await refreshStockCount();
         toast.show('Product deleted', {type: 'success', placement: 'top'});
-        navigation.navigate('Stock');
       } catch (error) {
         console.log(error);
       }
@@ -291,7 +294,12 @@ const ProductDetails = () => {
       <ScrollView>
         <View style={styles.container}>
           <View style={styles.productNameContainer}>
-            <Text style={styles.productNameText}>{product?.name}</Text>
+            <Text
+              style={styles.productNameText}
+              ellipsizeMode="tail"
+              numberOfLines={1}>
+              {product?.name}
+            </Text>
             <Text style={[styles.productNameText, styles.productCodeText]}>
               # {product?.code}
             </Text>

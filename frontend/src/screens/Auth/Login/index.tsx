@@ -18,13 +18,14 @@ import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useAuth} from '../../../providers/AuthProvider';
 import axiosInstance from '../../../services/api';
 import SubmitButton from '../../../components/SubmitButton';
+import {isOnline} from '../../../helpers/networkHelper';
+import {checkConnection} from '../../../helpers/checkConnection';
 
 const Login = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [emailToVerify, setEmailToVerify] = useState('');
-  const [emailIsVerified, setEmailIsVerified] = useState(false);
-
+  // const [emailIsVerified, setEmailIsVerified] = useState(false);
   const handleNavigation = (screen, values) => {
     navigation.navigate(screen, values);
   };
@@ -49,6 +50,8 @@ const Login = () => {
   };
 
   const onLoginPressed = async data => {
+    await checkConnection(toast);
+
     try {
       const response = await axiosInstance.post('/login', data, {
         headers: {
@@ -77,7 +80,7 @@ const Login = () => {
             type: 'danger',
             placement: 'top',
           });
-          setEmailIsVerified(false);
+          // setEmailIsVerified(false);
           setEmailToVerify(error.response.data.email);
         } else if (error.response.status === 401) {
           toast.show(error.response.data.message || 'Incorrect Credentials.', {
@@ -92,7 +95,7 @@ const Login = () => {
         }
       } else {
         console.log('Login Error: ', error.message);
-        toast.show('Something went wrong', {
+        toast.show('Something went wrong. ', {
           type: 'danger',
           placement: 'top',
         });

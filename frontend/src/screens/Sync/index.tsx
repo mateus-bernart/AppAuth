@@ -14,7 +14,7 @@ import {
   changeProductCodeOffline,
   deleteData,
   deleteProduct,
-  showBranchStockData,
+  showAllStocks,
   syncProducts,
 } from '../../helpers/databaseHelpers/stockProduct';
 import {useDatabase} from '../../providers/DatabaseProvider';
@@ -29,7 +29,7 @@ import {useStock} from '../../providers/StockProvider';
 
 type StockWithProduct = {
   stock_id: number;
-  product_id: number;
+  id: number;
   code: string;
   name: string;
   description: string;
@@ -108,9 +108,7 @@ const Sync = () => {
 
   const handleShowData = async () => {
     try {
-      const result = await showBranchStockData(db);
-      console.log('Stock product: ', result);
-
+      const result = await showAllStocks(db);
       setLocalData(result);
       await refreshStockCount();
     } catch (error) {
@@ -127,6 +125,7 @@ const Sync = () => {
         placement: 'top',
       });
       setModalCameraVisible(false);
+
       await handleShowData();
     } catch (error) {
       console.log(error);
@@ -145,15 +144,17 @@ const Sync = () => {
         text: 'DELETE',
         onPress: () => {
           handleDeleteProduct(productId);
-          handleShowData();
         },
       },
     ]);
 
   const handleDeleteProduct = async productId => {
     try {
+      console.log('➡️ Deleting product with ID:', productId); // 👈 log útil
       await deleteProduct(db, productId);
+      console.log('✅ Deleted product from DB');
       toast.show('Product deleted', {type: 'success', placement: 'top'});
+      await handleShowData();
     } catch (error) {
       console.log(error);
     }
@@ -170,7 +171,6 @@ const Sync = () => {
         text: 'DELETE',
         onPress: () => {
           handleDeleteData();
-          handleShowData();
         },
       },
     ]);
@@ -310,7 +310,7 @@ const Sync = () => {
                   onPress={() => {
                     reset({code: item.code});
                     setModalCameraVisible(true);
-                    setProductId(item.product_id);
+                    setProductId(item.id);
                   }}
                   style={[
                     styles.cell,
@@ -370,7 +370,7 @@ const Sync = () => {
               </View>
               <TouchableOpacity
                 style={styles.cell}
-                onPress={() => confirmDeleteProductAlert(item.product_id)}>
+                onPress={() => confirmDeleteProductAlert(item.id)}>
                 <IconFontAwesome name="trash" size={20} color="red" />
               </TouchableOpacity>
             </View>

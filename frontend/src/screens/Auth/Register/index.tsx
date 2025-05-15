@@ -25,6 +25,7 @@ import SubmitButton from '../../../components/SubmitButton';
 import SearchSelectPicker from '../../../components/SearchSelectPicker';
 import SelectPicker from '../../../components/SelectPicker';
 import {isOnline} from '../../../helpers/networkHelper';
+import {checkConnection} from '../../../helpers/checkConnection';
 
 const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
@@ -67,9 +68,12 @@ const Register = () => {
     }
   };
 
-  const onRegisterPressed = async data => {
-    console.log(data);
+  useEffect(() => {
+    checkConnection(toast);
+  }, []);
 
+  const onRegisterPressed = async data => {
+    await checkConnection(toast);
     await axiosInstance
       .post('/register', data)
       .then(response => {

@@ -17,6 +17,7 @@ import CustomInput from '../../../../components/CustomInput';
 import SubmitButton from '../../../../components/SubmitButton';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import axiosInstance from '../../../../services/api';
+import {checkConnection} from '../../../../helpers/checkConnection';
 
 const VerifyRecoverPassword = ({route}) => {
   const {control, handleSubmit} = useForm();
@@ -29,6 +30,8 @@ const VerifyRecoverPassword = ({route}) => {
   let interval;
 
   const startOtpCountdown = async () => {
+    await checkConnection(toast);
+
     try {
       const response = await axiosInstance.post('/user/check-otp-timeout', {
         email: email,
@@ -56,11 +59,17 @@ const VerifyRecoverPassword = ({route}) => {
   };
 
   useEffect(() => {
+    async () => {
+      await checkConnection(toast);
+    };
+
     startOtpCountdown();
     return () => clearInterval(interval);
   }, [email]);
 
   const sendCodeAgain = async () => {
+    await checkConnection(toast);
+
     const response = await axiosInstance.post('/user/send-recover-password', {
       email: email,
     });
@@ -72,6 +81,8 @@ const VerifyRecoverPassword = ({route}) => {
   };
 
   const onVerifyRecoverPasswordPressed = async data => {
+    await checkConnection(toast);
+
     try {
       const response = await axiosInstance.post(
         '/user/confirm-recover-password',

@@ -1,12 +1,4 @@
-import {
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React, {useEffect, useState} from 'react';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useForm} from 'react-hook-form';
@@ -17,6 +9,7 @@ import CustomInput from '../../../../components/CustomInput';
 import SubmitButton from '../../../../components/SubmitButton';
 import {AppNavigationProp} from '../../../../types/navigationTypes';
 import axiosInstance from '../../../../services/api';
+import {checkConnection} from '../../../../helpers/checkConnection';
 
 const SendRecoverPassword = () => {
   const {control, handleSubmit, setError} = useForm();
@@ -29,6 +22,8 @@ const SendRecoverPassword = () => {
   };
 
   const onRecoverPasswordPressed = async data => {
+    await checkConnection(toast);
+
     try {
       const response = await axiosInstance.post('/user/send-recover-password', {
         email: data.email,

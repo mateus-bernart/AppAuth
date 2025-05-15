@@ -305,7 +305,7 @@ const UserDetails = ({route}) => {
         {isMyProfile ? (
           <>
             <EditButton
-              onPress={handleEdit}
+              onPress={() => handleSubmit(handleEdit)()}
               iconName={editable ? 'check' : 'create'}
               size={35}
               color="white"
@@ -422,12 +422,12 @@ const UserDetails = ({route}) => {
                 <Text style={styles.infoTitle}>Phone:</Text>
                 <CustomInput
                   rules={{
-                    validate: value =>
+                    validate: value => {
                       !editable ||
-                      !value ||
-                      value.length === 11 ||
-                      /^\(\d{3}\)\s\d{4}-\d{4}$/.test(value) ||
-                      'Phone number should be 11 characters',
+                        !value ||
+                        value.length === 11 ||
+                        'Phone number should be 11 characters';
+                    },
                   }}
                   control={control}
                   name="phone_number"

@@ -13,7 +13,7 @@ export const changeProductCodeOffline = async (db, productId, productCode) => {
     db.transaction(tx => {
       tx.executeSql(
         `
-          UPDATE products SET code = ? WHERE id = ?
+          UPDATE products SET code = ?, sync_error = NULL, error_codes = NULL WHERE id = ?
         `,
         [productCode, productId],
         (_, result) => {
@@ -22,21 +22,6 @@ export const changeProductCodeOffline = async (db, productId, productCode) => {
         },
         (_, error) => {
           console.log('❌ Error updating the product code:', error);
-          reject(error);
-        },
-      );
-
-      tx.executeSql(
-        `
-          UPDATE products SET sync_error = NULL, error_codes = NULL WHERE id = ?
-        `,
-        [productId],
-        (_, result) => {
-          console.log('✅ Success updating sync_error and codes');
-          resolve(result);
-        },
-        (_, error) => {
-          console.log('❌ Error updating the sync_error and codes:', error);
           reject(error);
         },
       );
@@ -107,6 +92,15 @@ export const deleteProduct = async (db, productId) => {
   return new Promise((resolve, reject) => {
     db.transaction(
       tx => {
+        let productsDeleted = false;
+        let stocksDeleted = false;
+
+        const tryResolve = () => {
+          if (productsDeleted && stocksDeleted) {
+            resolve(true);
+          }
+        };
+
         tx.executeSql(
           `DELETE FROM products WHERE id = ?`,
           [productId],
@@ -114,22 +108,18 @@ export const deleteProduct = async (db, productId) => {
             if (result.rowsAffected > 0) {
               console.log('✅ Product deleted from table products');
             } else {
-              console.log(
-                '⚠️ No product found with ID in table products:',
-                productId,
-              );
+              console.log('⚠️ No product found in table products:', productId);
             }
-            resolve(result);
+            productsDeleted = true;
+            tryResolve();
           },
           (txObj, error) => {
-            console.log(
-              '❌ Error deleting the product from table products: ',
-              error,
-            );
+            console.log('❌ Error deleting from products:', error);
             reject(error);
             return true;
           },
         );
+
         tx.executeSql(
           `DELETE FROM stocks WHERE product_id = ?`,
           [productId],
@@ -137,18 +127,13 @@ export const deleteProduct = async (db, productId) => {
             if (result.rowsAffected > 0) {
               console.log('✅ Product deleted from table stocks');
             } else {
-              console.log(
-                '⚠️ No product found with ID in table stocks:',
-                productId,
-              );
+              console.log('⚠️ No product found in table stocks:', productId);
             }
-            resolve(result);
+            stocksDeleted = true;
+            tryResolve();
           },
           (txObj, error) => {
-            console.log(
-              '❌ Error deleting the product from table stocks: ',
-              error,
-            );
+            console.log('❌ Error deleting from stocks:', error);
             reject(error);
             return true;
           },
@@ -518,35 +503,66 @@ export const adjustStockQuantity = async (
   });
 };
 
-export const showBranchStockData = db => {
+export const showAllStocks = db => {
   return new Promise((resolve, reject) => {
     db.transaction(tx => {
       tx.executeSql(
         `
-          SELECT
-            p.id,
-            p.code,
+          SELECT p.id,
+            p.id as product_id,
             p.name,
+            p.code,
             p.description,
-            p.price,
-            p.image,
+            p.price, 
+            p.synced, 
             p.sync_error,
-            p.synced as product_synced,
-            p.created_at as product_created_at,
-            p.updated_at as product_updated_at,
-
-            s.id as stock_id,
-            s.product_id as stock_product_id,
-            s.branch_id,
-            s.batch,
             s.quantity,
-            s.synced as stock_synced,
-            s.created_at as stock_created_at,
-            s.updated_at as stock_updated_at
+            s.batch, 
+            s.synced as stock_synced 
           FROM products p
-          LEFT JOIN stocks s ON p.id = s.product_id;
+          INNER JOIN stocks s ON p.id = s.product_id
         `,
         [],
+        (_, results) => {
+          resolve(results.rows.raw());
+        },
+        (_, error) => {
+          console.log('Error getting sqlite data', error);
+          reject(error);
+        },
+      );
+    });
+  });
+};
+
+export const showBranchStockData = (db, branchId) => {
+  return new Promise((resolve, reject) => {
+    db.transaction(tx => {
+      tx.executeSql(
+        `
+        SELECT
+          s.id AS id, 
+          p.id AS product_id,
+          p.code,
+          p.name,
+          p.description,
+          p.image,
+          p.price,
+          p.synced AS product_synced,
+          p.created_at AS product_created_at,
+          p.updated_at AS product_updated_at,
+          p.sync_error AS sync_error,
+    
+          s.branch_id,
+          s.batch,
+          s.quantity,
+          s.synced AS stock_synced,
+          s.created_at AS stock_created_at,
+          s.updated_at AS stock_updated_at
+        FROM products p
+        LEFT JOIN stocks s ON p.id = s.product_id AND s.branch_id = ?;
+      `,
+        [branchId],
         (_, results) => {
           resolve(results.rows.raw());
         },

@@ -91,7 +91,7 @@ class UserController extends Controller
             'phone_number' => 'min:11|max:255|not_in:0',
             'street' => 'max:255',
             'neighborhood' => 'max:255',
-            'street_number' => 'max:255|numeric|nullable',
+            'street_number' => 'max:255|nullable',
             'city' => 'max:255',
         ]);
 

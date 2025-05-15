@@ -2,15 +2,15 @@ import {Image, StyleSheet, Text, TouchableOpacity, View} from 'react-native';
 import React from 'react';
 import SlideInView from '../SlideView';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
-import {Product} from '../../screens/Branches/Stock';
+import {Stock} from '../../screens/Branches/Stock';
 
-type ProductCard = {
+type ProductCardProps = {
   onPressCard: () => void;
   editable: boolean;
-  item: Product;
+  item: Stock;
   wasChanged: boolean;
-  newQuantity: string;
-  getImageByProductId: () => number;
+  newQuantity: number;
+  getImageByProductId: () => string;
   onPressAdjustQuantityIncrement: () => void;
   onPressAdjustQuantityDecrement: () => void;
 };
@@ -24,7 +24,7 @@ const ProductCard = ({
   getImageByProductId,
   onPressAdjustQuantityIncrement,
   onPressAdjustQuantityDecrement,
-}) => {
+}: ProductCardProps) => {
   return (
     <View style={styles.itemContainer}>
       <View style={styles.itemDetailWrapper}>
@@ -38,7 +38,7 @@ const ProductCard = ({
               style={styles.itemName}
               numberOfLines={1}
               ellipsizeMode="tail">
-              {item.name}
+              {item?.name}
             </Text>
             {item.product_synced === 0 && (
               <View style={styles.unsyncedContainer}>
@@ -125,7 +125,7 @@ const ProductCard = ({
                     ]}>
                     {!editable && (
                       <Image
-                        source={{uri: getImageByProductId}}
+                        source={{uri: getImageByProductId()}}
                         style={styles.imageStyle}
                       />
                     )}

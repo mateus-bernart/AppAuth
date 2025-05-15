@@ -1,24 +1,20 @@
 import {
   Alert,
   FlatList,
-  Image,
-  ImageSourcePropType,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {act, useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import axiosInstance from '../../../services/api';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {AppNavigationProp} from '../../../types/navigationTypes';
 import {useToast} from 'react-native-toast-notifications';
-import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
 import {useForm} from 'react-hook-form';
 import Header from '../../../components/Header';
 import SearchBar from '../../../components/SearchBar';
-import SlideInView from '../../../components/SlideView';
 import {BASE_URL} from '../../../services/config';
 import {useDatabase} from '../../../providers/DatabaseProvider';
 import {isOnline} from '../../../helpers/networkHelper';
@@ -29,17 +25,23 @@ import {
   showBranchStockData,
 } from '../../../helpers/databaseHelpers/stockProduct';
 
-export type Product = {
+export type Stock = {
   id: number;
+  product_id: number;
+  code: string;
   name: string;
   description: string;
-  code: string;
-  batch: string;
-  quantity: string;
-  price: number;
   image: string | null;
-  sync_error: string;
-  error_message: string;
+  price: number;
+  quantity: number;
+  batch: string;
+  branch_id: number;
+  sync_error?: string;
+  error_message?: string;
+  product_created_at: string;
+  product_updated_at: string;
+  product_synced: number;
+  stock_synced: number;
 };
 
 type Branch = {
@@ -51,7 +53,7 @@ type UpdatedQuantities = Record<number, number>;
 
 const Stock = ({route}) => {
   const branchId = route.params?.branchId;
-  const [productList, setProductList] = useState<Product[]>([]);
+  const [stock, setStock] = useState<Stock[]>([]);
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [branchInfo, setBranchInfo] = useState<Branch | null>(null);
@@ -67,7 +69,7 @@ const Stock = ({route}) => {
   const searchTerm = watch('term');
 
   const getImageByProductId = (productId: number): string => {
-    const product = productList.find(p => p.id === productId);
+    const product = stock.find(p => p.product_id === productId);
     const imagePath = product?.image;
 
     if (!imagePath || typeof imagePath !== 'string') return '';
@@ -84,10 +86,9 @@ const Stock = ({route}) => {
 
   const getSqliteBranchStock = async () => {
     try {
-      const productResult = await showBranchStockData(db);
+      const productResult = await showBranchStockData(db, branchId);
       console.log('Offline received stock: ', productResult);
-
-      setProductList(productResult);
+      setStock(productResult);
     } catch (error) {
       console.log('Error fetching SQLite branch stock:', error);
     }
@@ -103,11 +104,12 @@ const Stock = ({route}) => {
 
       const products = response.data.stock.map(stock => ({
         ...stock.product,
+        product_id: stock.product_id,
         quantity: stock.quantity,
         batch: stock.batch,
       }));
 
-      setProductList(products);
+      setStock(products);
       setBranchInfo(response.data.branch);
     } catch (error) {
       toast.show('Error to find products, check internet connection', {
@@ -143,7 +145,7 @@ const Stock = ({route}) => {
   const getCurrentQuantity = (productId: number): number => {
     return (
       updatedQuantities[productId] ??
-      productList.find(p => p.id === productId)?.quantity ??
+      stock.find(p => p.product_id === productId)?.quantity ??
       0
     );
   };
@@ -252,10 +254,10 @@ const Stock = ({route}) => {
     }, [searchTerm]),
   );
 
-  const normalizeApiProduct = (item: any): Product => ({
-    ...item,
-    id: item.product_id ?? item.id,
-  });
+  const normalizeApiProduct = (item: any): Stock => {
+    const normalized = {...item, id: item.product_id ?? item.id};
+    return normalized;
+  };
 
   return (
     <SafeAreaView style={styles.body}>
@@ -283,10 +285,11 @@ const Stock = ({route}) => {
         </TouchableOpacity>
       )}
       <FlatList
-        data={productList.filter(branch => branch.id)}
+        data={stock.filter(stock => stock.id)}
         renderItem={({item}) => {
-          const newQuantity = updatedQuantities[item.id] ?? item.quantity;
-          const wasChanged = updatedQuantities[item.id] !== undefined;
+          const newQuantity =
+            updatedQuantities[item.product_id] ?? item.quantity;
+          const wasChanged = updatedQuantities[item.product_id] !== undefined;
 
           return (
             <ProductCard
@@ -298,14 +301,14 @@ const Stock = ({route}) => {
               }
               editable={editable}
               item={item}
-              getImageByProductId={getImageByProductId(item.id)}
+              getImageByProductId={() => getImageByProductId(item.product_id)}
               newQuantity={newQuantity}
               wasChanged={wasChanged}
               onPressAdjustQuantityIncrement={() =>
-                handleAdjustQuantity('increment', item.id)
+                handleAdjustQuantity('increment', item.product_id)
               }
               onPressAdjustQuantityDecrement={() =>
-                handleAdjustQuantity('decrement', item.id)
+                handleAdjustQuantity('decrement', item.product_id)
               }
             />
           );

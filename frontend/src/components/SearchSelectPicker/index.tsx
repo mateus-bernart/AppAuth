@@ -3,6 +3,9 @@ import React, {useEffect, useState} from 'react';
 import axiosInstance from '../../services/api';
 import {Controller} from 'react-hook-form';
 import DropDownPicker from 'react-native-dropdown-picker';
+import {getBranchesOffline} from '../../helpers/databaseHelpers/getBranchesOffline';
+import {isOnline} from '../../helpers/networkHelper';
+import {useDatabase} from '../../providers/DatabaseProvider';
 
 type CustomSelectProps = {
   control: any;
@@ -25,24 +28,42 @@ const SearchSelectPicker: React.FC<CustomSelectProps> = ({
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<{label: string; value: number}[]>([]);
   const [loading, setLoading] = useState(true);
+  const {db} = useDatabase();
 
-  useEffect(() => {
-    const fetchBranches = async () => {
+  const getBranches = async () => {
+    const online = await isOnline();
+
+    if (!online) {
+      try {
+        const branches = await getBranchesOffline(db);
+        const formattedBranches = branches.map(branch => ({
+          label: branch.description,
+          value: branch.code,
+        }));
+        setItems(formattedBranches);
+      } catch (error) {
+        console.log('Error getting offline branches: ', error.response);
+      } finally {
+        setLoading(false);
+      }
+    } else {
       try {
         const response = await axiosInstance.get(endpoint);
         const formatted = response.data.map(item => ({
           label: item[valueField],
           value: item[valueField],
         }));
-
         setItems(formatted);
       } catch (error) {
         console.log('Error fetching branches:', error.response);
       } finally {
         setLoading(false);
       }
-    };
-    fetchBranches();
+    }
+  };
+
+  useEffect(() => {
+    getBranches();
   }, []);
 
   return (

@@ -17,25 +17,23 @@ import {AppNavigationProp} from '../../../../types/navigationTypes';
 import axiosInstance from '../../../../services/api';
 import dayjs from 'dayjs';
 import SubmitButton from '../../../../components/SubmitButton';
+import {isOnline} from '../../../../helpers/networkHelper';
+import {checkConnection} from '../../../../helpers/checkConnection';
 
 const VerifyEmail = ({route}) => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const [otpTrigger, setOtpTrigger] = useState(0);
-
   const [timeLeft, setTimeLeft] = useState('');
-
   const [otp, setOtp] = useState('');
   const {userEmail} = route?.params || {};
-
-  const handleNavigation = (screen, value) => {
-    navigation.navigate(screen, value);
-  };
 
   useEffect(() => {
     let interval;
 
     const fetchExpiration = async () => {
+      await checkConnection(toast);
+
       try {
         const response = await axiosInstance.post('/user/check-otp-timeout', {
           email: userEmail,
@@ -68,7 +66,9 @@ const VerifyEmail = ({route}) => {
     return () => clearInterval(interval);
   }, [otpTrigger]);
 
-  const reSendOtp = async email => {
+  const resendOtp = async email => {
+    await checkConnection(toast);
+
     try {
       const response = await axiosInstance.post('/email/send-otp', {
         email,
@@ -81,6 +81,8 @@ const VerifyEmail = ({route}) => {
   };
 
   const verifyOtp = async () => {
+    await checkConnection(toast);
+
     try {
       await axiosInstance
         .post('/email/verify-otp', {
@@ -140,7 +142,7 @@ const VerifyEmail = ({route}) => {
         />
         <TouchableOpacity
           onPress={() => {
-            reSendOtp(userEmail);
+            resendOtp(userEmail);
             toast.show('Email send again', {
               type: 'success',
               placement: 'top',
@@ -187,7 +189,7 @@ const VerifyEmail = ({route}) => {
       <View style={{marginHorizontal: 30, marginTop: 20}}>
         <SubmitButton text={'Verify'} onButtonPressed={() => verifyOtp()} />
       </View>
-      <TouchableOpacity>
+      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
         <View style={styles.messageEmailContainer}>
           <Text style={styles.descriptionText}>
             Already a member?{' '}
@@ -283,7 +285,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   timeOutTextHighlighted: {
-    fontSize: 30,
+    fontSize: 25,
     padding: 10,
     borderRadius: 8,
   },
