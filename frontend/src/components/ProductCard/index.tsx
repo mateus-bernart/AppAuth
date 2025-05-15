@@ -231,11 +231,11 @@ const styles = StyleSheet.create({
   unsyncedText: {
     paddingHorizontal: 10,
     paddingVertical: 5,
-    backgroundColor: '#ffe260',
+    backgroundColor: '#ffec98',
     fontSize: 20,
     borderRadius: 10,
     fontFamily: 'Poppins-Bold',
-    color: '#ac5e00',
+    color: '#884b00',
   },
   unsyncedContainer: {
     justifyContent: 'flex-end',

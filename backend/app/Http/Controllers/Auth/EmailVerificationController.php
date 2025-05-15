@@ -5,9 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Mail\MyMail;
 use App\Models\User;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 
 class EmailVerificationController extends Controller
@@ -23,7 +21,8 @@ class EmailVerificationController extends Controller
         //Creat OTP 4 digits
         $otp = rand(1000, 9999);
         $user->otp = $otp;
-        $user->otp_expires_at = now()->addMinutes(5); // or addSeconds(300) for 5 min
+        //TODO: add more minutes if needed
+        $user->otp_expires_at = now()->addMinutes(1); // or addSeconds(300) for 5 min
         $user->save();
 
         try {
@@ -75,7 +74,8 @@ class EmailVerificationController extends Controller
         //Creat OTP 4 digits
         $otp = rand(1000, 9999);
         $user->otp = $otp;
-        $user->otp_expires_at = now()->addMinutes(5); // or addSeconds(300) for 5 min
+        //TODO: add more minutes if needed
+        $user->otp_expires_at = now()->addMinutes(1); // or addSeconds(300) for 5 min
         $user->save();
 
         try {
@@ -100,17 +100,17 @@ class EmailVerificationController extends Controller
             'code' => 'required|numeric|digits:4'
         ]);
 
+        if (!$user->otp || !$user->otp_expires_at || now()->greaterThan($user->otp_expires_at)) {
+            return response()->json(['message' => 'OTP has expired. Please request a new one'], 400);
+        }
+
         try {
-            if ($user->otp === $request->code) {
-                $user->password = $fields['password'];
-                if (Hash::check($fields['password'], $user->password)) {
-                    $user->otp = null;
-                    $user->otp_expires_at = null;
-                    $user->save();
-                    return response()->json(['message' => 'Password changed.'], 200);
-                } else {
-                    return response()->json(['message' => 'Password error'], 400);
-                }
+            if ((int)$user->otp === (int)$request->code) {
+                $user->password = bcrypt($fields['password']); // Importante usar bcrypt aqui
+                $user->otp = null;
+                $user->otp_expires_at = null;
+                $user->save();
+                return response()->json(['message' => 'Password changed.'], 200);
             } else {
                 return response()->json(['message' => 'Invalid OTP'], 400);
             }
@@ -123,6 +123,7 @@ class EmailVerificationController extends Controller
             return response()->json(['message' => $th->getMessage(), 'code' => $th->getCode()], 422);
         }
     }
+
     public function checkOtpTimeout(Request $request)
     {
         $user = User::where('email', $request->email)->first();

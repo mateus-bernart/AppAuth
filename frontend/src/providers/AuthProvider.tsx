@@ -1,11 +1,5 @@
 import {StyleSheet, Text, View} from 'react-native';
-import React, {
-  createContext,
-  use,
-  useContext,
-  useEffect,
-  useState,
-} from 'react';
+import React, {createContext, useContext, useEffect, useState} from 'react';
 import {storageDelete, storageGet, storageSet} from '../services/storage';
 
 type UserType = 'employee' | 'manager' | 'regional_manager';
@@ -62,14 +56,19 @@ const AuthProvider = ({children}) => {
 
   useEffect(() => {
     const loadSession = async () => {
-      const token = await storageGet('AcessToken');
-      const user = await storageGet('UserData');
+      try {
+        const token = await storageGet('AcessToken');
+        const user = await storageGet('UserData');
 
-      if (token && user) {
-        await startSession(JSON.parse(user), token);
+        if (token && user) {
+          await startSession(JSON.parse(user), token);
+        } else {
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.log(error);
+        setIsLoading(false);
       }
-
-      setIsLoading(false);
     };
     loadSession();
   }, []);

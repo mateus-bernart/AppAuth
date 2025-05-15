@@ -154,7 +154,12 @@ const Register = () => {
                         });
                       }}>
                       {emailToVerify && (
-                        <View style={{flexDirection: 'row', gap: 10}}>
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            gap: 10,
+                            alignItems: 'center',
+                          }}>
                           <Text style={styles.verifyEmailText}>
                             Go to verify email
                           </Text>
@@ -391,6 +396,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins-Bold',
     color: 'green',
+    backgroundColor: '#b8eea3',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginBottom: 5,
   },
   addressContainerHeader: {
     gap: 5,

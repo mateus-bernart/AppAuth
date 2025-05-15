@@ -145,11 +145,22 @@ const VerifyEmail = ({route}) => {
               type: 'success',
               placement: 'top',
             });
-          }}>
+          }}
+          disabled={timeLeft !== 'Expired' ? true : false}>
           <View style={styles.messageEmailContainer}>
-            <Text style={styles.descriptionText}>
+            <Text
+              style={[
+                styles.descriptionText,
+                {color: timeLeft !== 'Expired' ? 'gray' : 'black'},
+              ]}
+              disabled={timeLeft !== 'Expired' ? true : false}>
               Didn't receive a code?{' '}
-              <Text style={[styles.descriptionText, styles.highLightedText]}>
+              <Text
+                style={[
+                  styles.descriptionText,
+                  styles.highLightedText,
+                  {color: timeLeft !== 'Expired' ? '#96aff5' : 'blue'},
+                ]}>
                 Request again
               </Text>
             </Text>

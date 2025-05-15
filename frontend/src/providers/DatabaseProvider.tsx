@@ -3,11 +3,14 @@ import SQLite from 'react-native-sqlite-storage';
 import {runMigrations} from '../database/migrations/runMigrations';
 import {saveBranchesOffline} from '../database/migrations/005_add_branches_to_branches_table';
 import {Branch} from '../screens/Branches';
+import {useAuth} from './AuthProvider';
+import {ActivityIndicator, View} from 'react-native';
+import {Text} from 'react-native-gesture-handler';
 
 SQLite.enablePromise(true);
 
 type DatabaseContextType = {
-  db: SQLite.SQliteDatabase;
+  db: SQLite.SQLiteDatabase;
   branches: Branch[];
 };
 
@@ -16,6 +19,8 @@ const DatabaseContext = createContext<DatabaseContextType | null>(null);
 export const DatabaseProvider = ({children}) => {
   const [db, setDb] = useState(null);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const {isLoading} = useAuth();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const initDatabase = async () => {
@@ -36,16 +41,24 @@ export const DatabaseProvider = ({children}) => {
         const branches = Array.isArray(resultBranches)
           ? resultBranches
           : resultBranches.data || [];
+
         setBranches(branches);
         console.log('✅ Branches loaded successfully');
       } catch (error) {
         console.log('❌ Error initializing database: ', error);
+      } finally {
+        setLoading(false);
       }
     };
-    initDatabase();
-  }, []);
 
-  const hasUnsyncedProducts = async db => {
+    if (!isLoading) {
+      initDatabase();
+    }
+  }, [isLoading]);
+
+  const hasUnsyncedProducts = async (
+    db: SQLite.SQLiteDatabase,
+  ): Promise<boolean> => {
     return new Promise(resolve => {
       db.transaction(tx => {
         tx.executeSql(
@@ -71,7 +84,7 @@ export const DatabaseProvider = ({children}) => {
         // await syncProducts(db);
         console.log('✅ Products syncronized successfully');
       } catch (error) {
-        console.log('❌ Error syncronizing the products');
+        console.log('❌ Error syncronizing the products', error);
       }
     };
     syncData();
@@ -81,7 +94,22 @@ export const DatabaseProvider = ({children}) => {
 
   return (
     <DatabaseContext.Provider value={{db, branches}}>
-      {children}
+      {loading || isLoading ? (
+        <View
+          style={{
+            flex: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            gap: 10,
+          }}>
+          <ActivityIndicator size="large" color="green" />
+          <Text style={{fontFamily: 'Poppins-Bold', fontSize: 16}}>
+            Loading data
+          </Text>
+        </View>
+      ) : (
+        children
+      )}
     </DatabaseContext.Provider>
   );
 };

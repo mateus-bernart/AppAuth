@@ -26,39 +26,50 @@ const VerifyRecoverPassword = ({route}) => {
 
   const toast = useToast();
 
+  let interval;
+
+  const startOtpCountdown = async () => {
+    try {
+      const response = await axiosInstance.post('/user/check-otp-timeout', {
+        email: email,
+      });
+
+      const expiresAt = dayjs(response.data.expires_at);
+
+      interval = setInterval(() => {
+        const now = dayjs();
+        const diff = expiresAt.diff(now, 'second');
+
+        if (diff < 0) {
+          clearInterval(interval);
+          setTimeLeft('Expired');
+        } else {
+          const minutes = Math.floor(diff / 60);
+          const seconds = diff % 60;
+          setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
+        }
+      }, 1000);
+    } catch (error) {
+      setTimeLeft('Could not fetch expiration');
+      console.log(error.response);
+    }
+  };
+
   useEffect(() => {
-    let interval;
-
-    const fetchExpiration = async () => {
-      try {
-        const response = await axiosInstance.post('/user/check-otp-timeout', {
-          email: email,
-        });
-
-        const expiresAt = dayjs(response.data.expires_at);
-
-        interval = setInterval(() => {
-          const now = dayjs();
-          const diff = expiresAt.diff(now, 'second');
-
-          if (diff < 0) {
-            clearInterval(interval);
-            setTimeLeft('Expired');
-          } else {
-            const minutes = Math.floor(diff / 60);
-            const seconds = diff % 60;
-            setTimeLeft(`${minutes}:${seconds.toString().padStart(2, '0')}`);
-          }
-        }, 1000);
-      } catch (error) {
-        setTimeLeft('Could not fetch expiration');
-        console.log(error.response);
-      }
-    };
-
-    fetchExpiration();
+    startOtpCountdown();
     return () => clearInterval(interval);
   }, [email]);
+
+  const sendCodeAgain = async () => {
+    const response = await axiosInstance.post('/user/send-recover-password', {
+      email: email,
+    });
+    toast.show(response.data.message, {
+      type: 'success',
+      placement: 'top',
+    });
+    startOtpCountdown();
+  };
 
   const onVerifyRecoverPasswordPressed = async data => {
     try {
@@ -84,8 +95,6 @@ const VerifyRecoverPassword = ({route}) => {
       });
     }
   };
-
-  const sendCodeAgain = () => {};
 
   return (
     <SafeAreaView style={{flex: 1}}>
@@ -159,7 +168,7 @@ const VerifyRecoverPassword = ({route}) => {
           </View>
           <SubmitButton
             onButtonPressed={handleSubmit(onVerifyRecoverPasswordPressed)}
-            text="Confirm Password"
+            text="Confirm new password"
           />
           {timeLeft === 'Expired' ? (
             <TouchableOpacity
