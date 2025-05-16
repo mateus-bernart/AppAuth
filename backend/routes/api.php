@@ -14,40 +14,42 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::get('/user', function (Request $request) {
     return $request->user();
   });
-  Route::get('/user/{id}', [UserController::class, 'getUser']);
   Route::get('/users', [UserController::class, 'getAllUsers']);
-  Route::put('/user/{id}', [UserController::class, 'update']);
+  Route::get('/users/{id}', [UserController::class, 'getUser']);
+  Route::put('/users/{id}', [UserController::class, 'update']);
   Route::post('/logout', [AuthController::class, 'logout']);
-  Route::post('/user/{id}/upload-image', [UserController::class, 'uploadImage']);
+  Route::post('/users/{id}/upload-image', [UserController::class, 'uploadImage']);
   Route::post('/email/verification-notification', function (Request $request) {
     $request->user()->sendEmailVerificationNotification();
   })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
-  Route::delete('/user/{id}/remove-image/', [UserController::class, 'removeUserImage']);
-  Route::delete('/user/delete/{id}', [UserController::class, 'deleteUser']);
-
-  // ============ BRANCH ===========
-  Route::get('/branch/{branchId}/stocks', [BranchController::class, 'getBranchWithStock']);
+  Route::delete('/users/{id}/remove-image/', [UserController::class, 'removeUserImage']);
+  Route::delete('/users/{id}/delete', [UserController::class, 'deleteUser']);
 
   // ============ PRODUCT ===========
-  Route::get('/branch/{branchId}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
-  Route::get('/products/check-code/{productId}', [ProductController::class, 'checkCode']);
-  Route::get('/product/{productId}', [ProductController::class, 'getProduct']);
-  Route::post('/branch/{branchId}/product/createOrUpdate/{productId?}', [ProductController::class, 'createOrUpdateProduct']);
-  Route::post('/product/{productId}/add-image', [ProductController::class, 'addImage']);
-  Route::delete('/product/delete/{id}', [ProductController::class, 'deleteProduct']);
-  Route::delete('/product/{productId}/remove-image', [ProductController::class, 'removeImage']);
+  // Route::get('/branch/{id}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
+  Route::get('/products/{id}/check-code', [ProductController::class, 'checkCode']);
+  Route::get('/product/{id}', [ProductController::class, 'getProduct']); // ✅
+  Route::post('/branches/{branchId}/products/{productId?}', [ProductController::class, 'createOrUpdateProduct']);  // ✅
+  Route::post('/product/{id}/add-image', [ProductController::class, 'addImage']); // ✅
+  Route::delete('/product/{id}/delete', [ProductController::class, 'deleteProduct']); // ✅
+  Route::delete('/product/{id}/remove-image', [ProductController::class, 'removeImage']); // ✅
 
   // ============ STOCK ===========
-  Route::get('/stock/{productId}', [StockController::class, 'getStock']);
-  Route::post('/stock/{productId}/log-adjustment', [StockController::class, 'logAdjustment']);
-  Route::post('/stock/{productId}/log-add', [StockController::class, 'logAdd']);
+  Route::get('/branches/{id}/stocks', [StockController::class, 'getStockByBranchId']); // ✅
+  Route::get('/products/{id}/stocks', [StockController::class, 'getStockByProductId']); // ✅
+  Route::post('/stocks/{id}/log-adjustment', [StockController::class, 'logAdjustment']);
+  Route::post('/stocks/{id}/log-add', [StockController::class, 'logAdd']);
 });
 
-Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+// ============ BRANCH ===========
+Route::get('/branches', [BranchController::class, 'getBranches']); // ✅
+
+// ============ AUTH ===========
+Route::post('/register', [AuthController::class, 'register']); // ✅
+Route::post('/login', [AuthController::class, 'login']); // ✅
+
 Route::post('/email/send-otp', [EmailVerificationController::class, 'sendOtp']);
 Route::post('/email/verify-otp', [EmailVerificationController::class, 'verifyOtp']);
 Route::post('/user/send-recover-password', [EmailVerificationController::class, 'sendRecoverPassword']);
 Route::post('/user/confirm-recover-password', [EmailVerificationController::class, 'confirmRecoverPassword']);
 Route::post('/user/check-otp-timeout', [EmailVerificationController::class, 'checkOtpTimeout']);
-Route::get('/branches', [BranchController::class, 'getAllBranches']);

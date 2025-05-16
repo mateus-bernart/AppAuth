@@ -100,7 +100,7 @@ const ProductDetails = () => {
     } else {
       try {
         const response = await axiosInstance.delete(
-          `/product/delete/${product?.id}`,
+          `/product/${product?.id}/delete`,
         );
         toast.show(response.data, {
           type: 'success',

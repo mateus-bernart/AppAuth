@@ -56,7 +56,7 @@ const UserDetails = ({route}) => {
     inputForm.current?.focus();
   };
 
-  const endpoint = `/user/${userId}`;
+  const endpoint = `/users/${userId}`;
 
   const handleLogout = () => {
     endSession();
@@ -129,20 +129,26 @@ const UserDetails = ({route}) => {
 
   const handleRemovePhoto = async id => {
     if (selectedImage) {
-      await axiosInstance.delete(`/user/${id}/remove-image`).then(response => {
-        if (response.status !== 200) {
-          toast.show(response.data.message, {
-            type: 'danger',
-            placement: 'top',
+      try {
+        await axiosInstance
+          .delete(`/users/${id}/remove-image`)
+          .then(response => {
+            if (response.status !== 200) {
+              toast.show(response.data.message, {
+                type: 'danger',
+                placement: 'top',
+              });
+              return;
+            }
+            toast.show(response.data.message, {
+              type: 'success',
+              placement: 'top',
+            });
           });
-          return;
-        }
-        toast.show(response.data.message, {
-          type: 'success',
-          placement: 'top',
-        });
-      });
-      setSelectedImage(null);
+        setSelectedImage(null);
+      } catch (error) {
+        console.log(error.response);
+      }
     } else {
       toast.show('You dont have any image.', {
         type: 'danger',
@@ -176,7 +182,7 @@ const UserDetails = ({route}) => {
 
   const deleteUser = async () => {
     try {
-      const response = await axiosInstance.delete(`/user/delete/${userId}`);
+      const response = await axiosInstance.delete(`/user/${userId}/delete`);
       toast.show(response.data.message, {type: 'success', placement: 'top'});
       navigation.navigate('UserManagement');
     } catch (e) {
