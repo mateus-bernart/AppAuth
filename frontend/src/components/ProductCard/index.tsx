@@ -40,16 +40,7 @@ const ProductCard = ({
               ellipsizeMode="tail">
               {item?.name}
             </Text>
-            {item.product_synced === 0 && (
-              <View style={styles.unsyncedContainer}>
-                <Text
-                  style={styles.unsyncedText}
-                  numberOfLines={1}
-                  ellipsizeMode="tail">
-                  Unsynced
-                </Text>
-              </View>
-            )}
+
             <Text style={styles.itemCode}># {item.code}</Text>
           </View>
 
@@ -227,18 +218,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: 'Poppins-Medium',
     fontSize: 16,
-  },
-  unsyncedText: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    backgroundColor: '#ffec98',
-    fontSize: 20,
-    borderRadius: 10,
-    fontFamily: 'Poppins-Bold',
-    color: '#884b00',
-  },
-  unsyncedContainer: {
-    justifyContent: 'flex-end',
   },
   quantityValueContainer: {
     flexDirection: 'row',

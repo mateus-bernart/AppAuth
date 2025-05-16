@@ -273,7 +273,9 @@ const Stock = ({route}) => {
         style={{top: 50}}
       />
       <SearchBar control={control} placeholder="Search by the name/code" />
-
+      <View style={styles.unsyncedContainer}>
+        <Text style={styles.unsyncedText}>Unsynced products</Text>
+      </View>
       {editable && (
         <TouchableOpacity
           onPress={() =>
@@ -334,6 +336,20 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     backgroundColor: '#60b565',
     color: 'green',
+  },
+  unsyncedContainer: {
+    marginHorizontal: 20,
+    marginBottom: 10,
+    padding: 10,
+    backgroundColor: '#ff8d0b',
+    borderRadius: 12,
+    width: '50%',
+    alignItems: 'center',
+  },
+  unsyncedText: {
+    fontFamily: 'Poppins-Medium',
+    fontSize: 16,
+    color: 'white',
   },
   editStockText: {
     fontFamily: 'Poppins-Bold',
