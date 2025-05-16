@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 import React, {useEffect, useRef, useState} from 'react';
-import {useIsFocused, useNavigation} from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import {useForm} from 'react-hook-form';
 import {useToast} from 'react-native-toast-notifications';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome';
@@ -24,7 +24,6 @@ import Header from '../../../components/Header';
 import SubmitButton from '../../../components/SubmitButton';
 import SearchSelectPicker from '../../../components/SearchSelectPicker';
 import SelectPicker from '../../../components/SelectPicker';
-import {isOnline} from '../../../helpers/networkHelper';
 import {checkConnection} from '../../../helpers/checkConnection';
 import {sendOtp} from '../../../helpers/sendOtp';
 
@@ -32,16 +31,7 @@ const Register = () => {
   const navigation = useNavigation<AppNavigationProp>();
   const toast = useToast();
   const {isAuthenticated} = useAuth();
-  const [iconDirection, setIconDirection] = useState(false);
   const [emailToVerify, setEmailToVerify] = useState(false);
-
-  const onDropdownClick = () => {
-    if (iconDirection) {
-      setIconDirection(false);
-    } else {
-      setIconDirection(true);
-    }
-  };
 
   const {
     control,
@@ -102,253 +92,230 @@ const Register = () => {
 
   return (
     <>
-      <SafeAreaView style={{flex: 1, marginBottom: 15}}>
+      <SafeAreaView style={{flex: 1}}>
         <Header title="REGISTER" />
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <ScrollView
-            contentContainerStyle={styles.scrollView}
-            keyboardShouldPersistTaps="handled"
-            showsVerticalScrollIndicator={false}>
-            {!isAuthenticated && (
-              <View style={styles.formFooter}>
-                <TouchableOpacity
-                  onPress={() => {
-                    navigation.navigate('Login');
-                  }}>
-                  <Text style={styles.createAccountText}>
-                    Already have an account?{' '}
-                    <Text style={styles.signInText}>Sign in</Text>
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            )}
 
-            {/*  ========== FORM  ============ */}
-
-            <View style={styles.formContainer}>
-              <View style={styles.credentialsContainer}>
-                <View style={styles.containerInfo}>
-                  <Text style={styles.formTitle}>Name</Text>
-                  <CustomInput
-                    rules={{required: 'Name is required'}}
-                    control={control}
-                    name="name"
-                    placeholder="Enter your name"
-                    iconLeft="user"
-                  />
-                </View>
-                <View style={styles.containerInfo}>
-                  <View style={styles.emailHeaderContainer}>
-                    <Text style={styles.formTitle}>Email</Text>
-                    <TouchableOpacity
-                      onPress={() => {
-                        handleNavigation('VerifyEmail', {
-                          userEmail: emailToVerify,
-                        });
-                      }}>
-                      {emailToVerify && (
-                        <View
-                          style={{
-                            flexDirection: 'row',
-                            gap: 10,
-                            alignItems: 'center',
-                          }}>
-                          <Text style={styles.verifyEmailText}>
-                            Go to verify email
-                          </Text>
-                          <IconFontAwesome
-                            name="chevron-right"
-                            size={20}
-                            color="green"
-                          />
-                        </View>
-                      )}
-                    </TouchableOpacity>
-                  </View>
-                  <CustomInput
-                    rules={{required: 'Email is required'}}
-                    control={control}
-                    name="email"
-                    placeholder="you@example.com"
-                    keyboardType="email-address"
-                    iconLeft="envelope"
-                  />
-                </View>
-                <View style={styles.containerInfo}>
-                  <Text style={styles.formTitle}>Phone number</Text>
-                  <CustomInput
-                    maxLength={11}
-                    rules={{
-                      minLength: {
-                        value: 11,
-                        message: 'Phone number should be 11 characters',
-                      },
-                      maxLength: {
-                        value: 11,
-                        message: 'Phone number should be 11 characters',
-                      },
-                    }}
-                    control={control}
-                    name="phone_number"
-                    placeholder="(+33)3333-3333"
-                    keyboardType="number-pad"
-                    iconLeft="phone-alt"
-                  />
-                </View>
-                <View style={styles.containerInfo}>
-                  <Text style={styles.formTitle}>Password</Text>
-                  <CustomInput
-                    rules={{
-                      required: 'Password is required',
-                      minLength: {
-                        value: 3,
-                        message: 'Password should be minimum 3 characters',
-                      },
-                    }}
-                    control={control}
-                    name="password"
-                    placeholder="Enter password"
-                    secureTextEntry={true}
-                    iconRight
-                    iconLeft="lock"
-                  />
-                </View>
-                <View style={styles.containerInfo}>
-                  <Text style={styles.formTitle}>Confirm Password</Text>
-                  <CustomInput
-                    rules={{
-                      required: 'Confirm your password',
-                      validate: value =>
-                        value === passwordVerification || 'Password must match',
-                      minLength: {
-                        value: 3,
-                        message: 'Password should be minimum 3 characters',
-                      },
-                    }}
-                    control={control}
-                    name="password_confirmation"
-                    placeholder="Repeat password"
-                    secureTextEntry={true}
-                    iconRight
-                    iconLeft="lock"
-                  />
-                </View>
-              </View>
-              <View style={styles.containerInfo}>
-                <Text style={styles.formTitle}>Branch</Text>
-                <SearchSelectPicker
-                  control={control}
-                  name="user_branch"
-                  endpoint={'/branches'}
-                  labelField={'code'}
-                  valueField={'description'}
-                  rules={{required: 'Branch is required'}}
-                  placeholder="Select a Branch"
-                />
-              </View>
-              <View style={styles.containerInfo}>
-                <Text style={styles.formTitle}>User type</Text>
-                <SelectPicker
-                  control={control}
-                  name="user_type"
-                  rules={{required: 'User type is required'}}
-                  placeholder="Select a user type"
-                />
-              </View>
-              <View style={styles.divisor}></View>
-
-              {/* ========= ADDRESS =========== */}
-
+        <ScrollView
+          contentContainerStyle={styles.scrollView}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          {!isAuthenticated && (
+            <View style={styles.formFooter}>
               <TouchableOpacity
-                style={styles.iconDropDown}
-                onPress={() => onDropdownClick()}>
-                <View style={styles.addressContainer}>
-                  <View style={styles.addressContainerHeader}>
-                    <MaterialIcons name="location-on" size={30} />
-                    <View style={{flex: 1}}>
-                      <Text style={styles.dividerText}>
-                        ADDRESS
-                        <Text style={{fontSize: 16, color: 'gray'}}>
-                          {' '}
-                          (optional)
-                        </Text>
-                      </Text>
-                    </View>
-                    {iconDirection ? (
-                      <IconFontAwesome
-                        name="chevron-down"
-                        size={25}
-                        style={styles.iconDropdown}
-                      />
-                    ) : (
-                      <IconFontAwesome
-                        name="chevron-up"
-                        size={25}
-                        style={styles.iconDropdown}
-                      />
-                    )}
-                  </View>
-                </View>
+                onPress={() => {
+                  navigation.navigate('Login');
+                }}>
+                <Text style={styles.createAccountText}>
+                  Already have an account?{' '}
+                  <Text style={styles.signInText}>Sign in</Text>
+                </Text>
               </TouchableOpacity>
-              {iconDirection ? (
-                <View style={styles.credentialsContainer}>
-                  <View style={styles.containerInfo}>
-                    <Text style={styles.formTitle}>Street</Text>
-                    <CustomInput
-                      control={control}
-                      name="street"
-                      placeholder="123 Main Street"
-                      iconLeft="map-signs"
-                    />
-                  </View>
-                  <View style={styles.containerInfo}>
-                    <Text style={styles.formTitle}>Neighborhood</Text>
-                    <CustomInput
-                      control={control}
-                      name="neighborhood"
-                      placeholder="Downtown, etc."
-                      iconLeft="map"
-                    />
-                  </View>
-                  <View style={styles.containerInfo}>
-                    <Text style={styles.formTitle}>Number</Text>
-                    <CustomInput
-                      control={control}
-                      name="street_number"
-                      placeholder="Apt 4B or House 42"
-                      iconLeft="home"
-                    />
-                  </View>
-                  <View style={styles.containerInfo}>
-                    <Text style={styles.formTitle}>City</Text>
-                    <CustomInput
-                      control={control}
-                      name="city"
-                      placeholder="New York, San Francisco"
-                      iconLeft="city"
-                    />
-                  </View>
-                </View>
-              ) : (
-                ''
-              )}
             </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+          )}
+
+          {/*  ========== FORM  ============ */}
+
+          <View style={styles.formContainer}>
+            <View style={styles.credentialsContainer}>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Name</Text>
+                <CustomInput
+                  rules={{required: 'Name is required'}}
+                  control={control}
+                  name="name"
+                  placeholder="Enter your name"
+                  iconLeft="user"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <View style={styles.emailHeaderContainer}>
+                  <Text style={styles.formTitle}>Email</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleNavigation('VerifyEmail', {
+                        userEmail: emailToVerify,
+                      });
+                    }}>
+                    {emailToVerify && (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          gap: 10,
+                          alignItems: 'center',
+                        }}>
+                        <Text style={styles.verifyEmailText}>
+                          Go to verify email
+                        </Text>
+                        <IconFontAwesome
+                          name="chevron-right"
+                          size={20}
+                          color="green"
+                        />
+                      </View>
+                    )}
+                  </TouchableOpacity>
+                </View>
+                <CustomInput
+                  rules={{required: 'Email is required'}}
+                  control={control}
+                  name="email"
+                  placeholder="you@example.com"
+                  keyboardType="email-address"
+                  iconLeft="envelope"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Phone number</Text>
+                <CustomInput
+                  maxLength={11}
+                  rules={{
+                    minLength: {
+                      value: 11,
+                      message: 'Phone number should be 11 characters',
+                    },
+                    maxLength: {
+                      value: 11,
+                      message: 'Phone number should be 11 characters',
+                    },
+                  }}
+                  control={control}
+                  name="phone_number"
+                  placeholder="(+33)3333-3333"
+                  keyboardType="number-pad"
+                  iconLeft="phone-alt"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Password</Text>
+                <CustomInput
+                  rules={{
+                    required: 'Password is required',
+                    minLength: {
+                      value: 3,
+                      message: 'Password should be minimum 3 characters',
+                    },
+                  }}
+                  control={control}
+                  name="password"
+                  placeholder="Enter password"
+                  secureTextEntry={true}
+                  iconRight
+                  iconLeft="lock"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Confirm Password</Text>
+                <CustomInput
+                  rules={{
+                    required: 'Confirm your password',
+                    validate: value =>
+                      value === passwordVerification || 'Password must match',
+                    minLength: {
+                      value: 3,
+                      message: 'Password should be minimum 3 characters',
+                    },
+                  }}
+                  control={control}
+                  name="password_confirmation"
+                  placeholder="Repeat password"
+                  secureTextEntry={true}
+                  iconRight
+                  iconLeft="lock"
+                />
+              </View>
+            </View>
+            <View style={styles.containerInfo}>
+              <Text style={styles.formTitle}>Branch</Text>
+              <SearchSelectPicker
+                control={control}
+                name="user_branch"
+                endpoint={'/branches'}
+                labelField={'code'}
+                valueField={'description'}
+                rules={{required: 'Branch is required'}}
+                placeholder="Select a Branch"
+              />
+            </View>
+            <View style={styles.containerInfo}>
+              <Text style={styles.formTitle}>User type</Text>
+              <SelectPicker
+                control={control}
+                name="user_type"
+                rules={{required: 'User type is required'}}
+                placeholder="Select a user type"
+              />
+            </View>
+            <View style={styles.divisor}></View>
+
+            {/* ========= ADDRESS =========== */}
+
+            <View style={styles.addressContainer}>
+              <View style={styles.addressContainerHeader}>
+                <MaterialIcons name="location-on" size={30} />
+                <View style={{flex: 1}}>
+                  <Text style={styles.dividerText}>
+                    ADDRESS
+                    <Text style={{fontSize: 16, color: 'gray'}}>
+                      {' '}
+                      (optional)
+                    </Text>
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View style={styles.credentialsContainer}>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Street</Text>
+                <CustomInput
+                  control={control}
+                  name="street"
+                  placeholder="123 Main Street"
+                  iconLeft="map-signs"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Neighborhood</Text>
+                <CustomInput
+                  control={control}
+                  name="neighborhood"
+                  placeholder="Downtown, etc."
+                  iconLeft="map"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>Number</Text>
+                <CustomInput
+                  control={control}
+                  name="street_number"
+                  placeholder="Apt 4B or House 42"
+                  iconLeft="home"
+                />
+              </View>
+              <View style={styles.containerInfo}>
+                <Text style={styles.formTitle}>City</Text>
+                <CustomInput
+                  control={control}
+                  name="city"
+                  placeholder="New York, San Francisco"
+                  iconLeft="city"
+                />
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+        <View
+          style={[
+            styles.registerContainerWrapper,
+            {height: isAuthenticated ? 190 : 150},
+          ]}>
+          <SubmitButton
+            text={'Save'}
+            onButtonPressed={handleSubmit(onRegisterPressed)}
+            textSize={20}
+            height={25}
+          />
+        </View>
       </SafeAreaView>
-      <View
-        style={[
-          styles.registerContainerWrapper,
-          {height: isAuthenticated ? 240 : 150},
-        ]}>
-        <SubmitButton
-          text={'Save'}
-          onButtonPressed={handleSubmit(onRegisterPressed)}
-          textSize={20}
-          height={25}
-        />
-      </View>
     </>
   );
 };
@@ -449,6 +416,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     justifyContent: 'center',
+    marginBottom: 10,
   },
   formFooter: {
     justifyContent: 'center',
