@@ -60,6 +60,7 @@ const Stock = ({route}) => {
   const {branches} = useDatabase();
   const [editable, setEditable] = useState(false);
   const {db} = useDatabase();
+  const [online, setOnline] = useState<boolean>(false);
 
   const [updatedQuantities, setUpdatedQuantities] = useState<UpdatedQuantities>(
     {},
@@ -180,7 +181,6 @@ const Stock = ({route}) => {
         {
           text: 'YES',
           onPress: async () => {
-            const online = await isOnline();
             try {
               if (!online) {
                 const productId = Object.keys(updatedQuantities).map(id =>
@@ -234,12 +234,21 @@ const Stock = ({route}) => {
     navigation.navigate(screens, params);
   };
 
+  useEffect(() => {
+    (async () => {
+      const online = await isOnline();
+      if (!online) {
+        setOnline(false);
+      } else {
+        setOnline(true);
+      }
+    })();
+  }, []);
+
   useFocusEffect(
     useCallback(() => {
       (async () => {
         try {
-          const online = await isOnline();
-
           if (!online) {
             const branch = branches.find(b => b.id === branchId);
             setBranchInfo(branch || null);
@@ -273,9 +282,11 @@ const Stock = ({route}) => {
         style={{top: 50}}
       />
       <SearchBar control={control} placeholder="Search by the name/code" />
-      <View style={styles.unsyncedContainer}>
-        <Text style={styles.unsyncedText}>Unsynced products</Text>
-      </View>
+      {!online && (
+        <View style={styles.unsyncedContainer}>
+          <Text style={styles.unsyncedText}>Unsynced products</Text>
+        </View>
+      )}
       {editable && (
         <TouchableOpacity
           onPress={() =>
