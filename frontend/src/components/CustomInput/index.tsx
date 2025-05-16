@@ -1,4 +1,6 @@
 import {
+  Animated,
+  Easing,
   KeyboardTypeOptions,
   StyleSheet,
   Text,
@@ -6,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import React, {Ref, useState} from 'react';
+import React, {Ref, useEffect, useRef, useState} from 'react';
 import {Controller} from 'react-hook-form';
 import IconFontAwesome from 'react-native-vector-icons/FontAwesome5';
 import {format} from 'react-number-format/types/numeric_format';
@@ -44,10 +46,24 @@ const CustomInput: React.FC<CustomInputProps> = ({
   defaultValue, // ou algum valor adequado como 0, null, etc.
 }) => {
   const [eyeToggle, setEyeToggle] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const handleShowPassword = () => {
     setEyeToggle(prev => !prev);
   };
+
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  const borderWidthAnim = useRef(new Animated.Value(0)).current;
+
+  const borderColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['black', 'green'],
+  });
+
+  const backgroundColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#fff', '#eeffee'],
+  });
 
   return (
     <Controller
@@ -55,72 +71,99 @@ const CustomInput: React.FC<CustomInputProps> = ({
       name={name}
       rules={rules}
       defaultValue={defaultValue ?? ''}
-      render={({field: {value, onChange, onBlur}, fieldState: {error}}) => (
-        <>
-          <View
-            style={[
-              textStyle ? null : styles.inputFieldContainer,
-              {borderColor: error ? 'red' : 'black'},
-              {borderWidth: error ? 1.5 : 0},
-            ]}>
-            {iconLeft && (
-              <IconFontAwesome
-                name={iconLeft}
-                size={20}
-                style={[styles.iconLeft, {color: error ? 'red' : 'black'}]}
-              />
-            )}
-            <TextInput
+      render={({field: {value, onChange, onBlur}, fieldState: {error}}) => {
+        useEffect(() => {
+          let toValue = 0;
+          if (error) {
+            toValue = 2;
+          } else if (isFocused) {
+            toValue = 2;
+          }
+          Animated.timing(animatedValue, {
+            toValue: isFocused ? 1 : 0,
+            duration: 200,
+            useNativeDriver: false,
+          }).start();
+          Animated.timing(borderWidthAnim, {
+            toValue: toValue,
+            duration: 100,
+            useNativeDriver: false,
+          }).start();
+        }, [isFocused, error]);
+        return (
+          <>
+            <Animated.View
               style={[
-                formStyle ? styles.formInput : styles.textInputStyle,
-                {color: !editable ? '#696969' : 'black'},
-              ]}
-              value={String(value)} // Controlled by react-hook-form
-              onChangeText={text => {
-                let formatted = text;
-
-                if (name === 'price') {
-                  formatted = text.replace(',', '.').replace(/[^0-9.]/g, '');
-                } else if (keyboardType === 'number-pad') {
-                  formatted = text.replace(/[^0-9]/g, '');
-                }
-
-                const parsedValue =
-                  keyboardType === 'number-pad' ? Number(formatted) : formatted;
-
-                onChange(parsedValue);
-              }}
-              onBlur={onBlur}
-              placeholder={placeholder}
-              secureTextEntry={!eyeToggle && secureTextEntry}
-              keyboardType={keyboardType}
-              editable={editable}
-              maxLength={maxLength}
-            />
-            {iconRight && (
-              <TouchableOpacity
-                style={{padding: 10}}
-                onPress={handleShowPassword}>
+                textStyle ? null : styles.inputFieldContainer,
+                {
+                  borderColor: error ? 'red' : borderColor,
+                  backgroundColor: backgroundColor,
+                  borderWidth: borderWidthAnim,
+                },
+              ]}>
+              {iconLeft && (
                 <IconFontAwesome
-                  name={eyeToggle ? 'eye' : 'eye-slash'}
+                  name={iconLeft}
                   size={20}
+                  style={[styles.iconLeft, {color: error ? 'red' : 'black'}]}
                 />
-              </TouchableOpacity>
+              )}
+              <TextInput
+                style={[
+                  formStyle ? styles.formInput : styles.textInputStyle,
+                  {color: !editable ? '#696969' : 'black'},
+                ]}
+                value={String(value)} // Controlled by react-hook-form
+                onChangeText={text => {
+                  let formatted = text;
+
+                  if (name === 'price') {
+                    formatted = text.replace(',', '.').replace(/[^0-9.]/g, '');
+                  } else if (keyboardType === 'number-pad') {
+                    formatted = text.replace(/[^0-9]/g, '');
+                  }
+
+                  const parsedValue =
+                    keyboardType === 'number-pad'
+                      ? Number(formatted)
+                      : formatted;
+
+                  onChange(parsedValue);
+                }}
+                placeholder={placeholder}
+                secureTextEntry={!eyeToggle && secureTextEntry}
+                keyboardType={keyboardType}
+                editable={editable}
+                maxLength={maxLength}
+                onFocus={() => setIsFocused(true)}
+                onBlur={() => setIsFocused(false)}
+              />
+              {iconRight && (
+                <TouchableOpacity
+                  style={{padding: 10}}
+                  onPress={handleShowPassword}>
+                  <IconFontAwesome
+                    name={eyeToggle ? 'eye' : 'eye-slash'}
+                    size={20}
+                  />
+                </TouchableOpacity>
+              )}
+            </Animated.View>
+
+            {error && (
+              <Text
+                style={{
+                  color: 'red',
+                  alignSelf: 'stretch',
+                  marginVertical: 5,
+                  fontWeight: 'bold',
+                }}>
+                {error.message || 'Error'}
+              </Text>
             )}
-          </View>
-          {error && (
-            <Text
-              style={{
-                color: 'red',
-                alignSelf: 'stretch',
-                marginVertical: 5,
-                fontWeight: 'bold',
-              }}>
-              {error.message || 'Error'}
-            </Text>
-          )}
-        </>
-      )}
+          </>
+        );
+      }}
     />
   );
 };

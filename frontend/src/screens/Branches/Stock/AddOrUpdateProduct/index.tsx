@@ -277,7 +277,7 @@ const AddOrUpdateProduct = () => {
                 rules={{required: product ? false : 'Description is required'}}
                 control={control}
                 name="description"
-                placeholder="Enter product Description"
+                placeholder="Enter product description"
                 iconLeft="file-alt"
                 keyboardType="default"
                 defaultValue={product?.description}
