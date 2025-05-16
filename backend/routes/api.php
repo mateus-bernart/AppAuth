@@ -26,27 +26,26 @@ Route::middleware('auth:sanctum')->group(function () {
   Route::delete('/users/{id}/delete', [UserController::class, 'deleteUser']);
 
   // ============ PRODUCT ===========
-  // Route::get('/branch/{id}/stocks/products', [ProductController::class, 'getBranchStockProducts']);
   Route::get('/products/{id}/check-code', [ProductController::class, 'checkCode']);
-  Route::get('/product/{id}', [ProductController::class, 'getProduct']); // ✅
-  Route::post('/branches/{branchId}/products/{productId?}', [ProductController::class, 'createOrUpdateProduct']);  // ✅
-  Route::post('/product/{id}/add-image', [ProductController::class, 'addImage']); // ✅
-  Route::delete('/product/{id}/delete', [ProductController::class, 'deleteProduct']); // ✅
-  Route::delete('/product/{id}/remove-image', [ProductController::class, 'removeImage']); // ✅
+  Route::get('/product/{id}', [ProductController::class, 'getProduct']);
+  Route::post('/branches/{branchId}/products/{productId?}', [ProductController::class, 'createOrUpdateProduct']);
+  Route::post('/product/{id}/add-image', [ProductController::class, 'addImage']);
+  Route::delete('/product/{id}/delete', [ProductController::class, 'deleteProduct']);
+  Route::delete('/product/{id}/remove-image', [ProductController::class, 'removeImage']);
 
   // ============ STOCK ===========
-  Route::get('/branches/{id}/stocks', [StockController::class, 'getStockByBranchId']); // ✅
-  Route::get('/products/{id}/stocks', [StockController::class, 'getStockByProductId']); // ✅
+  Route::get('/branches/{id}/stocks', [StockController::class, 'getStockByBranchId']);
+  Route::get('/products/{id}/stocks', [StockController::class, 'getStockByProductId']);
   Route::post('/stocks/{id}/log-adjustment', [StockController::class, 'logAdjustment']);
   Route::post('/stocks/{id}/log-add', [StockController::class, 'logAdd']);
 });
 
 // ============ BRANCH ===========
-Route::get('/branches', [BranchController::class, 'getBranches']); // ✅
+Route::get('/branches', [BranchController::class, 'getBranches']);
 
 // ============ AUTH ===========
-Route::post('/register', [AuthController::class, 'register']); // ✅
-Route::post('/login', [AuthController::class, 'login']); // ✅
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
 
 Route::post('/email/send-otp', [EmailVerificationController::class, 'sendOtp']);
 Route::post('/email/verify-otp', [EmailVerificationController::class, 'verifyOtp']);
