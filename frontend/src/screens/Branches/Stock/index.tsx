@@ -60,11 +60,10 @@ const Stock = ({route}) => {
   const {branches} = useDatabase();
   const [editable, setEditable] = useState(false);
   const {db} = useDatabase();
-  const [online, setOnline] = useState<boolean>(false);
-
   const [updatedQuantities, setUpdatedQuantities] = useState<UpdatedQuantities>(
     {},
   );
+  const [online, setOnline] = useState<boolean>(false);
 
   const {control, watch} = useForm();
   const searchTerm = watch('term');
@@ -85,6 +84,17 @@ const Stock = ({route}) => {
         }`;
   };
 
+  useEffect(() => {
+    (async () => {
+      const online = await isOnline();
+      if (!online) {
+        setOnline(false);
+      } else {
+        setOnline(true);
+      }
+    })();
+  }, []);
+
   const getSqliteBranchStock = async () => {
     try {
       const productResult = await showBranchStockData(db, branchId);
@@ -100,7 +110,7 @@ const Stock = ({route}) => {
       const query = searchTerm ? `?q=${encodeURIComponent(searchTerm)}` : '';
 
       const response = await axiosInstance.get(
-        `/branch/${branchId}/stocks${query}`,
+        `branches/${branchId}/stocks/${query}`,
       );
 
       const products = response.data.stock.map(stock => ({
@@ -181,6 +191,8 @@ const Stock = ({route}) => {
         {
           text: 'YES',
           onPress: async () => {
+            const online = await isOnline();
+
             try {
               if (!online) {
                 const productId = Object.keys(updatedQuantities).map(id =>
@@ -197,7 +209,7 @@ const Stock = ({route}) => {
                   Object.entries(updatedQuantities).map(
                     async ([productId, newQuantity]) => {
                       const response = await axiosInstance.post(
-                        `/stock/${productId}/log-adjustment`,
+                        `/stocks/${productId}/log-adjustment`,
                         {
                           branch_id: branchId,
                           new_quantity: newQuantity,
@@ -234,20 +246,11 @@ const Stock = ({route}) => {
     navigation.navigate(screens, params);
   };
 
-  useEffect(() => {
-    (async () => {
-      const online = await isOnline();
-      if (!online) {
-        setOnline(false);
-      } else {
-        setOnline(true);
-      }
-    })();
-  }, []);
-
   useFocusEffect(
     useCallback(() => {
       (async () => {
+        const online = await isOnline();
+
         try {
           if (!online) {
             const branch = branches.find(b => b.id === branchId);

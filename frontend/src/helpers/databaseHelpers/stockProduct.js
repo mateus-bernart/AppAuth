@@ -53,7 +53,7 @@ export const checkCodeAvailable = async (db, productCode) => {
   } else {
     try {
       const response = await axiosInstance.get(
-        `/products/check-code/${productCode}`,
+        `/products/${productCode}/check-code`,
       );
 
       if (response.data.exists) {
@@ -680,14 +680,14 @@ export const syncProducts = db => {
               }
 
               const response = await axiosInstance.post(
-                `/branch/${branchId}/product/createOrUpdate`,
+                `/branches/${branchId}/products`,
                 formData,
                 {headers: {'Content-Type': 'multipart/form-data'}},
               );
 
               const backendProductId = response.data.product.id;
 
-              await axiosInstance.post(`/stock/${backendProductId}/log-add`, {
+              await axiosInstance.post(`/stocks/${backendProductId}/log-add`, {
                 branch_id: branchId,
                 quantity: product.quantity,
               });

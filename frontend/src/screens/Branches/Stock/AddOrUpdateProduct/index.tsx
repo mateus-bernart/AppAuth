@@ -76,7 +76,7 @@ const AddOrUpdateProduct = () => {
 
   const fetchStockDetails = async productId => {
     try {
-      const response = await axiosInstance.get(`/stock/${productId}`);
+      const response = await axiosInstance.get(`products/${productId}/stocks`);
       return response.data.stock;
     } catch (error) {
       toast.show(
@@ -203,14 +203,12 @@ const AddOrUpdateProduct = () => {
       try {
         const response = await axiosInstance({
           url: product
-            ? `/branch/${branchId}/product/createOrUpdate/${product.id}`
-            : `/branch/${branchId}/product/createOrUpdate/`,
+            ? `/branches/${branchId}/products/${product.id}/`
+            : `/branches/${branchId}/products/`,
           method: 'post',
           data: formData,
           headers: {'Content-Type': 'multipart/form-data'},
         });
-
-        console.log('Product response: ', response);
 
         await new Promise(resolve => setTimeout(resolve, 500));
 

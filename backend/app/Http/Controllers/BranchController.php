@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 
 class BranchController extends Controller
 {
-    public function getAllBranches(Request $request)
+    public function getBranches(Request $request)
     {
         $term = $request->query('q');
         if ($term) {
@@ -19,28 +19,5 @@ class BranchController extends Controller
         }
 
         return Branch::all();
-    }
-
-    public function getBranchWithStock(Request $request, $branchId)
-    {
-
-        $term = $request->query('q');
-        $branch = Branch::with(['stock' => function ($query) use ($term) {
-            if ($term) {
-                $query->whereHas('product', function ($productQuery) use ($term) {
-                    $productQuery
-                        ->where('name', 'like', "%{$term}%")
-                        ->orWhere('code', 'like', "%{$term}%")
-                        ->orWhere('description', 'like', "%{$term}%");
-                });
-            }
-
-            $query->with('product');
-        }])->find($branchId);
-
-        return response()->json([
-            'branch' => $branch,
-            'stock' => $branch ? $branch->stock : []
-        ]);
     }
 }
