@@ -47,7 +47,6 @@ class UserController extends Controller
     public function uploadImage(Request $request, $id)
     {
         $user = User::find($id);
-
         if (!$user) {
             return response()->json(['error' => 'User not found'], 404);
         }
@@ -60,10 +59,20 @@ class UserController extends Controller
             'file' => 'image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
+        \Log::info('Deleting old image: ' . $user->image);
+        \Log::info('Exists? ' . (Storage::disk('public')->exists('profile_images/' . $user->image) ? 'Yes' : 'No'));
+
+        // 1. Deletar a imagem antiga, se existir
+        if ($user->image && Storage::disk('public')->exists('profile_images/' . $user->image)) {
+            Storage::disk('public')->delete('profile_images/' . $user->image);
+        }
+
+        // 2. Salvar a nova imagem
         $file = $request->file('file');
         $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
         $file->storeAs('profile_images', $filename, 'public');
 
+        // 3. Atualizar o banco com o nome da nova imagem
         $user->image = $filename;
         $user->save();
 

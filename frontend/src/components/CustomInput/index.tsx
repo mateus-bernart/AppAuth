@@ -62,7 +62,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
 
   const backgroundColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#fff', '#eeffee'],
+    outputRange: ['#e4e4e4', '#eeffee'],
   });
 
   return (
@@ -81,7 +81,7 @@ const CustomInput: React.FC<CustomInputProps> = ({
           }
           Animated.timing(animatedValue, {
             toValue: isFocused ? 1 : 0,
-            duration: 200,
+            duration: 100,
             useNativeDriver: false,
           }).start();
           Animated.timing(borderWidthAnim, {

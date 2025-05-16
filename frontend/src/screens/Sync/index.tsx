@@ -125,7 +125,7 @@ const Sync = () => {
         placement: 'top',
       });
       setModalCameraVisible(false);
-
+      setError([]);
       await handleShowData();
     } catch (error) {
       console.log(error);
